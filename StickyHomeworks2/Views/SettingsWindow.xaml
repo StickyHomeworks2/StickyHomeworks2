@@ -203,6 +203,24 @@
 
             </StackPanel>
         </ScrollViewer>
+        <ScrollViewer Width="332" x:Key="UpdateAdvancedSettings" 
+              VerticalScrollBarVisibility="Auto"
+              materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True">
+            <StackPanel Margin="16">
+                <TextBlock Text="高级更新设置" Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                   Margin="0 0 0 4"/>
+                <TextBlock Text="注意!如您不是专业人员,请谨慎设置。" TextWrapping="Wrap"
+                   Margin="0 0 0 16"/>
+
+
+
+                <Button IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
+                                                          Click="CancelDownloadUpdateButton_Onclick" Margin="0,10,0,0" >
+                    <ely:IconText Kind="DownloadOff" Text="取消更新" ToolTip="取消下载更新"/>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+
         <ely:BooleanToBooleanReConverter x:Key="BooleanToBooleanReConverter" />
         <StackPanel x:Key="EditSubjectDialog" VerticalAlignment="Stretch" Margin="16" MaxWidth="400">
             <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}" Text="编辑科目名称"/>
@@ -572,6 +590,64 @@
                             </ListBox>
                         </Grid>
                     </TabItem>
+
+
+                    <TabItem Header="更新">
+                        <ScrollViewer>
+                            <StackPanel Margin="6" MaxWidth="750">
+                                <StackPanel>
+                                    <Grid HorizontalAlignment="Stretch" Margin="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:Ripple Grid.Column="0" VerticalAlignment="Top"
+                                            MouseDown="AppIcon_OnMouseDown">
+                                            <materialDesign:PackIcon x:Name="UpdateIcon" Kind="Update" Width="50"  Height="50" VerticalAlignment="Top" />
+                                        </materialDesign:Ripple>
+                                        <StackPanel Grid.Column="1" Margin="5 0 0 0">
+                                            <TextBlock Height="46">
+                                                <Run Text="未获取更新" x:Name="UpdateStatusTextBlock" FontSize="35" FontWeight="Medium" />
+                                                    <LineBreak />
+                                            </TextBlock>                                           
+                                            <ProgressBar x:Name="DownloadProgress" Height="4" Margin="0,10,0,0" Visibility="Collapsed" Minimum="0" Maximum="100"  Value="0"
+                                                    Style="{StaticResource MaterialDesignLinearProgressBar}" 
+                                                    Foreground="#1E88E5"   Background="#BBDEFB" />
+                                            <TextBlock x:Name="versionStatusTextBlock"  FontSize="15"  Text="{Binding Source={x:Static ci:App.AppVersion},  StringFormat='当前版本：{0}'}" />
+
+                                            <Grid HorizontalAlignment="Stretch" >
+                                                <StackPanel  Orientation="Horizontal" Margin="-12 0">
+                                                    <Button x:Name="CheckUpdatesButton"  HorizontalAlignment="Left" Margin="10" IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
+                                                            Click="CheckUpdatesButton_Onclick">
+                                                        <ely:IconText Kind="restart" Text="检查更新" ToolTip="检查更新" />
+                                                    </Button>
+                                                    <Button x:Name="DownloadUpdatesButton" HorizontalAlignment="Left" Margin="10" IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
+                                                        Click="DownloadUpdatesButton_Onclick" Visibility="Collapsed">
+                                                        <ely:IconText Kind="Download" Text="下载更新" ToolTip="立即下载更新"/>
+                                                    </Button>
+                                                    <Button x:Name="InstallUpdatesButton" HorizontalAlignment="Left" Margin="10" IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
+                                                            Click="InstallUpdatesButton_Onclick" Visibility="Collapsed">
+                                                        <ely:IconText Kind="Autorenew" Text="立即重启" ToolTip="立即安装更新"/>
+                                                    </Button>
+                                                    <Button x:Name="CancelInstallUpdatesButton" HorizontalAlignment="Left" Margin="10" IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
+                                                            Click="CancelInstallUpdatesButton_Onclick" Visibility="Collapsed">
+                                                        <ely:IconText Kind="CloseThick" Text="取消安装" ToolTip="取消安装更新"/>
+                                                    </Button>
+                                                    <Button x:Name="CancelDownloadUpdateButton" HorizontalAlignment="Left" Margin="10" IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
+                                                          Click="CancelDownloadUpdateButton_Onclick" Visibility="Collapsed" >
+                                                        <ely:IconText Kind="DownloadOff" Text="取消更新" ToolTip="取消下载更新"/>
+                                                    </Button>
+                                                    <Button Content="{materialDesign:PackIcon DotsHorizontal}" IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
+                                                            ToolTip="更多设置" Click="UpdateAdvancedSettingsButton_Onclick"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
 
                     <!-- 关于 -->
                     <TabItem Header="关于">
