@@ -3,7 +3,7 @@
 > [!warning]
 > 这个项目还在开发中
 
-StickyHomeworks 是一款支持富文本的桌面作业贴工具。
+StickyHomeworks2 是一款支持富文本的桌面作业贴工具。
 
 ![image](https://github.com/HelloWRC/StickyHomeworks/assets/55006226/d6dc1553-d3ff-4905-907c-aba79089fc9a)
 
@@ -31,7 +31,7 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 - Windows 10 及以上版本的系统，x64架构
 - 已安装[.NET 8.0桌面运行时](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-desktop-8.0.1-windows-x64-installer)
 
-### 2. 下载软件压缩包
+### 2. 下载软件本体
 
 对于普通用户，可以在以下渠道下载到本软件，请根据自身网络环境选择合适的渠道。
 
@@ -51,7 +51,7 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 
 本应用目前的开发状态：
 
-- 正在[`master`](https://github.com/HelloWRC/StickyHomeworks/tree/master)分支上开发本应用。
+- 正在[`master`](https://github.com/zji573432-cpu/StickyHomeworks2/tree/master)分支上开发本应用。
 
 要在本地编译应用，您需要安装以下负载和工具：
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0)
