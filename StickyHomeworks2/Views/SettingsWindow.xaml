@@ -273,10 +273,6 @@
                                 <ely:SettingsCard IconGlyph="AutomaticStart" Header="开机自启"
                                                        Description="在系统启动时自动运行本应用。"
                                                        IsOn="{Binding Settings.IsAutoStartEnabled, Mode=TwoWay}" />
-                                <!-- 窗口置底 -->
-                                <ely:SettingsCard IconGlyph="LayersOutline" Header="窗口置底"
-                                                  Description="将窗口置于底端。"
-                                                  IsOn="{Binding Settings.IsBottom, Mode=TwoWay}" />
                                 <!-- 窗口标题 -->
                                 <ely:SettingsCard IconGlyph="DesktopWindows" Header="窗口标题"
                                                   Description="在窗口上显示的标题。">
@@ -332,6 +328,10 @@
                                                 AutoToolTipPrecision="2" />
                                     </ely:SettingsCard.Switcher>
                                 </ely:SettingsCard>
+                                <!-- 窗口置底 -->
+                                <ely:SettingsCard IconGlyph="LayersOutline" Header="窗口置底"
+                                                  Description="将窗口置于底端。"
+                                                  IsOn="{Binding Settings.IsBottom, Mode=TwoWay}" />
                                 <Separator Margin="0 16 0 8"/>
                                 <ely:IconText Kind="PaletteOutline" Text="主题" Margin="0 0 0 8"/>
                                 <!-- 应用主题 -->
