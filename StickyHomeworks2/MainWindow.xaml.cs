@@ -429,6 +429,7 @@ public partial class MainWindow : Window
 
         _setBottomTimer.Stop();
         _setBottomTimer.Start();
+        var hWnd = new WindowInteropHelper(this).Handle;
     }
 
     private void MainWindow_OnStateChanged(object? sender, EventArgs e)
