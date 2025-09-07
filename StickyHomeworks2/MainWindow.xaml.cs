@@ -429,6 +429,8 @@ public partial class MainWindow : Window
 
         _setBottomTimer.Stop();
         _setBottomTimer.Start();
+        var hWnd = new WindowInteropHelper(this).Handle;
+        NativeWindowHelper.SetWindowPos(hWnd, NativeWindowHelper.HWND_BOTTOM, 0, 0, 0, 0, NativeWindowHelper.SWP_NOSIZE | NativeWindowHelper.SWP_NOMOVE | NativeWindowHelper.SWP_NOACTIVATE);
     }
 
     private void MainWindow_OnStateChanged(object? sender, EventArgs e)
