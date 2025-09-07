@@ -42,6 +42,8 @@ public partial class MainWindow : Window
 
     public event EventHandler? OnHomeworkEditorUpdated;
 
+    private DispatcherTimer _setBottomTimer;
+
     public MainWindow(ProfileService profileService,
                       SettingsService settingsService,
                       WindowFocusObserverService focusObserverService)
@@ -53,6 +55,7 @@ public partial class MainWindow : Window
         focusObserverService.FocusChanged += FocusObserverServiceOnFocusChanged;
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
         ViewModel.PropertyChanging += ViewModelOnPropertyChanging;
+        this.StateChanged += OnWindowStateChanged;
         DataContext = this;
     }
 
@@ -143,6 +146,21 @@ public partial class MainWindow : Window
                 "恢复", (o) => { RecoverExpiredHomework(); }, null, false, false, TimeSpan.FromSeconds(30));
         }
         base.OnInitialized(e);
+    }
+
+    //全屏或最大化处理
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+      
+        if (WindowState != WindowState.Minimized &&
+            ViewModel.IsUnlocked) 
+        {
+            if (WindowState != WindowState.Normal)
+            {
+                SetPos(); 
+                WindowState = WindowState.Normal;
+            }
+        }
     }
 
     private void RecoverExpiredHomework()
@@ -399,12 +417,18 @@ public partial class MainWindow : Window
 
     private void SetBottom()
     {
-        if (!SettingsService.Settings.IsBottom)
+        if (!SettingsService.Settings.IsBottom) return;
+
+        if (_setBottomTimer == null)
         {
-            return;
+            _setBottomTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (s, e) =>
+            {
+                _setBottomTimer.Stop();
+            }, Dispatcher);
         }
-        var hWnd = new WindowInteropHelper(this).Handle;
-        NativeWindowHelper.SetWindowPos(hWnd, NativeWindowHelper.HWND_BOTTOM, 0, 0, 0, 0, NativeWindowHelper.SWP_NOSIZE | NativeWindowHelper.SWP_NOMOVE | NativeWindowHelper.SWP_NOACTIVATE);
+
+        _setBottomTimer.Stop();
+        _setBottomTimer.Start();
     }
 
     private void MainWindow_OnStateChanged(object? sender, EventArgs e)
