@@ -1,13 +1,13 @@
 # StickyHomeworks2
 
 > [!warning]
-> 这个项目还在开发中
+> 该项目处于开发阶段，请勿用于生产
 
-StickyHomeworks 是一款支持富文本的桌面作业贴工具。
+StickyHomeworks2 是一款支持富文本的桌面作业贴工具
 
 ![image](https://github.com/HelloWRC/StickyHomeworks/assets/55006226/d6dc1553-d3ff-4905-907c-aba79089fc9a)
 
-> 背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)
+> 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)
 
 ## 功能
 
@@ -31,17 +31,15 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 - Windows 10 及以上版本的系统，x64架构
 - 已安装[.NET 8.0桌面运行时](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-desktop-8.0.1-windows-x64-installer)
 
-### 2. 下载软件压缩包
+### 2. 下载软件本体
 
 对于普通用户，可以在以下渠道下载到本软件，请根据自身网络环境选择合适的渠道。
 
 > 测试版包含最新的功能，但也可能包含未完善和不稳定的功能，请谨慎使用。
 
-| 下载渠道/通道 | **🚀正式版** <br/>[![GitHub Release](https://img.shields.io/github/v/release/HelloWRC/StickyHomeworks?style=flat-square&logo=GitHub&color=%233fb950)](https://github.com/HelloWRC/ClassIsland/releases/latest)  | 🚧测试版<br/>[![GitHub Release](https://img.shields.io/github/v/release/HelloWRC/StickyHomeworks?include_prereleases&style=flat-square&logo=GitHub&label=BETA)](https://github.com/HelloWRC/ClassIsland/releases/) |
-| -- | -- | -- |
-| GitHub | [**GitHub下载**](https://github.com/HelloWRC/StickyHomeworks/releases/latest) | [GitHub下载](https://github.com/HelloWRC/StickyHomeworks/releases) |
-
-<!-- > GitHub Releases 还没有同步历史版本。要下载历史版本，请前往[AppCenter](https://install.appcenter.ms/users/hellowrc/apps/classisland/distribution_groups/public/releases/latest)。 -->
+| 下载渠道/通道 | **🚀正式版** <br/>[![GitHub Release](https://img.shields.io/github/v/release/zji573432-cpu/StickyHomeworks2?style=flat-square&logo=GitHub&color=%233fb950)](https://github.com/zji573432-cpu/StickyHomeworks2/releases/latest) | 🚧测试版<br/>[![GitHub Release](https://img.shields.io/github/v/release/zji573432-cpu/StickyHomeworks2?include_prereleases&style=flat-square&logo=GitHub&label=BETA)](https://github.com/HelloWRC/ClassIsland/releases/) |
+| :-: | :-: | :-: |
+| GitHub | [**GitHub下载**](https://github.com/zji573432-cpu/StickyHomeworks2/releases/latest) | [GitHub下载](https://github.com/HelloWRC/StickyHomeworks/releases) |
 
 ### 3. 解压软件
 
@@ -51,7 +49,7 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 
 本应用目前的开发状态：
 
-- 正在[`master`](https://github.com/HelloWRC/StickyHomeworks/tree/master)分支上开发本应用。
+- 正在[`dev`](https://github.com/zji573432-cpu/StickyHomeworks2/tree/dev)分支上开发本应用。
 
 要在本地编译应用，您需要安装以下负载和工具：
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0)
@@ -60,7 +58,7 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 对于Visual Studio，您需要在安装时勾选以下工作负载：
 - .NET 桌面开发
 
-我们欢迎想要为本应用实现新功能或进行改进的同学提交 [Pull Request](https://github.com/HelloWRC/StickyHomeworks/pulls)。
+我们欢迎想要为本应用实现新功能或进行改进的同学提交 [Pull Request](https://github.com/zji573432-cpu/StickyHomeworks2/pulls)。
 
 ## 许可证
 
