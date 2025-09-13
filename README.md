@@ -1,13 +1,18 @@
 # StickyHomeworks2
 
 > [!warning]
-> 该项目处于开发阶段，请勿用于生产
+> 该项目处于开发阶段，请勿用于生产环境
 
-StickyHomeworks2 是一款支持富文本的桌面作业贴工具
+### StickyHomeworks2 是一款支持富文本的桌面作业贴工具
+
+[![Downloads](https://img.shields.io/github/downloads/StickyHomeworks2/StickyHomeworks2/total?style=social&label=下载量&logo=github)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)[![GitHub Issues](https://img.shields.io/github/issues-search/StickyHomeworks2/StickyHomeworks2?query=is%3Aopen&style=flat&logo=github&label=Issues&color=%233fb950)](https://github.com/StickyHomeworks2/StickyHomeworks2/issues)[![Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat&color=%233fb950&label=稳定版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest) [![Beta](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/)
+
+#### **💬[点我加入 QQ 群](https://qm.qq.com/q/w6vcjZA3DO)**
+
 
 ![image](https://github.com/HelloWRC/StickyHomeworks/assets/55006226/d6dc1553-d3ff-4905-907c-aba79089fc9a)
 
-> 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)
+> 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)[![stars](https://img.shields.io/github/stars/Sticky-attention/Sticky-attention?label=Stars)](https://github.com/Sticky-attention/Sticky-attention)
 
 ## 功能
 
@@ -37,9 +42,23 @@ StickyHomeworks2 是一款支持富文本的桌面作业贴工具
 
 > 测试版包含最新的功能，但也可能包含未完善和不稳定的功能，请谨慎使用。
 
-| 下载渠道/通道 | **🚀正式版** <br/>[![GitHub Release](https://img.shields.io/github/v/release/zji573432-cpu/StickyHomeworks2?style=flat-square&logo=GitHub&color=%233fb950)](https://github.com/zji573432-cpu/StickyHomeworks2/releases/latest) | 🚧测试版<br/>[![GitHub Release](https://img.shields.io/github/v/release/zji573432-cpu/StickyHomeworks2?include_prereleases&style=flat-square&logo=GitHub&label=BETA)](https://github.com/HelloWRC/ClassIsland/releases/) |
-| :-: | :-: | :-: |
-| GitHub | [**GitHub下载**](https://github.com/zji573432-cpu/StickyHomeworks2/releases/latest) | [GitHub下载](https://github.com/HelloWRC/StickyHomeworks/releases) |
+<table>
+  <tr>
+    <th>下载渠道/通道 </th>
+    <th>🚀正式版</th>
+    <th>🚧测试版</th>
+  </tr>
+  <tr>
+    <td>GitHub</td>
+    <td><a href="https://github.com/zji573432-cpu/StickyHomeworks2/releases/latest"> <b>GitHub下载</b></a></td>
+    <td><a href="https://github.com/HelloWRC/StickyHomeworks/releases"> GitHub下载</a></td>
+  </tr>
+  <tr>
+    <td>QQ群文件下载</td>
+    <td colspan="2"><a href="https://qm.qq.com/q/w6vcjZA3DO"><b>加入QQ群</b></a></td>
+  </tr>
+</table>
+
 
 ### 3. 解压软件
 
