@@ -2,19 +2,19 @@
 
 # StickyHomeworks2
 
-> [!warning]
+> 
 > 该项目处于开发阶段，请勿用于生产环境
 
 ### StickyHomeworks2 是一款支持富文本的桌面作业贴工具
 
-[![Downloads](https://img.shields.io/github/downloads/StickyHomeworks2/StickyHomeworks2/total?style=social&label=下载量&logo=github)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)[![GitHub Issues](https://img.shields.io/github/issues-search/StickyHomeworks2/StickyHomeworks2?query=is%3Aopen&style=flat&logo=github&label=Issues&color=%233fb950)](https://github.com/StickyHomeworks2/StickyHomeworks2/issues)[![Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat&color=%233fb950&label=稳定版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest) [![Beta](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/)
+[![Downloads](https://img.shields.io/github/downloads/StickyHomeworks2/StickyHomeworks2/total?style=social&label=下载量&logo=github)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)[![GitHub Issues](https://img.shields.io/github/issues-search/StickyHomeworks2/StickyHomeworks2?query=is%3Aopen&style=flat&logo=github&label=Issues&color=%233fb950)](https://github.com/StickyHomeworks2/StickyHomeworks2/issues)[![Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat&color=%233fb950&label=稳定版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest) [![Beta](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/) [![stars](https://img.shields.io/github/stars/StickyHomeworks2/StickyHomeworks2?label=Stars)](https://github.com/StickyHomeworks2/StickyHomeworks2)
 
 #### **💬[点我加入 QQ 群](https://qm.qq.com/q/w6vcjZA3DO)**
 
 
 ![image](https://github.com/HelloWRC/StickyHomeworks/assets/55006226/d6dc1553-d3ff-4905-907c-aba79089fc9a)
 
-> 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)[![stars](https://img.shields.io/github/stars/Sticky-attention/Sticky-attention?label=Stars)](https://github.com/Sticky-attention/Sticky-attention)
+> 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)
 
 </div>
 
