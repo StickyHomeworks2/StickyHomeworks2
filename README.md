@@ -1,3 +1,5 @@
+<div align="center">
+
 # StickyHomeworks2
 
 > [!warning]
@@ -13,6 +15,8 @@
 ![image](https://github.com/HelloWRC/StickyHomeworks/assets/55006226/d6dc1553-d3ff-4905-907c-aba79089fc9a)
 
 > 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)[![stars](https://img.shields.io/github/stars/Sticky-attention/Sticky-attention?label=Stars)](https://github.com/Sticky-attention/Sticky-attention)
+
+</div>
 
 ## 功能
 
