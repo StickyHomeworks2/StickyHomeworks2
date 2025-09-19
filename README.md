@@ -49,8 +49,8 @@
 <table>
   <tr>
     <th>下载渠道/通道 </th>
-    <th>🚀正式版</th>
-    <th>🚧测试版</th>
+    <th>🚀正式版 [![Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat&color=%233fb950&label=稳定版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)</th>
+    <th>🚧测试版 [![Beta](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/) </th>
   </tr>
   <tr>
     <td>GitHub</td>
