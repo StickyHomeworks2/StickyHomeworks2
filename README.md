@@ -83,6 +83,26 @@
 
 我们欢迎想要为本应用实现新功能或进行改进的同学提交 [Pull Request](https://github.com/zji573432-cpu/StickyHomeworks2/pulls)。
 
+## 致谢
+
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-33-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
+本项目由 [HelloWRC/StickyHomeworks](https://github.com/HelloWRC/StickyHomeworks) 的项目二次开发
+
+感谢以下同学为本项目为本项目的开发提供支持（[✨](https://allcontributors.org/docs/zh-cn/emoji-key)）：
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/HelloWRC"><img src="https://avatars.githubusercontent.com/u/55006226?v=4?s=100" width="100px;" alt="HelloWRC"/><br /><sub><b>HelloWRC</b></sub></a><br /><a href="https://github.com/ClassIsland/ClassIsland/commits?author=HelloWRC" title="Code">💻</a> <a href="#design-HelloWRC" title="Design">🎨</a> <a href="#ideas-HelloWRC" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jizilin6732"><img src="https://avatars.githubusercontent.com/u/162853646?v=4?s=100" width="100px;" alt="jizilin6732"/><br /><sub><b>jizilin6732</b></sub></a><br /><a href="https://github.com/StickyHomeworks2/StickyHomeworks2/commits?author=zji573432-cpu" title="Code">💻</a> <a href="#design-jizilin6732" title="Design">🎨</a> <a href="#ideas-jizilin6732" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/belugaQAQ"><img src="https://avatars.githubusercontent.com/u157481292?v=4s=100" width="100px;" alt="belugaQAQ"/><br /><sub><b>ClassIsBand</b></sub></a><br /><a href="https://github.com/StickyHomeworks2/StickyHomeworks2/commits?author=ClassIsBand" title="Code">💻</a> <a href="#question-Doctor-yoi" title="Answering Questions">💬</a></td>
+    </tr>
+  </tbody>
+</table>
+
+
 ## 许可证
 
 本项目基于 [General Public License v3](LICENSE.txt) 获得许可。
