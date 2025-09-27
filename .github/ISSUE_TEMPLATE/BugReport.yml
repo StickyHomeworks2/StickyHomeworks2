@@ -1,7 +1,8 @@
 name: Bug 反馈
 description: 在使用 StickyHomework2 的过程中遇到了 Bug
 title: （将此栏【替换】为你的标题）
-labels: ["Bug", "待查看", "优先级：无"]
+labels: ["Bug", "待查看"]
+assignees: ["zji573432-cpu"]
 type: Bug
 body:
   - type: markdown
@@ -22,7 +23,6 @@ body:
         - label: 我已更新到最新版 ![最新的版本号](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat-square&label=) 或 ![最新的版本号](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat-square&label=) 测试，并看过 [最新提交](https://github.com/StickyHomeworks2/StickyHomeworks2/commits/dev/)，确认这一 Bug 还没有修复。我也已在 [Issues](https://github.com/StickyHomeworks2/StickyHomeworks2/issues?q=type%3ABug) 中检索，确认这一 Bug 未被提交过。
           required: true
         - label: 我已经仔细阅读过选项里的内容，并且知道这个选项不用勾选。
-        - label: 我已知晓并同意，此处仅用于汇报程序中存在的问题（关于其他非程序本身的问题应当在 Discussion 板块提出）。
           required: true
   - type: markdown
     attributes: 
@@ -65,6 +65,14 @@ body:
       label: 堆栈跟踪（可选）
       description: 如果在遇到这个 Bug 时发生了崩溃（弹出崩溃提示），或者产生了错误日志，请将产生的堆栈跟踪信息粘贴到此处，便于开发者定位 Bug。
       render: shell
+  - type: input
+    id: contact
+    attributes:
+      label: 联系方式（可选）
+      description: 我们可能需要向你进一步询问了解您碰到的问题，你可以选择性填写您的联系方式（如QQ号、邮箱等）。
+      placeholder: xxxxxxx@qq.com
+    validations:
+      required: false
   - type: checkboxes
     id: revision
     attributes:
@@ -73,3 +81,4 @@ body:
       options:
         - label: 我认为上述的描述已经足以详细，以允许开发人员能复现该问题。如果我的 issue 没有按照上述的要求填写，可能会被无条件关闭。
           required: true
+
