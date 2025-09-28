@@ -766,6 +766,7 @@
                                 </TextBlock>
 
                                 <MenuItem Icon="{materialDesign:PackIcon BugOutline}" Header="崩溃测试" Click="ButtonCrash_OnClick"/>
+                                <MenuItem Icon="{materialDesign:PackIcon CloseBoxMultiple}" Header="多开警告" Click="MultipleOpeningsText_OnClick"/>
                                 <MenuItem IsCheckable="True" IsChecked="{Binding Settings.IsDebugShowInTaskBar}" Header="在任务栏显示图标"/>
                                 <MenuItem Icon="{materialDesign:PackIcon LightningBoltOutline}" Header="测试作业编辑窗口" Click="MenuItemTestHomeworkEditWindow_OnClick"/>
                                 <RichTextBox>

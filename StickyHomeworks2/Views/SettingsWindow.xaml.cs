@@ -713,6 +713,11 @@ exit /b 0
         CheckUpdatesButton.Visibility = Visibility.Visible;
         await CheckForUpdatesAsync();
     }
-
     //<<<更新逻辑:结束>>>
+
+    private void MultipleOpeningsText_OnClick(object sender, RoutedEventArgs e)
+    {
+        SingleInstanceWarning warningWindow = new();
+        warningWindow.ShowDialog();
+    }
 }
