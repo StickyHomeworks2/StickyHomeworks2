@@ -32,12 +32,12 @@
             <Run Text="应用发生了无法解决的错误，需要退出。这可能是由一个bug引起的。若要将此错误反馈至开发人员，请保留此错误信息，并一并提交至开发者。"/>
         </TextBlock>
         <TextBox x:Name="TextBoxCrashInfo" Grid.Row="1" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0 6" AcceptsReturn="True"
-                 VerticalContentAlignment="Top"
-                 VerticalScrollBarVisibility="Auto" IsReadOnly="True" Text="{Binding CrashInfo, Mode=OneWay}" HorizontalScrollBarVisibility="Auto"
-                 d:Text="123"/>
-        <StackPanel Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal">
-            <Button Style="{StaticResource MaterialDesignPaperButton}" Margin="0 0 6 0" Click="ButtonIgnore_OnClick">
-                <ely:IconText Kind="Close" Text="忽略" IconMargin="3 0 0 0"/>
+                <ScrollViewer  Grid.Row="1" Grid.ColumnSpan="20" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Cursor="Hand">
+                    <TextBox x:Name="TextBoxCrashInfo" Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                     Margin="0,10,0,10" AcceptsReturn="True" VerticalContentAlignment="Top" 
+                     VerticalScrollBarVisibility="Auto" IsReadOnly="True" Text="{Binding CrashInfo, Mode=OneWay}" 
+                     TextWrapping="Wrap" HorizontalScrollBarVisibility="Auto" />
+                </ScrollViewer>
             </Button>
             <Button Style="{StaticResource MaterialDesignPaperButton}" Margin="0 0 6 0" Click="ButtonExit_OnClick">
                 <ely:IconText Kind="ExitToApp" Text="退出应用" IconMargin="3 0 0 0"/>
