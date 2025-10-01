@@ -82,7 +82,7 @@ public partial class MainWindow : Window
 
     private void ViewModelOnPropertyChanging(object? sender, PropertyChangingEventArgs e)
     {
-        if (e.PropertyName == nameof(ViewModel.SelectedHomework))
+        if (e.PropertyName == nameof(ViewModel.SelectedHomework) && !ViewModel.IsUpdatingHomeworkSubject)
         {
             ExitEditingMode(true);
         }
@@ -94,7 +94,7 @@ public partial class MainWindow : Window
         {
             RepositionEditingWindow();
         }
-        if (e.PropertyName == nameof(ViewModel.SelectedHomework))
+        if (e.PropertyName == nameof(ViewModel.SelectedHomework) && !ViewModel.IsUpdatingHomeworkSubject)
         {
             ExitEditingMode(false);
         }
@@ -196,8 +196,18 @@ public partial class MainWindow : Window
         var s = ViewModel.SelectedHomework;
         ProfileService.Profile.Homeworks.Remove(s);
         ProfileService.Profile.Homeworks.Add(s);
+
+        // 保存当前的IsDrawerOpened状态
+        bool wasDrawerOpened = ViewModel.IsDrawerOpened;
+        // 更新SelectedHomework
         ViewModel.SelectedHomework = s;
         ViewModel.IsUpdatingHomeworkSubject = false;
+        // 确保编辑窗口保持打开状态
+        if (wasDrawerOpened)
+        {
+            ViewModel.IsDrawerOpened = true;
+            AppEx.GetService<HomeworkEditWindow>().TryOpen();
+        }
     }
 
     private void OnEditingFinished(object? sender, EventArgs e)
