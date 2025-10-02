@@ -1,13 +1,22 @@
+<div align="center">
+
 # StickyHomeworks2
 
-> [!warning]
-> 这个项目还在早期开发中
+> 
+> 该项目处于开发阶段，请勿用于生产环境
 
-StickyHomeworks 是一款支持富文本的桌面作业贴工具。
+### StickyHomeworks2 是一款支持富文本的桌面作业贴工具
+
+[![Downloads](https://img.shields.io/github/downloads/StickyHomeworks2/StickyHomeworks2/total?style=social&label=下载量&logo=github)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)[![GitHub Issues](https://img.shields.io/github/issues-search/StickyHomeworks2/StickyHomeworks2?query=is%3Aopen&style=flat&logo=github&label=Issues&color=%233fb950)](https://github.com/StickyHomeworks2/StickyHomeworks2/issues)[![Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat&color=%233fb950&label=稳定版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest) [![Beta](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/) [![stars](https://img.shields.io/github/stars/StickyHomeworks2/StickyHomeworks2?label=Stars)](https://github.com/StickyHomeworks2/StickyHomeworks2)
+
+#### **💬[点我加入 QQ 群](https://qm.qq.com/q/w6vcjZA3DO)**
+
 
 ![image](https://github.com/HelloWRC/StickyHomeworks/assets/55006226/d6dc1553-d3ff-4905-907c-aba79089fc9a)
 
-> 背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)
+> 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)
+
+</div>
 
 ## 功能
 
@@ -31,17 +40,29 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 - Windows 10 及以上版本的系统，x64架构
 - 已安装[.NET 8.0桌面运行时](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-desktop-8.0.1-windows-x64-installer)
 
-### 2. 下载软件压缩包
+### 2. 下载软件本体
 
 对于普通用户，可以在以下渠道下载到本软件，请根据自身网络环境选择合适的渠道。
 
 > 测试版包含最新的功能，但也可能包含未完善和不稳定的功能，请谨慎使用。
 
-| 下载渠道/通道 | **🚀正式版** <br/>[![GitHub Release](https://img.shields.io/github/v/release/HelloWRC/StickyHomeworks?style=flat-square&logo=GitHub&color=%233fb950)](https://github.com/HelloWRC/ClassIsland/releases/latest)  | 🚧测试版<br/>[![GitHub Release](https://img.shields.io/github/v/release/HelloWRC/StickyHomeworks?include_prereleases&style=flat-square&logo=GitHub&label=BETA)](https://github.com/HelloWRC/ClassIsland/releases/) |
-| -- | -- | -- |
-| GitHub | [**GitHub下载**](https://github.com/HelloWRC/StickyHomeworks/releases/latest) | [GitHub下载](https://github.com/HelloWRC/StickyHomeworks/releases) |
+<table>
+  <tr>
+    <th>下载渠道/通道 </th>
+    <th>🚀正式版 </th>
+    <th>🚧测试版 </th>
+  </tr>
+  <tr>
+    <td>GitHub</td>
+    <td><a href="https://github.com/zji573432-cpu/StickyHomeworks2/releases/latest"> <b>GitHub下载</b></a></td>
+    <td><a href="https://github.com/HelloWRC/StickyHomeworks/releases"> GitHub下载</a></td>
+  </tr>
+  <tr>
+    <td>QQ群文件下载</td>
+    <td colspan="2"><a href="https://qm.qq.com/q/w6vcjZA3DO"><b>加入QQ群</b></a></td>
+  </tr>
+</table>
 
-<!-- > GitHub Releases 还没有同步历史版本。要下载历史版本，请前往[AppCenter](https://install.appcenter.ms/users/hellowrc/apps/classisland/distribution_groups/public/releases/latest)。 -->
 
 ### 3. 解压软件
 
@@ -51,7 +72,7 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 
 本应用目前的开发状态：
 
-- 正在[`master`](https://github.com/HelloWRC/StickyHomeworks/tree/master)分支上开发本应用。
+- 正在[`dev`](https://github.com/zji573432-cpu/StickyHomeworks2/tree/dev)分支上开发本应用。
 
 要在本地编译应用，您需要安装以下负载和工具：
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0)
@@ -60,7 +81,27 @@ StickyHomeworks 是一款支持富文本的桌面作业贴工具。
 对于Visual Studio，您需要在安装时勾选以下工作负载：
 - .NET 桌面开发
 
-我们欢迎想要为本应用实现新功能或进行改进的同学提交 [Pull Request](https://github.com/HelloWRC/StickyHomeworks/pulls)。
+我们欢迎想要为本应用实现新功能或进行改进的同学提交 [Pull Request](https://github.com/zji573432-cpu/StickyHomeworks2/pulls)。
+
+## 致谢
+
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
+本项目由 [HelloWRC/StickyHomeworks](https://github.com/HelloWRC/StickyHomeworks) 的项目二次开发
+
+感谢以下同学为本项目为本项目的开发提供支持（[✨](https://allcontributors.org/docs/zh-cn/emoji-key)）：
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/HelloWRC"><img src="https://avatars.githubusercontent.com/u/55006226?v=4?s=100" width="100px;" alt="HelloWRC"/><br /><sub><b>HelloWRC</b></sub></a><br /><a href="https://github.com/ClassIsland/ClassIsland/commits?author=HelloWRC" title="Code">💻</a> <a href="#design-HelloWRC" title="Design">🎨</a> <a href="#ideas-HelloWRC" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jizilin6732"><img src="https://avatars.githubusercontent.com/u/162853646?v=4?s=100" width="100px;" alt="jizilin6732"/><br /><sub><b>jizilin6732</b></sub></a><br /><a href="https://github.com/StickyHomeworks2/StickyHomeworks2/commits?author=zji573432-cpu" title="Code">💻</a> <a href="#design-jizilin6732" title="Design">🎨</a> <a href="#ideas-jizilin6732" title="Ideas, Planning, & Feedback">🤔</a> <a href="#question-jizilin6732" title="Answering Questions">💬</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/belugaQAQ"><img src="https://avatars.githubusercontent.com/u/157481292?v=4?s=100" width="100px;" alt="belugaQAQ"/><br /><sub><b>ClassIsBand</b></sub></a><br /><a href="https://github.com/StickyHomeworks2/StickyHomeworks2/commits?author=belugaQAQ" title="Code">💻</a> <a href="#question-ClassIsBand" title="Answering Questions">💬</a> <a href="https://github.com/ClassIsland/ClassIsland/commits?author=belugaQAQ" title="Documentation">📖</a></td>
+    </tr>
+  </tbody>
+</table>
+
 
 ## 许可证
 
