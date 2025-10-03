@@ -1,5 +1,6 @@
 <div align="center">
-
+<img width="256" height="256" alt="AppLogo" src="https://github.com/user-attachments/assets/40d567c2-77bc-4c3e-bb1f-5215cc0bb376" />
+  
 # StickyHomeworks2
 
 > 
