@@ -19,24 +19,23 @@
       AllowsTransparency="True"
       WindowStartupLocation="CenterScreen"
       ResizeMode="NoResize">
-    <Border BorderBrush="Gray" BorderThickness="4" >
-        <Grid Margin="20 5 17 0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="190"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" TextWrapping="Wrap">
+
+    <Grid Margin="20 5 17 0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="190"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" TextWrapping="Wrap">
             <Run Text="awa" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="40" FontWeight="Bold"/>
                 <LineBreak/>
             <Run Text="没门！" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="25" FontWeight="Bold"/>
                 <LineBreak/><LineBreak/>
             <Run Text="应用已经在运行中，别想重复启动第二个实例！" FontSize="15"/>
-            </TextBlock>
-            <StackPanel Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal">
-                <Button Style="{StaticResource MaterialDesignPaperButton}" Margin="0 0 6 0" Click="ButtonIgnore_OnClick">
-                    <ely:IconText Kind="Close" Text="关闭" IconMargin="3 0 0 0" RenderTransformOrigin="0.632,1.665"/>
-                </Button>
-            </StackPanel>
-        </Grid>
-    </Border>
+        </TextBlock>
+        <StackPanel Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Style="{StaticResource MaterialDesignPaperButton}" Margin="0 0 6 0" Click="ButtonIgnore_OnClick">
+                <ely:IconText Kind="Close" Text="关闭" IconMargin="3 0 0 0" RenderTransformOrigin="0.632,1.665"/>
+            </Button>
+        </StackPanel>
+    </Grid>
 </ely:MyWindow>
