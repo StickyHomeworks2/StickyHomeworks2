@@ -103,6 +103,18 @@
   </tbody>
 </table>
 
+## 赞助商/Sponsor
+感谢以下赞助商对本项目提供支持:
+
+<table>
+    <td>
+      <img alt="苏州晔淞信息科技有限公司" src="[https://eb48d3a3.xy.proaa.top/Ystron/icon-128x128.png]" width="50" height="50"/>
+    </td>
+    <td>
+    由<a href="https://www.yesongit.com">苏州晔淞信息科技有限公司</a>提供云计算支持。苏州晔淞信息科技有限公司以自主创新、灵活开放的理念，以行业领先的云计算平台助力云上业务创新。
+    </td>
+  </tr> 
+</table>
 
 ## 许可证
 
