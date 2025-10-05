@@ -78,4 +78,6 @@ public partial class App : AppEx
     {
         Mutex?.ReleaseMutex();
     }
+
+
 }
