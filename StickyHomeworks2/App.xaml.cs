@@ -25,6 +25,8 @@ public partial class App : AppEx
 {
     private static Mutex? Mutex;
 
+    private static SingleInstanceWarning warningWindow;
+
     public static string AppVersion => Assembly.GetExecutingAssembly().GetName().Version!.ToString();
 
     protected override void OnStartup(StartupEventArgs e)
@@ -33,7 +35,7 @@ public partial class App : AppEx
         Mutex = new Mutex(true, "StickyHomeworks.Lock", out var createNew);
         if (!createNew)
         {
-            SingleInstanceWarning warningWindow = new();
+            warningWindow = new SingleInstanceWarning();
             warningWindow.ShowDialog();
             Environment.Exit(0);
         }
@@ -76,4 +78,6 @@ public partial class App : AppEx
     {
         Mutex?.ReleaseMutex();
     }
+
+
 }
