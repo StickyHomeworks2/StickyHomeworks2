@@ -1,4 +1,4 @@
-﻿<ely:MyWindow x:Class="StickyHomeworks.Views.SettingsWindow"
+<ely:MyWindow x:Class="StickyHomeworks.Views.SettingsWindow"
                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -108,7 +108,11 @@
                     AvatarImage="/Assets/Contributiors/HelloWRC@64w.jpg"
                     Name="HelloWRC" Description="软件作者，写代码巨水（划掉）" />
                 <models:ContributionMember
+                    AvatarImage="/Assets/jizilin6732.jpg"
                     Name="晒~居" Description="软件作者，写代码也一样水（划掉）" />
+                <models:ContributionMember
+                    AvatarImage="/Assets/ClassIsband.jpg"
+                    Name="ClassIsband" Description="什么都会一点点但也只会一点点的万能贡献者（划掉）" />
             </ListView>
         </Grid>
 
@@ -663,74 +667,70 @@
                     <!-- 关于 -->
                     <TabItem Header="关于">
                         <ScrollViewer>
+                            
                             <StackPanel Margin="6" MaxWidth="750">
-                                <StackPanel>
-                                    <!-- banner -->
-                                    <!--<Grid Height="100">
-                        <Image Source="/Assets/banner.png" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>-->
-                                    <Grid HorizontalAlignment="Stretch" Margin="12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition />
-                                        </Grid.ColumnDefinitions>
-                                        <!-- icon -->
-                                        <materialDesign:Ripple Grid.Column="0" VerticalAlignment="Top"
-                                                               MouseDown="AppIcon_OnMouseDown">
-                                            <!-- TODO: 应用图标 -->
-                                            <!--<Image Source="/Assets/AppLogo.ico" Width="40"
-                                                   Height="40" VerticalAlignment="Top" />-->
-                                        </materialDesign:Ripple>
-                                        <!-- about -->
-                                        <StackPanel Grid.Column="1" Margin="10 0 0 0">
-                                            <TextBlock>
-                                                    <Run Text="StickyHomework" FontSize="24" FontWeight="Bold" />
-                                                    <LineBreak />
-                                                    <Run Text="{x:Static ci:App.AppVersion}" />
-                                                    <LineBreak />
-                                                    <Run Text="Copyright (c) 2023 HelloWRC" />
-                                            </TextBlock>
-                                            <WrapPanel>
-                                                <Button HorizontalAlignment="Left" Margin="6"
-                                                            Style="{StaticResource MaterialDesignFlatButton}">
-                                                    <ely:IconText Kind="MicrosoftGithub" Text="GitHub"/>
-                                                </Button>
-                                                <Button HorizontalAlignment="Left" Margin="6"
-                                                            Style="{StaticResource MaterialDesignFlatButton}">
-                                                    <ely:IconText Kind="BugOutline" Text="问题反馈"/>
-                                                </Button>
-                                                <Button HorizontalAlignment="Left" Margin="6"
-                                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                                            Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}">
-                                                    <ely:IconText Kind="License" Text="开源许可"/>
-                                                    <Button.CommandParameter>
-                                                        <StaticResource ResourceKey="OpenSourceLicense" />
-                                                    </Button.CommandParameter>
-                                                </Button>
+                                <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" IsSelectionEnabled="False" PreviewMouseWheel="UIElement_OnPreviewMouseWheel" ContextMenu="{x:Null}">
+                                    <FlowDocument FontFamily="{StaticResource HarmonyOsSans}">
+                                        <Paragraph Style="{StaticResource MarkdownHeadline1Style}">
+                                            关于StickyHomework2
+                                        </Paragraph>
+                                    </FlowDocument>
+                                </FlowDocumentScrollViewer>
 
-                                            </WrapPanel>
-                                        </StackPanel>
-                                    </Grid>
-
-                                </StackPanel>
-
+                                <materialDesign:Card ClipContent="False">
+                                    <StackPanel>
+                                        <Image Source="/Assets/banner.png" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Grid HorizontalAlignment="Stretch" Margin="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition />
+                                            </Grid.ColumnDefinitions>
+                                            <!-- icon -->
+                                            <materialDesign:Ripple Grid.Column="0" VerticalAlignment="Top" MouseDown="AppIcon_OnMouseDown">
+                                                <Image Source="/Assets/AppLogo.ico" Width="70" VerticalAlignment="Top" />
+                                            </materialDesign:Ripple>
+                                            <!-- about -->
+                                            <StackPanel Grid.Column="1" Margin="10 0 0 0">
+                                                <Grid>
+                                                    <TextBlock>
+                                                        <Run Text="StickyHomework2" FontSize="24" FontWeight="Bold" />
+                                                        <LineBreak />
+                                                        <Run Text="{x:Static ci:App.AppVersion}" />
+                                                        <LineBreak />
+                                                        <Run Text="Copyright (c) 2023 HelloWRC" />
+                                                    </TextBlock>
+                                                    <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                        <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Click="Github">
+                                                            <ely:IconText Kind="MicrosoftGithub" ToolTip="官方Github"/>
+                                                        </Button>
+                                                        <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Click="Issues">
+                                                            <ely:IconText Kind="BugOutline" ToolTip="Bug报告"/>
+                                                        </Button>
+                                                        <Button HorizontalAlignment="Left" Margin="6" Style="{StaticResource MaterialDesignFlatButton}" Click="ButtonThirdPartyLibs_OnClick">
+                                                            <ely:IconText Kind="PackageVariant" ToolTip="第三方库"/>
+                                                        </Button>
+                                                        <Button HorizontalAlignment="Left" Margin="6" Style="{StaticResource MaterialDesignFlatButton}" Click="ButtonContributors_OnClick">
+                                                            <ely:IconText Kind="PeopleGroupOutline" ToolTip="贡献人员" />
+                                                        </Button>
+                                                    </WrapPanel>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                    </materialDesign:Card>
                                 <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                                           IsSelectionEnabled="False"
                                                           PreviewMouseWheel="UIElement_OnPreviewMouseWheel"
                                                           ContextMenu="{x:Null}">
                                     <FlowDocument FontFamily="{StaticResource HarmonyOsSans}">
-                                        <Paragraph Style="{StaticResource MarkdownHeadline1Style}">
-                                            关于本应用
+                                        <Paragraph Foreground="#ff0000">
+                                            注意！该项目处于开发阶段，请勿用于生产环境！
                                         </Paragraph>
                                         <Paragraph>
-                                            注意！本应用处于早期开发阶段！大部分功能尚不完善，或存在bug，可能会在后期的版本中完善或修复。饼要一个一个画，功能要一个一个实现（
+                                            目前大部分功能尚不完善，可能会出现bug，会在后期的版本中完善或修复。
                                         </Paragraph>
                                         <Paragraph>
-                                            别看了，没做完。
-                                        </Paragraph>
-                                        <Paragraph Style="{StaticResource MarkdownHeadline2Style}"
-                                                   LineHeight="2">
-                                            鸣谢：
+                                            饼要一个一个画，功能要一个一个实现（
                                         </Paragraph>
                                         <Paragraph>
                                             <TextBlock>
@@ -738,24 +738,11 @@
                                             </TextBlock>
                                         </Paragraph>
                                         <Paragraph>
-                                            <Button HorizontalAlignment="Left" Margin="6"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    Click="ButtonContributors_OnClick">
-                                                <ely:IconText Kind="PeopleGroupOutline" Text="贡献人员" />
-                                            </Button>
-                                            <Button HorizontalAlignment="Left" Margin="6"
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-                                                    Click="ButtonThirdPartyLibs_OnClick">
-                                                <ely:IconText Kind="PackageVariant" Text="第三方库" />
-                                            </Button></Paragraph>
-                                        <Paragraph>
                                             Work In Progress
                                         </Paragraph>
-
                                         <Paragraph Foreground="#fff7d1ec">
                                             永远喜欢爱莉希雅
                                         </Paragraph>
-
                                     </FlowDocument>
                                 </FlowDocumentScrollViewer>
 

@@ -777,5 +777,20 @@ exit /b 0
         SingleInstanceWarning warningWindow = new();
         warningWindow.ShowDialog();
     }
-
+    private void Github(object sender, RoutedEventArgs e)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://github.com/StickyHomeworks2/StickyHomeworks2",
+            UseShellExecute = true
+        });
+    }
+    private void Issues(object sender, RoutedEventArgs e)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://github.com/StickyHomeworks2/StickyHomeworks2/issues",
+            UseShellExecute = true
+        });
+    }
 }
