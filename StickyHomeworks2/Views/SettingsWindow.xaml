@@ -7,6 +7,7 @@
                    xmlns:controls="clr-namespace:StickyHomeworks.Controls"
                    xmlns:models="clr-namespace:StickyHomeworks.Models"
                    xmlns:services="clr-namespace:StickyHomeworks.Services"
+                   xmlns:local="clr-namespace:StickyHomeworks2.Helpers"
                    mc:Ignorable="d"
                    d:DataContext="{d:DesignInstance views:SettingsWindow}"
                    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -31,6 +32,9 @@
         <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignListBoxItem}"
                x:Key="NotificationsListBoxItemStyle">
                                                          
+        </Style>
+        <Style TargetType="{x:Type Hyperlink}">
+            <Setter Property="local:HyperlinkBehavior.ConfirmNavigation" Value="True"/>
         </Style>
         <ely:ColorToColorPickerBrushConverter x:Key="ColorToColorPickerBrushConverter"/>
         <Style TargetType="StackPanel" x:Key="SettingsPageStackPanelStyle">
@@ -720,6 +724,11 @@
                                         <Paragraph Style="{StaticResource MarkdownHeadline2Style}"
                                                    LineHeight="2">
                                             鸣谢：
+                                        </Paragraph>
+                                        <Paragraph>
+                                            <TextBlock>
+                                                 由 <Hyperlink NavigateUri="https://www.szyesun.com" >苏州晔淞信息科技有限公司</Hyperlink> 提供云计算支持
+                                            </TextBlock>
                                         </Paragraph>
                                         <Paragraph>
                                             <Button HorizontalAlignment="Left" Margin="6"
