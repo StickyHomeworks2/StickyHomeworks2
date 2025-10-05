@@ -5,11 +5,13 @@ using System.Windows.Input;
 using ClassIsland.Services;
 using ElysiaFramework;
 using ElysiaFramework.Controls;
+using Markdig;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
 using StickyHomeworks.Models;
 using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
+using StickyHomeworks2.Helpers;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -19,6 +21,8 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -371,6 +375,7 @@ public partial class SettingsWindow : MyWindow
                     DownloadUpdatesButton.IsEnabled = true;
                     CancelDownloadUpdateButton.IsEnabled = true;
                     CheckUpdatesButton.IsEnabled = true;
+                    LoadTabs(); 
                 }
                 
                 else
@@ -405,7 +410,7 @@ public partial class SettingsWindow : MyWindow
     private async Task DownloadUpdatesAsync(object sender)
     {
         if (!DownloadUpdatesButton.IsEnabled) return;
-        var downloadUrl = (string)((Button)sender).Tag;
+        var downloadUrl = (string)((System.Windows.Controls.Button)sender).Tag;
 
         CheckUpdatesButton.IsEnabled = false;
         DownloadUpdatesButton.IsEnabled = false;
@@ -522,6 +527,7 @@ public partial class SettingsWindow : MyWindow
                 DownloadProgress.IsIndeterminate = true;
             });
 
+            UpdateStatusTextBlock.Text = "开始安装...";
 
             await Task.Run(() => ZipFile.ExtractToDirectory(zipFilePath, extractDir, overwriteFiles: true));
 
@@ -591,7 +597,7 @@ exit /b 0
             Process.Start(startInfo);
 
       
-            Application.Current.Shutdown();
+            System.Windows.Application.Current.Shutdown();
         }
         catch (Exception ex)
         {
@@ -628,11 +634,11 @@ exit /b 0
 
             Dispatcher.Invoke(() =>
             {
-                MessageBox.Show(
+            System.Windows.Forms.MessageBox.Show(
                     message,
                     "更新失败",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                (MessageBoxButtons)MessageBoxButton.OK,
+                (MessageBoxIcon)MessageBoxImage.Error);
             });
 
 
@@ -649,7 +655,7 @@ exit /b 0
             System.Diagnostics.Debug.WriteLine($"更新失败: {ex.Message}");
 
 
-            Application.Current.Shutdown();
+        System.Windows.Application.Current.Shutdown();
         }
     }
 
@@ -713,6 +719,57 @@ exit /b 0
         CheckUpdatesButton.Visibility = Visibility.Visible;
         await CheckForUpdatesAsync();
     }
+
+    private async void LoadTabs()
+    {
+        string[] urls = new string[]
+        {
+                "https://eb48d3a3.xy.proaa.top/"
+        };
+
+        foreach (var url in urls)
+        {
+            string markdownContent = await GetMarkdownContentFromUrl(url);
+            if (!string.IsNullOrEmpty(markdownContent))
+            {
+                string htmlContent = Markdown.ToHtml(markdownContent);
+                AddTabItem(url, htmlContent);
+            }
+        }
+    }
+
+    private async Task<string> GetMarkdownContentFromUrl(string url)
+    {
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                HttpResponseMessage response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsStringAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"无法加载 {url}: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        return null;
+    }
+
+    private void AddTabItem(string url, string content)
+    {
+        string tabName = System.IO.Path.GetFileNameWithoutExtension(new Uri(url).LocalPath);
+        TabItem tabItem = new TabItem
+        {
+            Header = tabName,
+            Content = new System.Windows.Controls.WebBrowser { Source = new Uri($"data:text/html,{Uri.EscapeDataString(content)}") }
+        };
+        tabControl.Items.Add(tabItem);
+    }
+
+
     //<<<更新逻辑:结束>>>
 
     private void MultipleOpeningsText_OnClick(object sender, RoutedEventArgs e)
@@ -720,4 +777,5 @@ exit /b 0
         SingleInstanceWarning warningWindow = new();
         warningWindow.ShowDialog();
     }
+
 }

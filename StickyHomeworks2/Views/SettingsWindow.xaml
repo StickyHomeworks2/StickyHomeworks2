@@ -648,6 +648,14 @@
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
+
+                                <StackPanel Margin="0 0">
+                                    <TabControl x:Name="tabControl" Margin=" 0">
+                                        <TabItem Header="更新日志">
+                                            <WebBrowser x:Name="webBrowser" />
+                                        </TabItem>
+                                    </TabControl>
+                            </StackPanel>
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
