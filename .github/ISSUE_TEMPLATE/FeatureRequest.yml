@@ -3,7 +3,7 @@ description: 为 StickyHomework2 提出一项新的功能。
 title: （将此栏【替换】为你的标题）
 labels: ["新功能", "待查看"]
 assignees: ["zji573432-cpu"]
-type: 特性
+type: Trait
 body:
   - type: markdown
     attributes:
@@ -54,5 +54,6 @@ body:
         - label: 我认为上述的描述已经足以详细，以便开发人员理解您想要的功能。如果我的 issue 没有按照上述的要求填写，可能会被无条件关闭。
 
           required: true
+
 
 
