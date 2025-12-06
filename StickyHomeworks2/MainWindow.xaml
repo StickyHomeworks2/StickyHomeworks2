@@ -207,7 +207,7 @@
                                         <Separator Margin="-12 4"/>
                                         <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon Refresh}" Header="恢复过期的作业" Click="MenuItemRecoverExpiredHomework_OnClick" IsEnabled="{Binding ViewModel.CanRecoverExpireHomework}"/>
                                         <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon CogOutline}" Header="更多设置…" Click="ButtonSettings_OnClick"/>
-                                        <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon HelpCircleOutline}" Header="帮助" Click="Docs"/>
+                                        <!--<MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon HelpCircleOutline}" Header="帮助" Click="Docs"/>-->
                                         <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon ExitToApp}" Header="退出" Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}" CommandParameter="{StaticResource ExitConfirm}" />
                                     </StackPanel>
                                 </Grid>
