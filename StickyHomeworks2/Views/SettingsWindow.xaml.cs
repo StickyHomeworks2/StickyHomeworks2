@@ -793,4 +793,12 @@ exit /b 0
             UseShellExecute = true
         });
     }
+    private void Docs(object sender, RoutedEventArgs e)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://sh2.xn--fjqu59cvx0aoqi.icu/doc/guide/",
+            UseShellExecute = true
+        });
+    }
 }

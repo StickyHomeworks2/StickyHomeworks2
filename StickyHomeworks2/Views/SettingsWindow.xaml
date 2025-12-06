@@ -703,8 +703,8 @@
                                                         <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Click="Github">
                                                             <ely:IconText Kind="MicrosoftGithub" ToolTip="官方Github"/>
                                                         </Button>
-                                                        <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Click="Issues">
-                                                            <ely:IconText Kind="BugOutline" ToolTip="Bug报告"/>
+                                                        <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Click="Docs">
+                                                            <ely:IconText Kind="BookOpenVariant" ToolTip="文档"/>
                                                         </Button>
                                                         <Button HorizontalAlignment="Left" Margin="6" Style="{StaticResource MaterialDesignFlatButton}" Click="ButtonThirdPartyLibs_OnClick">
                                                             <ely:IconText Kind="PackageVariant" ToolTip="第三方库"/>
@@ -733,15 +733,22 @@
                                             饼要一个一个画，功能要一个一个实现（
                                         </Paragraph>
                                         <Paragraph>
-                                            <TextBlock>
-                                                 由 <Hyperlink NavigateUri="https://www.ystron.com" >苏州晔淞信息科技有限公司</Hyperlink> 提供云计算支持
-                                            </TextBlock>
-                                        </Paragraph>
-                                        <Paragraph>
                                             Work In Progress
                                         </Paragraph>
                                         <Paragraph Foreground="#fff7d1ec">
                                             永远喜欢爱莉希雅
+                                        </Paragraph>
+                                    </FlowDocument>
+                                </FlowDocumentScrollViewer>
+                                <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" IsSelectionEnabled="False" PreviewMouseWheel="UIElement_OnPreviewMouseWheel" ContextMenu="{x:Null}">
+                                    <FlowDocument FontFamily="{StaticResource HarmonyOsSans}">
+                                        <Paragraph Style="{StaticResource MarkdownHeadline1Style}">
+                                            鸣谢
+                                        </Paragraph>
+                                        <Paragraph>
+                                            <TextBlock>
+                                                由 <Hyperlink NavigateUri="https://www.ystron.com" >苏州晔淞信息科技有限公司</Hyperlink> 提供云计算支持
+                                            </TextBlock>
                                         </Paragraph>
                                     </FlowDocument>
                                 </FlowDocumentScrollViewer>

@@ -599,4 +599,13 @@ public partial class MainWindow : Window
         SizeToContent = SizeToContent.Height;
         Width = Math.Min(ActualWidth, 350);
     }
+
+    private void Docs(object sender, RoutedEventArgs e)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://sh2.xn--fjqu59cvx0aoqi.icu/",
+            UseShellExecute = true
+        });
+    }
 }
