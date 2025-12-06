@@ -699,19 +699,24 @@
                                                         <LineBreak />
                                                         <Run Text="Copyright (c) 2023 HelloWRC" />
                                                     </TextBlock>
-                                                    <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                                                        <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Click="Github">
-                                                            <ely:IconText Kind="MicrosoftGithub" ToolTip="官方Github"/>
+                                                    <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="2 2">
+                                                        <Button Content="{materialDesign:PackIcon Github}" 
+                                                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                                                ToolTip="Github" Click="ButtonGithub_Click" Margin="2 2">
                                                         </Button>
-                                                        <Button HorizontalAlignment="Left" Style="{StaticResource MaterialDesignFlatButton}" Click="Docs">
-                                                            <ely:IconText Kind="BookOpenVariant" ToolTip="文档"/>
+                                                        <Button Content="{materialDesign:PackIcon BookOpenVariant}" 
+                                                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                                                ToolTip="文档" Click="ButtonDocs_Click" Margin="2 2">
                                                         </Button>
-                                                        <Button HorizontalAlignment="Left" Margin="6" Style="{StaticResource MaterialDesignFlatButton}" Click="ButtonThirdPartyLibs_OnClick">
-                                                            <ely:IconText Kind="PackageVariant" ToolTip="第三方库"/>
+                                                        <Button Content="{materialDesign:PackIcon Dropbox}" 
+                                                             IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                                             ToolTip="第三方库" Click="ButtonThirdPartyLibs_OnClick" Margin="2 2">
                                                         </Button>
-                                                        <Button HorizontalAlignment="Left" Margin="6" Style="{StaticResource MaterialDesignFlatButton}" Click="ButtonContributors_OnClick">
-                                                            <ely:IconText Kind="PeopleGroupOutline" ToolTip="贡献人员" />
+                                                        <Button Content="{materialDesign:PackIcon AccountMultiple}" 
+                                                                IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                                                                ToolTip="贡献者" Click="ButtonContributors_OnClick" Margin="2 2">
                                                         </Button>
+
                                                     </WrapPanel>
                                                 </Grid>
                                             </StackPanel>

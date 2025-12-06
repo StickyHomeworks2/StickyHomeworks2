@@ -777,7 +777,7 @@ exit /b 0
         SingleInstanceWarning warningWindow = new();
         warningWindow.ShowDialog();
     }
-    private void Github(object sender, RoutedEventArgs e)
+    private void ButtonGithub_Click(object sender, RoutedEventArgs e)
     {
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
@@ -793,7 +793,7 @@ exit /b 0
             UseShellExecute = true
         });
     }
-    private void Docs(object sender, RoutedEventArgs e)
+    private void ButtonDocs_Click(object sender, RoutedEventArgs e)
     {
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
