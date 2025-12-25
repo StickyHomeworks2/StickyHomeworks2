@@ -17,7 +17,9 @@
                    TextElement.FontSize="14"
                    TextOptions.TextFormattingMode="Ideal" 
                    TextOptions.TextRenderingMode="Auto"   
-                   Title="应用设置" Height="550" Width="1200"
+              Title="应用设置"
+        Height="550"
+        Width="1200"
                    Icon="/Assets/AppLogo.png"
                    MinWidth="600"
                    Closing="SettingsWindow_OnClosing"
@@ -271,7 +273,10 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <!-- 内容 -->
-                <TabControl Grid.Column="2" Grid.Row="1" TabStripPlacement="Left" x:Name="RootTabControl">
+                <TabControl Grid.Column="2"
+                        Grid.Row="1"
+                        TabStripPlacement="Left"
+                        x:Name="RootTabControl">
                     <!-- 基本 -->
                     <TabItem  Header="基本">
                         <ScrollViewer >
@@ -279,7 +284,12 @@
                                 <!-- 开机自启 -->
                                 <ely:SettingsCard IconGlyph="AutomaticStart" Header="开机自启"
                                                        Description="在系统启动时自动运行本应用。"
-                                                       IsOn="{Binding Settings.IsAutoStartEnabled, Mode=TwoWay}" />
+                                                  IsOn="{Binding Settings.IsAutoStartEnabled, Mode=TwoWay}"/>
+                                <!-- 自动清除作业 -->
+                                <ely:SettingsCard IconGlyph="ClipboardTextClock"
+                                        Header="自动清除作业"
+                                                  Description="当作业超出设定期限时，清除掉过期作业。"
+                                                  IsOn="{Binding Settings.Autooutwork, Mode=TwoWay}"/>
                                 <!-- 窗口标题 -->
                                 <ely:SettingsCard IconGlyph="DesktopWindows" Header="窗口标题"
                                                   Description="在窗口上显示的标题。">

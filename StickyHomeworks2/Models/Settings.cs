@@ -21,6 +21,7 @@ public class Settings : ObservableRecipient
     private int _wallpaperAutoUpdateIntervalSeconds = 60;
     private string _wallpaperClassName = "";
     private bool _isFallbackModeEnabled = true;
+    
     private double _targetLightValue = 0.6;
     private double _opacity = 0.7;
     private double _scale = 1.5;
@@ -35,6 +36,7 @@ public class Settings : ObservableRecipient
     private string _title = "作业";
     private double _maxPanelWidth = 350;
     private bool _isDebugShowInTaskBar = false;
+    private bool _autooutwork = true;
     private ObservableCollection<Color> _savedColors = new();
 
     public double WindowX
@@ -133,6 +135,18 @@ public class Settings : ObservableRecipient
             OnPropertyChanged();
         }
     }
+
+        public bool Autooutwork
+    {
+        get => _autooutwork;
+        set
+        {
+            if (value == _autooutwork) return;
+            _autooutwork = value;
+            OnPropertyChanged();
+        }
+    }
+
 
     public double MaxPanelWidth
     {

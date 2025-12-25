@@ -139,11 +139,13 @@ public partial class MainWindow : Window
     protected override void OnInitialized(EventArgs e)
     {
         ViewModel.ExpiredHomeworks = ProfileService.CleanupOutdated();
-        if (ViewModel.ExpiredHomeworks.Count > 0)
+        if (SettingsService.Settings.Autooutwork)
         {
+        if (ViewModel.ExpiredHomeworks.Count > 0)
             ViewModel.CanRecoverExpireHomework = true;
             ViewModel.SnackbarMessageQueue.Enqueue($"清除了{ViewModel.ExpiredHomeworks.Count}条过期的作业。",
                 "恢复", (o) => { RecoverExpiredHomework(); }, null, false, false, TimeSpan.FromSeconds(30));
+            
         }
         base.OnInitialized(e);
     }
