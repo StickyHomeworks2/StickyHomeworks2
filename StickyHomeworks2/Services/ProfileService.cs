@@ -44,6 +44,7 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
         }
     }
 
+    //查删
     public List<Homework> CleanupOutdated()
     {
         var rm = Profile.Homeworks.Where(i => i.DueTime.Date < DateTime.Today.Date).ToList();
@@ -52,6 +53,13 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
             Profile.Homeworks.Remove(i);
         }
         return rm;
+    }
+    //只查
+    public List<Homework> GetExpiredHomeworks()
+    {
+        return Profile.Homeworks
+            .Where(i => i.DueTime.Date < DateTime.Today.Date)
+            .ToList();
     }
 
     public void SaveProfile()
