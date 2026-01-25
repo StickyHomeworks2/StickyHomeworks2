@@ -516,64 +516,124 @@ public partial class MainWindow : Window
 
     private async void ButtonExport_OnClick(object sender, RoutedEventArgs e)
     {
+        
         ViewModel.IsWorking = true;
+
+      
         var dialog = new System.Windows.Forms.SaveFileDialog()
         {
+           
             Filter = "图片 (*.png)|*.png"
         };
+
+        // 生成一个默认的文件名，包含时间戳
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        dialog.FileName = $"Export_{timestamp}.png";
+
+        
         if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
         {
             goto done;
         }
 
+        
         ExitEditingMode();
-        //MainListView.Background = (Brush)FindResource("MaterialDesignPaper");
-        await System.Windows.Threading.Dispatcher.Yield(DispatcherPriority.Render);
-        var file = dialog.FileName!;
-        var visual = new DrawingVisual();
-        var s = SettingsService.Settings.Scale;
-        using (var context = visual.RenderOpen())
+
+      
+        await Task.Yield();
+
+       
+        var file = dialog.FileName;
+
+       
+        var scale = SettingsService.Settings.Scale;
+
+        
+        var listViewWidth = MainListView.ActualWidth;
+        var listViewHeight = MainListView.ActualHeight;
+
+        
+        var backgroundWidth = listViewWidth * scale + 100;
+        var backgroundHeight = listViewHeight * scale + 100;
+
+        
+        var backgroundVisual = new DrawingVisual();
+        using (var context = backgroundVisual.RenderOpen())
         {
+            
+            var bg = (System.Windows.Media.Brush)FindResource("MaterialDesignPaper");
+
+            // 绘制背景
+            context.DrawRectangle(bg, null, new Rect(0, 0, backgroundWidth, backgroundHeight));
+        }
+
+   
+        var contentVisual = new DrawingVisual();
+        using (var context = contentVisual.RenderOpen())
+        {
+            // 创建一个新的视觉画刷
             var brush = new VisualBrush(MainListView)
             {
-                Stretch = Stretch.None
+                Stretch = Stretch.None  // 设置画刷的拉伸模式为 None
             };
-            var bg = (Brush)FindResource("MaterialDesignPaper");
-            context.DrawRectangle(bg, null, new Rect(0, 0, MainListView.ActualWidth * s, MainListView.ActualHeight * s)); 
-            context.DrawRectangle(brush, null, new Rect(0, 0, MainListView.ActualWidth * s, MainListView.ActualHeight * s));
-            context.Close();
+
+          
+            context.DrawRectangle(brush, null, new Rect(50, 50, listViewWidth * scale, listViewHeight * scale));
         }
 
-        var bitmap = new RenderTargetBitmap((int)(MainListView.ActualWidth * s), (int)(ActualHeight * s), 96d, 96d,
-            PixelFormats.Default);
-        bitmap.Render(visual);
+       
+        var finalVisual = new DrawingVisual();
+        using (var context = finalVisual.RenderOpen())
+        {
+            // 绘制背景
+            context.DrawDrawing(backgroundVisual.Drawing);
+            // 绘制内容
+            context.DrawDrawing(contentVisual.Drawing);
+        }
+
+     
+        var bitmap = new RenderTargetBitmap((int)backgroundWidth, (int)backgroundHeight, 96d, 96d, PixelFormats.Default);
+        bitmap.Render(finalVisual);
+
+     
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+     
         try
         {
-            var stream = File.Open(file, FileMode.OpenOrCreate);
-            encoder.Save(stream);
-            stream.Close();
-            ViewModel.SnackbarMessageQueue.Enqueue($"成功地导出到：{file}", "查看", () =>
+            
+            using (var stream = new FileStream(file, FileMode.Create, FileAccess.Write))
             {
-                Process.Start(new ProcessStartInfo()
+
+                encoder.Save(stream);
+
+
+                ViewModel.SnackbarMessageQueue.Enqueue($"成功地导出到：{file}", "查看", () =>
                 {
-                    FileName = file,
-                    UseShellExecute = true
+                    // 启动系统默认程序打开导出的文件
+                    Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = file,
+                        UseShellExecute = true
+                    });
                 });
-            });
-
+            }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            ViewModel.SnackbarMessageQueue.Enqueue($"导出失败：{ex}");
+            
+            ViewModel.SnackbarMessageQueue.Enqueue($"导出失败：{ex.Message}");
         }
 
-        done:
-        //MainListView.Background = null;
+    done:
+        // 释放保存对话框占用的资源
         dialog.Dispose();
+
+        // false，导出已完成
         ViewModel.IsWorking = false;
     }
+
 
     private void DrawerHost_OnDrawerClosing(object? sender, DrawerClosingEventArgs e)
     {
