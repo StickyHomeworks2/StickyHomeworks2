@@ -1,11 +1,8 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Input;
-using ClassIsland.Services;
+﻿using ClassIsland.Services;
 using ElysiaFramework;
 using ElysiaFramework.Controls;
 using Markdig;
+using Markdig.Wpf;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
 using StickyHomeworks.Models;
@@ -13,6 +10,8 @@ using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
 using StickyHomeworks2.Helpers;
 using System.ComponentModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -20,9 +19,11 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Forms;
+using System.Windows.Input;
 using System.Windows.Input;
 using System.Windows.Media;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -67,6 +68,9 @@ public partial class SettingsWindow : MyWindow
     private string _savePath;
     private const string UpdateInfoUrl = "http://eb48d3a3.xy.proaa.top/latest.json";
     private const string LocalAppData = "StickyHomeworks2Updater";
+    private readonly HttpClient _httpClient = new HttpClient();
+    private const string ChangelogUrl = "https://eb48d3a3.xy.proaa.top/changelog.md";
+
 
     public SettingsWindow(WallpaperPickingService wallpaperPickingService,
         SettingsService settingsService)
@@ -90,6 +94,9 @@ public partial class SettingsWindow : MyWindow
         var exeDir = AppDomain.CurrentDomain.BaseDirectory;
         _savePath = System.IO.Path.Combine(exeDir, "UpdateTemp", "StickyHomeworks2.zip");
         System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_savePath));
+
+        _httpClient = new HttpClient();
+        _httpClient.Timeout = TimeSpan.FromSeconds(15);
 
     }
 
@@ -375,7 +382,7 @@ public partial class SettingsWindow : MyWindow
                     DownloadUpdatesButton.IsEnabled = true;
                     CancelDownloadUpdateButton.IsEnabled = true;
                     CheckUpdatesButton.IsEnabled = true;
-                    LoadTabs(); 
+                    //LoadTabs(); 
                 }
                 
                 else
@@ -702,6 +709,7 @@ exit /b 0
     private async void CheckUpdatesButton_Onclick(object sender, RoutedEventArgs e)
     {
         await CheckForUpdatesAsync();
+        await LoadChangeLogAsync();
     }
 
     private void UpdateAdvancedSettingsButton_Onclick(object sender, RoutedEventArgs e)
@@ -720,23 +728,23 @@ exit /b 0
         await CheckForUpdatesAsync();
     }
 
-    private async void LoadTabs()
-    {
-        string[] urls = new string[]
-        {
-                "https://eb48d3a3.xy.proaa.top/"
-        };
+    //private async void LoadTabs()
+    //{
+    //    string[] urls = new string[]
+    //    {
+    //            "https://eb48d3a3.xy.proaa.top/"
+    //    };
 
-        foreach (var url in urls)
-        {
-            string markdownContent = await GetMarkdownContentFromUrl(url);
-            if (!string.IsNullOrEmpty(markdownContent))
-            {
-                string htmlContent = Markdown.ToHtml(markdownContent);
-                AddTabItem(url, htmlContent);
-            }
-        }
-    }
+    //    foreach (var url in urls)
+    //    {
+    //        string markdownContent = await GetMarkdownContentFromUrl(url);
+    //        if (!string.IsNullOrEmpty(markdownContent))
+    //        {
+    //            string htmlContent = Markdown.ToHtml(markdownContent);
+    //            AddTabItem(url, htmlContent);
+    //        }
+    //    }
+    //}
 
     private async Task<string> GetMarkdownContentFromUrl(string url)
     {
@@ -758,19 +766,150 @@ exit /b 0
         return null;
     }
 
-    private void AddTabItem(string url, string content)
+    //private void AddTabItem(string url, string content)
+    //{
+    //    string tabName = System.IO.Path.GetFileNameWithoutExtension(new Uri(url).LocalPath);
+    //    TabItem tabItem = new TabItem
+    //    {
+    //        Header = tabName,
+    //        Content = new System.Windows.Controls.WebBrowser { Source = new Uri($"data:text/html,{Uri.EscapeDataString(content)}") }
+    //    };
+    //    tabControl.Items.Add(tabItem);
+    //}
+
+
+    private async Task LoadChangeLogAsync()
     {
-        string tabName = System.IO.Path.GetFileNameWithoutExtension(new Uri(url).LocalPath);
-        TabItem tabItem = new TabItem
+        try
         {
-            Header = tabName,
-            Content = new System.Windows.Controls.WebBrowser { Source = new Uri($"data:text/html,{Uri.EscapeDataString(content)}") }
-        };
-        tabControl.Items.Add(tabItem);
+    
+
+            // 获取Markdown内容
+            string markdown = await _httpClient.GetStringAsync(ChangelogUrl);
+
+            // 使用R0enderToFlowDocument 渲染
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                var flowDocument = RenderMarkdownToFlowDocument(markdown);
+                DocumentViewer.Document = flowDocument;
+            });
+        }
+        catch (HttpRequestException ex)
+        {
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                DocumentViewer.Document = CreateErrorDocument($"网络连接失败：{ex.Message}");
+            });
+        }
+        catch (Exception ex)
+        {
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                DocumentViewer.Document = CreateErrorDocument($"加载失败：{ex.Message}");
+            });
+        }
     }
+
+    private FlowDocument RenderMarkdownToFlowDocument(string markdown)
+    {
+        // 配置管道
+        var pipeline = new MarkdownPipelineBuilder()
+            .UseSupportedExtensions()
+            .Build();
+
+        // 将Markdown转换为 FlowDocument
+        var flowDocument = Markdig.Wpf.Markdown.ToFlowDocument(markdown, pipeline);
+
+        // 应用样式
+        ApplyMaterialDesignStyles(flowDocument);
+
+        return flowDocument;
+    }
+
+    private void ApplyMaterialDesignStyles(FlowDocument document)
+    {
+        // 设置文档整体式
+        document.FontFamily = new System.Windows.Media.FontFamily("Microsoft YaHei, Segoe UI");
+        document.FontSize = 14;
+        document.Foreground = (System.Windows.Media.Brush)FindResource("MaterialDesignBody");
+        document.Background = System.Windows.Media.Brushes.Transparent;
+
+    
+        document.PagePadding = new Thickness(12);
+
+
+        var primaryBrush = (System.Windows.Media.Brush)FindResource("PrimaryHueMidBrush");
+        var secondaryBrush = (System.Windows.Media.Brush)FindResource("SecondaryHueMidBrush");
+        var bodyBrush = (System.Windows.Media.Brush)FindResource("MaterialDesignBody");
+
+
+        foreach (var block in document.Blocks)
+        {
+            if (block is Paragraph paragraph)
+            {
+
+                if (paragraph.Inlines.FirstOrDefault() is Run run)
+                {
+
+                    if (run.FontFamily?.Source.Contains("Consolas") == true)
+                    {
+                        paragraph.Background = (System.Windows.Media.Brush)FindResource("MaterialDesignPaper");
+                        paragraph.BorderBrush = bodyBrush;
+                        paragraph.BorderThickness = new Thickness(1);
+                        paragraph.Padding = new Thickness(8);
+                        paragraph.Margin = new Thickness(0, 8, 0, 8);
+                    }
+                }
+
+                paragraph.Margin = new Thickness(0, 4, 0, 4);
+            }
+            else if (block is List list)
+            {
+                list.Margin = new Thickness(24, 8, 0, 8);
+            }
+        }
+    }
+
+    private FlowDocument CreateErrorDocument(string errorMessage)
+    {
+        var flowDocument = new FlowDocument
+        {
+            FontFamily = new System.Windows.Media.FontFamily("Microsoft YaHei, Segoe UI"),
+            FontSize = 14,
+            Foreground = (System.Windows.Media.Brush)FindResource("MaterialDesignBody")
+        };
+
+        var title = new Paragraph(new Run("无法加载更新日志"))
+        {
+            FontSize = 18,
+            FontWeight = FontWeights.Bold,
+            Foreground = (System.Windows.Media.Brush)FindResource("MaterialDesignValidationErrorBrush"),
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+
+        var message = new Paragraph(new Run(errorMessage))
+        {
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+
+
+        flowDocument.Blocks.Add(title);
+        flowDocument.Blocks.Add(message);
+
+        return flowDocument;
+    }
+
+   
+
+
+
+
+
+
 
 
     //<<<更新逻辑:结束>>>
+
 
     private void MultipleOpeningsText_OnClick(object sender, RoutedEventArgs e)
     {
