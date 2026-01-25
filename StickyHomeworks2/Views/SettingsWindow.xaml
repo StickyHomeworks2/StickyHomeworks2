@@ -457,14 +457,26 @@
                                         Header="窗口置底"
                                                   Description="将窗口置于底端。"
                                                   IsOn="{Binding Settings.IsBottom, Mode=TwoWay}"/>
-
-                                <ely:SettingsCard IconGlyph="PaletteOutline" Header="标题颜色"
+                                <!--标题颜色-->
+                                    <ely:SettingsCard IconGlyph="PaletteOutline" Header="标题颜色"
                                                        Description="主界面标题颜色。">
                                     <ely:SettingsCard.Switcher>
                                         <ely:ColorPicker Color="{Binding Settings.TitleColor, Mode=TwoWay}" />
                                     </ely:SettingsCard.Switcher>
                                 </ely:SettingsCard>
-                               
+                                <!--标题粗细-->
+                                <ely:SettingsCard IconGlyph="FormatBold" Header="标题粗细"
+                                                       Description="主界面标题粗细。">
+                                    <ely:SettingsCard.Switcher>
+                                        <ComboBox SelectedValue="{Binding Settings.TitleFontWeight}">
+                                            <FontWeight>Normal</FontWeight>
+                                            <FontWeight>Bold</FontWeight>
+                                            <FontWeight>Light</FontWeight>
+                                            <FontWeight>Medium</FontWeight>
+                                        </ComboBox>
+                                    </ely:SettingsCard.Switcher>
+                                </ely:SettingsCard>
+
 
                                 <Separator Margin="0 16 0 8"/>
                                 <ely:IconText Kind="PaletteOutline"

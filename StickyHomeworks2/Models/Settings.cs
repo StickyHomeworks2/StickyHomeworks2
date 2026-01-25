@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using System.Windows;
 using System.Windows.Media;
 using WindowsShortcutFactory;
 using File = System.IO.File;
@@ -41,6 +42,7 @@ public class Settings : ObservableRecipient
     private bool _autooutwork = true;
     private ObservableCollection<Color> _savedColors = new();
     private Color _titleColor = Colors.White;
+    private FontWeight _titleFontWeight = FontWeights.Normal;
 
 
 
@@ -95,6 +97,17 @@ public class Settings : ObservableRecipient
         {
             if (value.Equals(_titleColor)) return;
             _titleColor = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public FontWeight TitleFontWeight
+    {
+        get => _titleFontWeight;
+        set
+        {
+            if (value.Equals(_titleFontWeight)) return;
+            _titleFontWeight = value;
             OnPropertyChanged();
         }
     }

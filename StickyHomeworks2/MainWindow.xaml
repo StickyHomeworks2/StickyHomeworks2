@@ -141,11 +141,9 @@
                         <!-- 标题 -->
                         <TextBlock Grid.Column="0" 
                                  Text="{Binding SettingsService.Settings.Title, Mode=OneWay}"
-                                 Foreground="{Binding SettingsService.Settings.TitleColor, 
-                                 Converter={StaticResource ColorToBrushConverter}, 
-                                 Mode=OneWay}"
+                                 Foreground="{Binding SettingsService.Settings.TitleColor, Converter={StaticResource ColorToBrushConverter},  Mode=OneWay}"
+                                 FontWeight="{Binding SettingsService.Settings.TitleFontWeight, Mode=OneWay}"
                                  VerticalAlignment="Center"
-                                    FontWeight="Medium"
                                  TextTrimming="CharacterEllipsis"
                                  FontSize="22" Margin="6 2 2 2"/>
 
