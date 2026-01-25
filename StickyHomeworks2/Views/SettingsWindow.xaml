@@ -440,7 +440,7 @@
                                 <!-- 背景透明度 -->
                                 <ely:SettingsCard IconGlyph="SquareTransparent"
                                         Header="背景不透明度"
-                                                  Description="课表背景颜色的不透明度。">
+                                                  Description="调节作业背景颜色的不透明度。">
                                     <ely:SettingsCard.Switcher>
                                         <Slider Width="180"
                                                 Minimum="0"
@@ -457,6 +457,15 @@
                                         Header="窗口置底"
                                                   Description="将窗口置于底端。"
                                                   IsOn="{Binding Settings.IsBottom, Mode=TwoWay}"/>
+
+                                <ely:SettingsCard IconGlyph="PaletteOutline" Header="标题颜色"
+                                                       Description="主界面标题颜色。">
+                                    <ely:SettingsCard.Switcher>
+                                        <ely:ColorPicker Color="{Binding Settings.TitleColor, Mode=TwoWay}" />
+                                    </ely:SettingsCard.Switcher>
+                                </ely:SettingsCard>
+                               
+
                                 <Separator Margin="0 16 0 8"/>
                                 <ely:IconText Kind="PaletteOutline"
                                         Text="主题"

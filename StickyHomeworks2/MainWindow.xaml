@@ -9,7 +9,8 @@
         xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
         xmlns:controls="clr-namespace:StickyHomeworks.Controls"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:behaviors="clr-namespace:StickyHomeworks.Behaviors"
+        xmlns:converter="clr-namespace:StickyHomeworks.Converter"
+        xmlns:behaviors="clr-namespace:StickyHomeworks.Behaviors" 
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="14"
@@ -43,6 +44,7 @@
         </Style>
     </Window.Style>
     <Window.Resources>
+        <converter:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
         <Style x:Key="MarkdownParagraphBaseStyle" TargetType="Paragraph">
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="FontSize" Value="20"/>
@@ -137,11 +139,16 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <!-- 标题 -->
-                        <TextBlock Grid.Column="0" Text="{Binding SettingsService.Settings.Title, Mode=OneWay}"
-                                   VerticalAlignment="Center"
-                                   FontWeight="Medium"
-                                   TextTrimming="CharacterEllipsis"
-                                   FontSize="22" Margin="6 2 2 2" />
+                        <TextBlock Grid.Column="0" 
+                                 Text="{Binding SettingsService.Settings.Title, Mode=OneWay}"
+                                 Foreground="{Binding SettingsService.Settings.TitleColor, 
+                                 Converter={StaticResource ColorToBrushConverter}, 
+                                 Mode=OneWay}"
+                                 VerticalAlignment="Center"
+                                    FontWeight="Medium"
+                                 TextTrimming="CharacterEllipsis"
+                                 FontSize="22" Margin="6 2 2 2"/>
+
                         <!-- 功能区 -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <StackPanel.Resources>

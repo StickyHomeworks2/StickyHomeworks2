@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignColors;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Windows.Media;
 using WindowsShortcutFactory;
@@ -38,6 +40,9 @@ public class Settings : ObservableRecipient
     private bool _isDebugShowInTaskBar = false;
     private bool _autooutwork = true;
     private ObservableCollection<Color> _savedColors = new();
+    private Color _titleColor = Colors.White;
+
+
 
     public double WindowX
     {
@@ -82,6 +87,18 @@ public class Settings : ObservableRecipient
             OnPropertyChanged();
         }
     }
+
+    public Color TitleColor
+    {
+        get => _titleColor;
+        set
+        {
+            if (value.Equals(_titleColor)) return;
+            _titleColor = value;
+            OnPropertyChanged();
+        }
+    }
+
 
     #region General
 
@@ -376,3 +393,4 @@ public class Settings : ObservableRecipient
         }
     }
 }
+
