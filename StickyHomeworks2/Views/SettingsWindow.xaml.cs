@@ -695,11 +695,14 @@ exit /b 0
     {
         _cts?.Cancel();
         UpdateIcon.Kind = PackIconKind.UploadOff;
-        versionStatusTextBlock.Text = "正在取消...";
-        UpdateStatusTextBlock.Text = $"请稍后...";
+        versionStatusTextBlock.Text = "已取消更新";
+        UpdateStatusTextBlock.Text = $"更新已取消";
         await Task.Delay(150);
-        await CheckForUpdatesAsync();
-
+        CheckUpdatesButton.IsEnabled = true;
+        CheckUpdatesButton.Visibility = Visibility.Visible;
+        DownloadUpdatesButton.Visibility = Visibility.Collapsed;
+        CancelDownloadUpdateButton.Visibility = Visibility.Collapsed;
+        DownloadProgress.Visibility = Visibility.Collapsed;
     }
     private async void DownloadUpdatesButton_Onclick(object sender, RoutedEventArgs e)
     {
