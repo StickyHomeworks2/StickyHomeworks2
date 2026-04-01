@@ -468,11 +468,12 @@
                                 <ely:SettingsCard IconGlyph="FormatBold" Header="标题粗细"
                                                        Description="主界面标题粗细。">
                                     <ely:SettingsCard.Switcher>
-                                        <ComboBox SelectedValue="{Binding Settings.TitleFontWeight}">
-                                            <FontWeight>Normal</FontWeight>
-                                            <FontWeight>Bold</FontWeight>
+                                        <ComboBox Foreground="{DynamicResource MaterialDesignBody}"
+                                                  HorizontalContentAlignment="Left" SelectedValue="{Binding Settings.TitleFontWeight}">
                                             <FontWeight>Light</FontWeight>
+                                            <FontWeight>Normal</FontWeight>
                                             <FontWeight>Medium</FontWeight>
+                                            <FontWeight>Bold</FontWeight>
                                         </ComboBox>
                                     </ely:SettingsCard.Switcher>
                                 </ely:SettingsCard>
@@ -925,7 +926,7 @@
                                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                                 <FlowDocumentScrollViewer x:Name="DocumentViewer"
                                                           Foreground="{DynamicResource MaterialDesignBody}"
-                                                          Background="Transparent"
+                                                          Background="{DynamicResource MaterialDesignPaper}"
                                                           BorderThickness="0"
                                                           IsSelectionEnabled="True"
                                                           VerticalScrollBarVisibility="Auto"/>

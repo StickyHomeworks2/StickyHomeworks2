@@ -782,8 +782,6 @@ exit /b 0
     {
         try
         {
-    
-
             // 获取Markdown内容
             string markdown = await _httpClient.GetStringAsync(ChangelogUrl);
 
@@ -791,6 +789,17 @@ exit /b 0
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 var flowDocument = RenderMarkdownToFlowDocument(markdown);
+                flowDocument.Foreground = this.FindResource("MaterialDesignBody") as System.Windows.Media.Brush;
+                flowDocument.Background = this.FindResource("MaterialDesignPaper") as System.Windows.Media.Brush;
+                foreach (var block in flowDocument.Blocks)
+                {
+                    if (block is Paragraph paragraph)
+                    {
+                        paragraph.Foreground = flowDocument.Foreground;
+                        paragraph.Background = flowDocument.Background;
+                    }
+                }
+
                 DocumentViewer.Document = flowDocument;
             });
         }
