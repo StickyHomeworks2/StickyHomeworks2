@@ -26,6 +26,7 @@ using System.Windows.Threading;
 using Stfu.Linq;
 using DataFormats = System.Windows.DataFormats;
 using DragEventArgs = System.Windows.DragEventArgs;
+using H.NotifyIcon;
 
 namespace StickyHomeworks;
 
@@ -57,6 +58,7 @@ public partial class MainWindow : Window
         ViewModel.PropertyChanging += ViewModelOnPropertyChanging;
         this.StateChanged += OnWindowStateChanged;
         DataContext = this;
+        this.TrayIconView.TrayRightMouseUp += TrayIconView_TrayMouseRightClick;
     }
 
     private void FocusObserverServiceOnFocusChanged(object? sender, EventArgs e)
@@ -688,5 +690,24 @@ public partial class MainWindow : Window
             FileName = "https://sh2.xn--fjqu59cvx0aoqi.icu/",
             UseShellExecute = true
         });
+    }
+    private void OpenTaskbarWindow()
+    {
+        var taskbarWindow = new SingleInstanceWarning();
+        taskbarWindow.ShowDialog();
+    }
+    private void TrayIconView_TrayMouseRightClick(object sender, RoutedEventArgs e)
+    {
+        // 弹出 Taskbar.xaml 窗口
+        var menu = new Views.Taskbar();
+        // 在鼠标位置显示
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+        menu.IsOpen = true;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        this.TrayIconView.TrayRightMouseUp -= TrayIconView_TrayMouseRightClick;
+        base.OnClosed(e);
     }
 }

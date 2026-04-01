@@ -11,6 +11,8 @@
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:converter="clr-namespace:StickyHomeworks.Converter"
         xmlns:behaviors="clr-namespace:StickyHomeworks.Behaviors" 
+        xmlns:tb="clr-namespace:H.NotifyIcon;assembly=H.NotifyIcon.Wpf"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
         TextElement.FontSize="14"
@@ -111,7 +113,7 @@
 
         </WindowChrome>
     </WindowChrome.WindowChrome>
-
+    <Grid>
     <materialDesign:DialogHost Identifier="MainWindow">
         <materialDesign:DrawerHost IsTabStop="False"
                                    FocusVisualStyle="{x:Null}"
@@ -354,9 +356,13 @@
 
                 <!-- 保存中 -->
                 <!--<Canvas Grid.Row="1" Margin="0,30,50,0" HorizontalAlignment="Right" VerticalAlignment="Top">
-                    --><!-- File --><!--
+                    -->
+                <!-- File -->
+                <!--
                     <materialDesign:PackIcon Name="PackIconArrowFile" Kind="ArrowDownBold" Width="26" Height="26" Canvas.Top="0"/>
-                    --><!-- File --><!--
+                    -->
+                <!-- File -->
+                <!--
                     <materialDesign:PackIcon Name="PackIconFile" Kind="FileDocument" Width="26" Height="26" Canvas.Top="30"/>
                 </Canvas>-->
 
@@ -415,4 +421,16 @@
             </Grid>
         </materialDesign:DrawerHost>
     </materialDesign:DialogHost>
+        <tb:TaskbarIcon 
+            x:Name="TrayIconView"
+            ToolTipText="ToolTip"
+            IconSource="/Assets/AppLogo.ico"
+            LeftClickCommand="{Binding OpenTaskbarWindowCommand}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseRightButtonDown">
+                    <i:InvokeCommandAction Command="{Binding OpenTaskbarWindowCommand}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </tb:TaskbarIcon>
+    </Grid>
 </Window>
