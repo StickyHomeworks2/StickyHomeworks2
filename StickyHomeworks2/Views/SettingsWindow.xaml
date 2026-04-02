@@ -150,7 +150,7 @@
                 <models:ContributionMember
                     AvatarImage="/Assets/ClassIsband.jpg"
                     Name="ClassIsband"
-                        Description="什么都会一点点但也只会一点点的万能贡献者（划掉）"/>
+                        Description="什么都只会一点点的万能贡献者（划掉）"/>
             </ListView>
         </Grid>
 

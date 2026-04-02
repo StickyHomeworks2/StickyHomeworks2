@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignColors;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -44,6 +44,7 @@ public class Settings : ObservableRecipient
     private ObservableCollection<Color> _savedColors = new();
     private Color _titleColor = Colors.White;
     private FontWeight _titleFontWeight = FontWeights.Normal;
+    private int _titleFontWeightValue = 400; // 400 = Normal
 
 
 
@@ -101,7 +102,8 @@ public class Settings : ObservableRecipient
             OnPropertyChanged();
         }
     }
-
+    //<<<字符粗细转换-开始>>>
+    [JsonIgnore]
     public FontWeight TitleFontWeight
     {
         get => _titleFontWeight;
@@ -109,11 +111,32 @@ public class Settings : ObservableRecipient
         {
             if (value.Equals(_titleFontWeight)) return;
             _titleFontWeight = value;
+            if (value == FontWeights.Light) TitleFontWeightValue = 300;
+            else if (value == FontWeights.Normal) TitleFontWeightValue = 400;
+            else if (value == FontWeights.Medium) TitleFontWeightValue = 500;
+            else if (value == FontWeights.Bold) TitleFontWeightValue = 700;
+            else TitleFontWeightValue = 400;
             OnPropertyChanged();
         }
     }
 
-
+    public int TitleFontWeightValue
+    {
+        get => _titleFontWeightValue;
+        set
+        {
+            if (value == _titleFontWeightValue) return;
+            _titleFontWeightValue = value;
+            if (value == 300) _titleFontWeight = FontWeights.Light;
+            else if (value == 400) _titleFontWeight = FontWeights.Normal;
+            else if (value == 500) _titleFontWeight = FontWeights.Medium;
+            else if (value == 700) _titleFontWeight = FontWeights.Bold;
+            else _titleFontWeight = FontWeights.Normal;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(TitleFontWeight));
+        }
+    }
+    //<<<字符粗细转换-结束>>>
     #region General
 
     public bool IsAutoStartEnabled
