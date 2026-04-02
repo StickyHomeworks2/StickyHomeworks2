@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -29,6 +29,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     private RichTextBox _relatedRichTextBox = new();
     public MainWindow MainWindow { get; }
     public SettingsService SettingsService { get; }
+    public TimeMachineService TimeMachineService { get; }
 
     public HomeworkEditViewModel ViewModel { get; } = new();
 
@@ -67,10 +68,11 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         }
     }
 
-    public HomeworkEditWindow(MainWindow mainWindow, SettingsService settingsService)
+    public HomeworkEditWindow(MainWindow mainWindow, SettingsService settingsService, TimeMachineService timeMachineService)
     {
         MainWindow = mainWindow;
         SettingsService = settingsService;
+        TimeMachineService = timeMachineService;
         DataContext = this;
         InitializeComponent();
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
@@ -209,6 +211,10 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     {
         EditingFinished?.Invoke(this, EventArgs.Empty);
         AppEx.GetService<ProfileService>().SaveProfile();
+        if (!TimeMachineService.IsRestoring)
+        {
+            TimeMachineService.CreateBackup(MainWindow.MainListView);
+        }
     }
 
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

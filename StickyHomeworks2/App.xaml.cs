@@ -1,4 +1,4 @@
-﻿using System.Configuration;
+using System.Configuration;
 using System.Data;
 using System.Reflection;
 using System.Windows;
@@ -56,6 +56,9 @@ public partial class App : AppEx
                 services.AddSingleton<HomeworkEditWindow>();
                 services.AddSingleton<CrashWindow>();
                 services.AddSingleton<WindowFocusObserverService>();
+                services.AddSingleton<TimeMachineService>();
+                services.AddSingleton<ViewModels.TimeMachineViewModel>();
+                services.AddSingleton<TimeMachineWindow>();
             }).
             Build();
         _ = Host.StartAsync();

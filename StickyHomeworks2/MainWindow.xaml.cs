@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -41,6 +41,8 @@ public partial class MainWindow : Window
 
     public SettingsService SettingsService { get; }
 
+    public TimeMachineService TimeMachineService { get; }
+
     public event EventHandler? OnHomeworkEditorUpdated;
 
     private DispatcherTimer _setBottomTimer;
@@ -51,6 +53,7 @@ public partial class MainWindow : Window
     {
         ProfileService = profileService;
         SettingsService = settingsService;
+        TimeMachineService = AppEx.GetService<TimeMachineService>();
         //Automation.AddAutomationFocusChangedEventHandler(OnFocusChangedHandler);
         InitializeComponent();
         focusObserverService.FocusChanged += FocusObserverServiceOnFocusChanged;
@@ -115,6 +118,11 @@ public partial class MainWindow : Window
         ViewModel.IsDrawerOpened = false;
         AppEx.GetService<HomeworkEditWindow>().TryClose();
         AppEx.GetService<ProfileService>().SaveProfile();
+        // 仅在 hard=true 且不在还原状态时才触发备份
+        if (hard && !TimeMachineService.IsRestoring)
+        {
+            TimeMachineService.CreateBackup(MainListView);
+        }
     }
 
     private void SetPos()
@@ -430,6 +438,12 @@ public partial class MainWindow : Window
         if (ViewModel.SelectedHomework == null)
             return;
         ProfileService.Profile.Homeworks.Remove(ViewModel.SelectedHomework);
+        ProfileService.SaveProfile();
+        // 仅在不在还原状态时才触发备份
+        if (!TimeMachineService.IsRestoring)
+        {
+            TimeMachineService.CreateBackup(MainListView);
+        }
         ViewModel.IsUpdatingHomeworkSubject = false;
     }
 
@@ -666,6 +680,25 @@ public partial class MainWindow : Window
     private void MenuItemRecoverExpiredHomework_OnClick(object sender, RoutedEventArgs e)
     {
         RecoverExpiredHomework();
+    }
+
+    private void MenuItemTimeMachine_OnClick(object sender, RoutedEventArgs e)
+    {
+        PopupExAdvanced.IsOpen = false;
+        var win = AppEx.GetService<TimeMachineWindow>();
+        if (!win.IsOpened)
+        {
+            win.IsOpened = true;
+            win.Show();
+        }
+        else
+        {
+            if (win.WindowState == WindowState.Minimized)
+            {
+                win.WindowState = WindowState.Normal;
+            }
+            win.Activate();
+        }
     }
 
     private void MainWindow_OnDragOver(object sender, DragEventArgs e)

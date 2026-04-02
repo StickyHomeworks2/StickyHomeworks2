@@ -1,4 +1,4 @@
-﻿<Window x:Class="StickyHomeworks.MainWindow"
+<Window x:Class="StickyHomeworks.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -213,6 +213,7 @@
                                         </Grid>
                                         <Separator Margin="-12 4"/>
                                         <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon Refresh}" Header="恢复过期的作业" Click="MenuItemRecoverExpiredHomework_OnClick" IsEnabled="{Binding ViewModel.CanRecoverExpireHomework}"/>
+                                        <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon History}" Header="时间机器…" Click="MenuItemTimeMachine_OnClick"/>
                                         <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon CogOutline}" Header="更多设置…" Click="ButtonSettings_OnClick"/>
                                         <!--<MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon HelpCircleOutline}" Header="帮助" Click="Docs"/>-->
                                         <MenuItem Margin="-12 0" Icon="{materialDesign:PackIcon ExitToApp}" Header="退出" Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}" CommandParameter="{StaticResource ExitConfirm}" />
