@@ -141,6 +141,8 @@ namespace StickyHomeworks.Views
                 if (mainWindow != null)
                 {
                     mainWindow.ViewModel.IsClosing = true;
+                    // 清理托盘图标
+                    mainWindow.TrayIconView.Dispose();
                 }
                 Application.Current.Shutdown();
             }

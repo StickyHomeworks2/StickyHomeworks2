@@ -707,6 +707,9 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        // 清理托盘图标
+        this.TrayIconView.Dispose();
+        // 移除事件处理
         this.TrayIconView.TrayRightMouseUp -= TrayIconView_TrayMouseRightClick;
         base.OnClosed(e);
     }
