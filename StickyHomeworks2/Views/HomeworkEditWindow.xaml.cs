@@ -211,10 +211,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     {
         EditingFinished?.Invoke(this, EventArgs.Empty);
         AppEx.GetService<ProfileService>().SaveProfile();
-        if (!TimeMachineService.IsRestoring)
-        {
-            TimeMachineService.CreateBackup(MainWindow.MainListView);
-        }
+        // 备份由 MainWindow.ExitEditingMode 触发，此处不再重复调用
     }
 
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
