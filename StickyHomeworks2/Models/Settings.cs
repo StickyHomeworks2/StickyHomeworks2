@@ -40,6 +40,7 @@ public class Settings : ObservableRecipient
     private double _maxPanelWidth = 350;
     private bool _isDebugShowInTaskBar = false;
     private bool _autooutwork = true;
+    private bool _isMainWindowVisible = true;
     private ObservableCollection<Color> _savedColors = new();
     private Color _titleColor = Colors.White;
     private FontWeight _titleFontWeight = FontWeights.Normal;
@@ -391,6 +392,17 @@ public class Settings : ObservableRecipient
         {
             if (value == _isDebugShowInTaskBar) return;
             _isDebugShowInTaskBar = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsMainWindowVisible
+    {
+        get => _isMainWindowVisible;
+        set
+        {
+            if (value == _isMainWindowVisible) return;
+            _isMainWindowVisible = value;
             OnPropertyChanged();
         }
     }

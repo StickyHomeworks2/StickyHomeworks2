@@ -1,4 +1,4 @@
-﻿using ElysiaFramework;
+using ElysiaFramework;
 using StickyHomeworks.Services;
 using System;
 using System.Collections.Generic;
@@ -34,6 +34,20 @@ namespace StickyHomeworks.Views
                     if (background == null) return;
 
                     PaintRectangles(this, background);
+                    
+                    // 同步菜单项状态
+                    var settingsService = AppEx.GetService<SettingsService>();
+                    if (settingsService != null)
+                    {
+                        foreach (var item in Items)
+                        {
+                            if (item is MenuItem menuItem && menuItem.Header.ToString() == "显示主界面")
+                            {
+                                menuItem.IsChecked = settingsService.Settings.IsMainWindowVisible;
+                                break;
+                            }
+                        }
+                    }
                 }
                 catch { }
             }, System.Windows.Threading.DispatcherPriority.Loaded);
@@ -53,18 +67,30 @@ namespace StickyHomeworks.Views
         }
 // <<<上色部分：结束>>>
 
-        /*private void MenuItemShowMainWindow_OnClick(object sender, RoutedEventArgs e)
+        private void MenuItemShowMainWindow_OnClick(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem menuItem)
             {
                 // 切换主窗口可见性
                 var settingsService = AppEx.GetService<SettingsService>();
-                if (settingsService != null)
+                var mainWindow = AppEx.GetService<MainWindow>();
+                if (settingsService != null && mainWindow != null)
                 {
                     settingsService.Settings.IsMainWindowVisible = !settingsService.Settings.IsMainWindowVisible;
+                    menuItem.IsChecked = settingsService.Settings.IsMainWindowVisible;
+                    
+                    if (settingsService.Settings.IsMainWindowVisible)
+                    {
+                        mainWindow.Show();
+                        mainWindow.Activate();
+                    }
+                    else
+                    {
+                        mainWindow.Hide();
+                    }
                 }
             }
-        }*/
+        }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
         {

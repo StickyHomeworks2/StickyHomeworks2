@@ -423,7 +423,7 @@
     </materialDesign:DialogHost>
         <tb:TaskbarIcon 
             x:Name="TrayIconView"
-            ToolTipText="ToolTip"
+            ToolTipText="StickyHomeworks2"
             IconSource="/Assets/AppLogo.ico"
             LeftClickCommand="{Binding OpenTaskbarWindowCommand}">
             <i:Interaction.Triggers>
