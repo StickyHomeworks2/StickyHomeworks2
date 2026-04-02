@@ -5,11 +5,13 @@ on:
   push:
     branches: 
       - "master"
-      - "dev"         
+      - "dev"     
+      - "dev1"
   pull_request:
     branches: 
       - "master"
-      - "dev"      
+      - "dev"
+      - "dev1"
 
 jobs:
   build:
