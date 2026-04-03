@@ -3,8 +3,7 @@ using System.IO;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
 
-namespace StickyHomeworks.Views;
-
+namespace StickyHomeworks.Converters;
 public class PreviewPathConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -24,7 +23,7 @@ public class PreviewPathConverter : IValueConverter
             image.UriSource = new Uri(Path.GetFullPath(fullPath), UriKind.Absolute);
             image.CacheOption = BitmapCacheOption.OnLoad;
             image.EndInit();
-            image.Freeze(); 
+            image.Freeze();
             return image;
         }
         catch (Exception ex)

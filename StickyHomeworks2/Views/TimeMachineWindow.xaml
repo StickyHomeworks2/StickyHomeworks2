@@ -4,6 +4,7 @@
                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                    xmlns:local="clr-namespace:StickyHomeworks.Views"
+                   xmlns:converters="clr-namespace:StickyHomeworks.Converters"
                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
                    xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
                    mc:Ignorable="d"
@@ -17,8 +18,8 @@
                    FontFamily="{StaticResource HarmonyOsSans}"
                    Title="时间机器">
     <ely:MyWindow.Resources>
-        <local:PreviewPathConverter x:Key="PreviewPathConverter"/>
-        <local:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
+        <converters:PreviewPathConverter x:Key="PreviewPathConverter"/>
+        <converters:NotNullToBoolConverter x:Key="NotNullToBoolConverter"/>
     </ely:MyWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
