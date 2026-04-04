@@ -5,6 +5,10 @@
 
 <img width="1280" height="720" alt="sh2banner" src="https://github.com/user-attachments/assets/f5ff1571-9acd-4af1-8663-0bb65731e8a3" />
 
+>
+> **StickyHomeworks2是一款支持富文本的桌面作业贴工具**  
+> **适用于班级一体机上展示作业的情景**
+
 [![Stars](https://img.shields.io/github/stars/StickyHomeworks2/StickyHomeworks2?label=Stars)](https://github.com/StickyHomeworks2/StickyHomeworks2)
 [![正式版 Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat-square&color=%233fb950&label=正式版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)
 [![测试版 Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat-square&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/)
