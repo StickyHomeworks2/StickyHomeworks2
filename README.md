@@ -1,22 +1,19 @@
 <!-- AES : U2FsdGVkX19MZ5w1Jmtii8QYDB3UFkveWPyRyOS2R+WcNULjk7Mc8JDUj48V4sVs -->
 <div align="center">
-<img width="256" height="256" alt="AppLogo" src="https://github.com/user-attachments/assets/40d567c2-77bc-4c3e-bb1f-5215cc0bb376" />
   
-# StickyHomeworks2
+# <img width="32" height="32" alt="AppLogo" src="https://github.com/user-attachments/assets/40d567c2-77bc-4c3e-bb1f-5215cc0bb376" /> StickyHomeworks2
 
-> 
-> 该项目处于开发阶段，请勿用于生产环境
+<img width="1280" height="720" alt="sh2banner" src="https://github.com/user-attachments/assets/f5ff1571-9acd-4af1-8663-0bb65731e8a3" />
 
-### StickyHomeworks2 是一款支持富文本的桌面作业贴工具
-
-[![Downloads](https://img.shields.io/github/downloads/StickyHomeworks2/StickyHomeworks2/total?style=social&label=下载量&logo=github)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)[![GitHub Issues](https://img.shields.io/github/issues-search/StickyHomeworks2/StickyHomeworks2?query=is%3Aopen&style=flat&logo=github&label=Issues&color=%233fb950)](https://github.com/StickyHomeworks2/StickyHomeworks2/issues)[![Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat&color=%233fb950&label=稳定版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest) [![Beta](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/) [![stars](https://img.shields.io/github/stars/StickyHomeworks2/StickyHomeworks2?label=Stars)](https://github.com/StickyHomeworks2/StickyHomeworks2)
+[![Stars](https://img.shields.io/github/stars/StickyHomeworks2/StickyHomeworks2?label=Stars)](https://github.com/StickyHomeworks2/StickyHomeworks2)
+[![正式版 Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?style=flat-square&color=%233fb950&label=正式版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)
+[![测试版 Release](https://img.shields.io/github/v/release/StickyHomeworks2/StickyHomeworks2?include_prereleases&style=flat-square&label=测试版)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/)
+[![下载量](https://img.shields.io/github/downloads/StickyHomeworks2/StickyHomeworks2/total?style=social&label=下载量&logo=github)](https://github.com/StickyHomeworks2/StickyHomeworks2/releases/latest)<br/>
+![.NET 版本](https://img.shields.io/badge/.NET-8-512bd4?style=flat-square)
+![GitHub Repo size](https://img.shields.io/github/repo-size/StickyHomeworks2/StickyHomeworks2?style=flat-square&color=3cb371)
+[![GitHub Repo Languages](https://img.shields.io/github/languages/top/StickyHomeworks2/StickyHomeworks2?style=flat-square)](https://github.com/StickyHomeworks2/StickyHomeworks2/search?l=c%23)
 
 #### **💬[点我加入 QQ 群](https://qm.qq.com/q/w6vcjZA3DO)**
-
-
-![image](https://github.com/HelloWRC/StickyHomeworks/assets/55006226/d6dc1553-d3ff-4905-907c-aba79089fc9a)
-
-> 图片为StickyHomeworks软件，背景图片来自[Pixiv@辰暮sora](https://www.pixiv.net/artworks/110847880)
 
 </div>
 
@@ -29,7 +26,7 @@
 - [X] 主界面全局缩放
 - [X] 自动清理过期作业
 - [X] 导出作业截图
-- [ ] 作业历史记录
+- [x] 托盘菜单
 - [ ] 插入与管理表情包
 - [ ] 插入图片
 - [ ] 插入链接
@@ -74,7 +71,7 @@
 
 本应用目前的开发状态：
 
-- 正在[`dev`](https://github.com/zji573432-cpu/StickyHomeworks2/tree/dev)分支上开发本应用。
+- 正在[`dev1`](https://github.com/StickyHomeworks2/StickyHomeworks2/tree/dev1)分支上开发本应用。
 
 要在本地编译应用，您需要安装以下负载和工具：
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0)
@@ -83,7 +80,7 @@
 对于Visual Studio，您需要在安装时勾选以下工作负载：
 - .NET 桌面开发
 
-我们欢迎想要为本应用实现新功能或进行改进的同学提交 [Pull Request](https://github.com/zji573432-cpu/StickyHomeworks2/pulls)。
+我们欢迎想要为本应用实现新功能或进行改进的同学提交 [Pull Request](https://github.com/StickyHomeworks2/StickyHomeworks2/pulls)。
 
 ## 致谢
 
@@ -99,7 +96,7 @@
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/HelloWRC"><img src="https://avatars.githubusercontent.com/u/55006226?v=4?s=100" width="100px;" alt="HelloWRC"/><br /><sub><b>HelloWRC</b></sub></a><br /><a href="https://github.com/ClassIsland/ClassIsland/commits?author=HelloWRC" title="Code">💻</a> <a href="#design-HelloWRC" title="Design">🎨</a> <a href="#ideas-HelloWRC" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/jizilin6732"><img src="https://avatars.githubusercontent.com/u/162853646?v=4?s=100" width="100px;" alt="jizilin6732"/><br /><sub><b>jizilin6732</b></sub></a><br /><a href="https://github.com/StickyHomeworks2/StickyHomeworks2/commits?author=zji573432-cpu" title="Code">💻</a> <a href="#design-jizilin6732" title="Design">🎨</a> <a href="#ideas-jizilin6732" title="Ideas, Planning, & Feedback">🤔</a> <a href="#question-jizilin6732" title="Answering Questions">💬</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/belugaQAQ"><img src="https://avatars.githubusercontent.com/u/157481292?v=4?s=100" width="100px;" alt="belugaQAQ"/><br /><sub><b>ClassIsBand</b></sub></a><br /><a href="https://github.com/StickyHomeworks2/StickyHomeworks2/commits?author=belugaQAQ" title="Code">💻</a> <a href="#question-ClassIsBand" title="Answering Questions">💬</a> <a href="https://github.com/ClassIsland/ClassIsland/commits?author=belugaQAQ" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/belugaQAQ"><img src="https://avatars.githubusercontent.com/u/157481292?v=4?s=100" width="100px;" alt="belugaQAQ"/><br /><sub><b>ClassIsBand</b></sub></a><br /><a href="https://github.com/StickyHomeworks2/StickyHomeworks2/commits?author=belugaQAQ" title="Code">💻</a><a href="#design-jizilin6732" title="Design">🎨</a> <a href="#question-ClassIsBand" title="Answering Questions">💬</a> <a href="https://github.com/ClassIsland/ClassIsland/commits?author=belugaQAQ" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
