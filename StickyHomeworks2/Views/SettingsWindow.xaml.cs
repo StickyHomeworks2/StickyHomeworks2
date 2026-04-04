@@ -1,4 +1,4 @@
-﻿using ClassIsland.Services;
+using ClassIsland.Services;
 using ElysiaFramework;
 using ElysiaFramework.Controls;
 using Markdig;
@@ -97,7 +97,6 @@ public partial class SettingsWindow : MyWindow
 
     private void SettingsOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        
     }
 
 

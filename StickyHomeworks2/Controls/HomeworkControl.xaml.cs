@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,7 @@ using System.Windows.Shapes;
 using ElysiaFramework;
 using Stfu.Linq;
 using StickyHomeworks.Models;
+using StickyHomeworks.Services;
 using StickyHomeworks.Views;
 
 namespace StickyHomeworks.Controls;
@@ -26,7 +28,11 @@ namespace StickyHomeworks.Controls;
 public partial class HomeworkControl : UserControl
 {
     public static readonly DependencyProperty HomeworkProperty = DependencyProperty.Register(
-        nameof(Homework), typeof(Homework), typeof(HomeworkControl), new PropertyMetadata(default(Homework)));
+        nameof(Homework), typeof(Homework), typeof(HomeworkControl), new PropertyMetadata(default(Homework), (o, args) =>
+        {
+            var c = o as HomeworkControl;
+            c?.OnHomeworkChanged(args.OldValue as Homework, args.NewValue as Homework);
+        }));
 
     public Homework Homework
     {
@@ -65,6 +71,41 @@ public partial class HomeworkControl : UserControl
     public HomeworkControl()
     {
         InitializeComponent();
+    }
+
+    private void OnHomeworkChanged(Homework? oldValue, Homework? newValue)
+    {
+        if (oldValue != null)
+            oldValue.PropertyChanged -= HomeworkOnPropertyChanged;
+        if (newValue != null)
+            newValue.PropertyChanged += HomeworkOnPropertyChanged;
+        UpdateExpiredMark();
+    }
+
+    private void HomeworkOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Homework.DueTime))
+            UpdateExpiredMark();
+    }
+
+    private void UpdateExpiredMark()
+    {
+        if (Homework == null || RichTextBox == null) return;
+        var settingsService = AppEx.GetService<SettingsService>();
+        if (settingsService?.Settings.IsExpiredMarkEnabled != true)
+        {
+            RichTextBox.ClearValue(ForegroundProperty);
+            return;
+        }
+        var isExpired = Homework.DueTime.Date < DateTime.Today.Date;
+        if (isExpired)
+        {
+            RichTextBox.Foreground = new SolidColorBrush(settingsService.Settings.ExpiredMarkColor);
+        }
+        else
+        {
+            RichTextBox.ClearValue(ForegroundProperty);
+        }
     }
 
     private void IsEditingChanged(bool value)

@@ -1,4 +1,4 @@
-﻿﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignColors;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -41,6 +41,8 @@ public class Settings : ObservableRecipient
     private bool _isDebugShowInTaskBar = false;
     private bool _autooutwork = true;
     private bool _isMainWindowVisible = true;
+    private bool _isExpiredMarkEnabled = false;
+    private Color _expiredMarkColor = Color.FromRgb(0x33, 0x33, 0x33);
     private ObservableCollection<Color> _savedColors = new();
     private Color _titleColor = Colors.White;
     private FontWeight _titleFontWeight = FontWeights.Normal;
@@ -197,6 +199,28 @@ public class Settings : ObservableRecipient
         {
             if (value == _autooutwork) return;
             _autooutwork = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsExpiredMarkEnabled
+    {
+        get => _isExpiredMarkEnabled;
+        set
+        {
+            if (value == _isExpiredMarkEnabled) return;
+            _isExpiredMarkEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public Color ExpiredMarkColor
+    {
+        get => _expiredMarkColor;
+        set
+        {
+            if (value.Equals(_expiredMarkColor)) return;
+            _expiredMarkColor = value;
             OnPropertyChanged();
         }
     }

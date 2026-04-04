@@ -383,6 +383,17 @@
                                         Header="自动清除作业"
                                                   Description="当作业超出设定期限时，清除掉过期作业。"
                                                   IsOn="{Binding Settings.Autooutwork, Mode=TwoWay}"/>
+                                <!-- 过期作业标记 -->
+                                <ely:SettingsExpanderCard IconGlyph="Marker"
+                                                          Header="过期作业标记"
+                                                          Description="启用后，过期的作业内容将自动标记为指定颜色。"
+                                                          IsOn="{Binding Settings.IsExpiredMarkEnabled, Mode=TwoWay}"
+                                                          ContentIconGlyph="PaletteOutline"
+                                                          ContentHeader="标记颜色"
+                                                          ContentDescription="过期作业内容的显示颜色。"
+                                                          Margin="0 0 0 6">
+                                    <ely:ColorPicker Color="{Binding Settings.ExpiredMarkColor, Mode=TwoWay}"/>
+                                </ely:SettingsExpanderCard>
                                 <!-- 窗口标题 -->
                                 <ely:SettingsCard IconGlyph="DesktopWindows"
                                         Header="窗口标题"
