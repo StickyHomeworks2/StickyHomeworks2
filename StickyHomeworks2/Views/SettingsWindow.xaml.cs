@@ -10,8 +10,6 @@ using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
 using StickyHomeworks2.Helpers;
 using System.ComponentModel;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -19,14 +17,11 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Windows;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Input;
 using System.Windows.Media;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace StickyHomeworks.Views;
 /// <summary>
@@ -68,7 +63,7 @@ public partial class SettingsWindow : MyWindow
     private string _savePath;
     private const string UpdateInfoUrl = "http://eb48d3a3.xy.proaa.top/latest.json";
     private const string LocalAppData = "StickyHomeworks2Updater";
-    private readonly HttpClient _httpClient = new HttpClient();
+    private readonly HttpClient _httpClient;
     private const string ChangelogUrl = "https://eb48d3a3.xy.proaa.top/changelog.md";
 
 
@@ -137,6 +132,38 @@ public partial class SettingsWindow : MyWindow
                 parent.RaiseEvent(eventArg);
             }
         }
+    }
+
+    private void DocumentViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        e.Handled = true;
+        var viewer = sender as System.Windows.Controls.FlowDocumentScrollViewer;
+        if (viewer == null) return;
+        
+        // 使用 VisualTreeHelper 查找内部 ScrollViewer
+        var scrollViewer = FindVisualChild<ScrollViewer>(viewer);
+        if (scrollViewer != null)
+        {
+            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta / 3.0);
+        }
+    }
+    
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        if (parent == null) return null;
+        
+        for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+            
+            if (child is T found)
+                return found;
+            
+            var result = FindVisualChild<T>(child);
+            if (result != null)
+                return result;
+        }
+        return null;
     }
 
     private void SettingsWindow_OnClosing(object? sender, CancelEventArgs e)

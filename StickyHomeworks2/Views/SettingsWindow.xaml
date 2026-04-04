@@ -808,10 +808,14 @@
 
 
                     <TabItem Header="更新">
-                        <ScrollViewer>
-                            <StackPanel Margin="6"
-                                    MaxWidth="750">
-                                <StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <ScrollViewer Grid.Row="0">
+                                <StackPanel Margin="6"
+                                        MaxWidth="750">
                                     <Grid HorizontalAlignment="Stretch"
                                             Margin="12">
                                         <Grid.ColumnDefinitions>
@@ -918,28 +922,24 @@
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
+                            </ScrollViewer>
 
-                                <StackPanel Margin="0 0">
-                                    <TabControl x:Name="tabControl"
-                                            Margin=" 0">
-                                        <TabItem Header="更新日志">
-                                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                                <FlowDocumentScrollViewer x:Name="DocumentViewer"
-                                                          Foreground="{DynamicResource MaterialDesignBody}"
-                                                          Background="{DynamicResource MaterialDesignPaper}"
-                                                          BorderThickness="0"
-                                                          IsSelectionEnabled="True"
-                                                          VerticalScrollBarVisibility="Auto"/>
-                                            </ScrollViewer>
-                                        </TabItem>
-                                    </TabControl>
-                                </StackPanel>
-                            </StackPanel>
-                        </ScrollViewer>
+                            <TabControl x:Name="tabControl" Margin="100,0,100,0" Grid.Row="1" >
+                                <TabItem Header="更新日志">
+                                    <FlowDocumentScrollViewer x:Name="DocumentViewer"
+                                              Foreground="{DynamicResource MaterialDesignBody}"
+                                              Background="{DynamicResource MaterialDesignPaper}"
+                                              BorderThickness="0"
+                                              IsSelectionEnabled="True"
+                                              VerticalScrollBarVisibility="Auto"
+                                              PreviewMouseWheel="DocumentViewer_PreviewMouseWheel"/>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
                     </TabItem>
 
 
-                    <!-- 关于 -->
+                        <!-- 关于 -->
                     <TabItem Header="关于">
                         <ScrollViewer>
 
