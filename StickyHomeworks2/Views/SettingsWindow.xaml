@@ -379,10 +379,18 @@
                                                   Description="在系统启动时自动运行本应用。"
                                                   IsOn="{Binding Settings.IsAutoStartEnabled, Mode=TwoWay}"/>
                                 <!-- 自动清除作业 -->
-                                <ely:SettingsCard IconGlyph="ClipboardTextClock"
-                                        Header="自动清除作业"
-                                                  Description="当作业超出设定期限时，清除掉过期作业。"
-                                                  IsOn="{Binding Settings.Autooutwork, Mode=TwoWay}"/>
+                                <ely:SettingsExpanderCard IconGlyph="ClipboardTextClock"
+                                                          Header="自动清除作业"
+                                                          Description="当作业超出设定期限时，清除掉过期作业。"
+                                                          IsOn="{Binding Settings.Autooutwork, Mode=TwoWay}"
+                                                          ContentIconGlyph="TimerOutline"
+                                                          ContentHeader="延迟清除"
+                                                          ContentDescription="在首次展示过期作业后的第二天清除。"
+                                                          Margin="0 0 0 6">
+                                    <CheckBox IsChecked="{Binding Settings.DelayedCleanupEnabled, Mode=TwoWay}"
+                                              IsEnabled="{Binding Settings.Autooutwork}"
+                                              Content="启用"/>
+                                </ely:SettingsExpanderCard>
                                 <!-- 过期作业标记 -->
                                 <ely:SettingsExpanderCard IconGlyph="Marker"
                                                           Header="过期作业标记"

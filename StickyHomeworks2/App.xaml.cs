@@ -47,8 +47,8 @@ public partial class App : AppEx
             {
                 services.AddDbContext<AppDbContext>();
                 services.AddSingleton<IThemeService, ThemeService>();
-                services.AddSingleton<ProfileService>();
                 services.AddSingleton<SettingsService>();
+                services.AddSingleton<ProfileService>();
                 services.AddSingleton<SettingsWindow>();
                 services.AddSingleton<WallpaperPickingService>();
                 services.AddHostedService<ThemeBackgroundService>();

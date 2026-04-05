@@ -91,21 +91,15 @@ public partial class HomeworkControl : UserControl
     private void UpdateExpiredMark()
     {
         if (Homework == null || RichTextBox == null) return;
-        var settingsService = AppEx.GetService<SettingsService>();
-        if (settingsService?.Settings.IsExpiredMarkEnabled != true)
-        {
-            RichTextBox.ClearValue(ForegroundProperty);
-            return;
-        }
-        var isExpired = Homework.DueTime.Date < DateTime.Today.Date;
-        if (isExpired)
-        {
-            RichTextBox.Foreground = new SolidColorBrush(settingsService.Settings.ExpiredMarkColor);
-        }
+        
+        if (Homework.IsExpired && Homework.FirstExpiredShowTime == null)
+            Homework.FirstExpiredShowTime = DateTime.Now;
+        
+        var settings = AppEx.GetService<SettingsService>()?.Settings;
+        if (Homework.IsExpired && settings?.IsExpiredMarkEnabled == true)
+            RichTextBox.Foreground = new SolidColorBrush(settings.ExpiredMarkColor);
         else
-        {
             RichTextBox.ClearValue(ForegroundProperty);
-        }
     }
 
     private void IsEditingChanged(bool value)

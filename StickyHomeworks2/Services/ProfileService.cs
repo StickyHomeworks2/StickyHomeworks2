@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -10,14 +10,14 @@ namespace StickyHomeworks.Services;
 public class ProfileService : IHostedService, INotifyPropertyChanged
 {
     private Profile _profile = new();
+    private readonly SettingsService _settingsService;
 
     public event EventHandler? ProfileSaved;
 
-    public ProfileService(IHostApplicationLifetime applicationLifetime)
+    public ProfileService(IHostApplicationLifetime applicationLifetime, SettingsService settingsService)
     {
+        _settingsService = settingsService;
         LoadProfile();
-        //CleanupOutdated();
-        //applicationLifetime.ApplicationStopping.Register(SaveProfile);
         Profile.PropertyChanged += (sender, args) => SaveProfile();
     }
 
@@ -44,23 +44,18 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
         }
     }
 
-    //查删
     public List<Homework> CleanupOutdated()
     {
-        var rm = Profile.Homeworks.Where(i => i.DueTime.Date < DateTime.Today.Date).ToList();
-        foreach (var i in rm)
-        {
-            Profile.Homeworks.Remove(i);
-        }
+        var useDelayed = _settingsService.Settings.DelayedCleanupEnabled && _settingsService.Settings.Autooutwork;
+        
+        var rm = Profile.Homeworks.Where(i => 
+            i.DueTime.Date < DateTime.Today.Date && 
+            (!useDelayed || (i.FirstExpiredShowTime.HasValue && i.FirstExpiredShowTime.Value.Date < DateTime.Today.Date))).ToList();
+        
+        foreach (var i in rm) Profile.Homeworks.Remove(i);
         return rm;
     }
-    //只查
-    public List<Homework> GetExpiredHomeworks()
-    {
-        return Profile.Homeworks
-            .Where(i => i.DueTime.Date < DateTime.Today.Date)
-            .ToList();
-    }
+    public List<Homework> GetExpiredHomeworks() => Profile.Homeworks.Where(i => i.DueTime.Date < DateTime.Today.Date).ToList();
 
     public void SaveProfile()
     {

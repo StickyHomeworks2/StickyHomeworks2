@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StickyHomeworks.Models;
@@ -9,6 +10,7 @@ public class Homework : ObservableRecipient
     private string _subject = "";
     private DateTime _dueTime = DateTime.Today;
     private ObservableCollection<string> _tags = new();
+    private DateTime? _firstExpiredShowTime;
 
     public string Content
     {
@@ -53,4 +55,17 @@ public class Homework : ObservableRecipient
             OnPropertyChanged();
         }
     }
+
+    public DateTime? FirstExpiredShowTime
+    {
+        get => _firstExpiredShowTime;
+        set
+        {
+            if (value.Equals(_firstExpiredShowTime)) return;
+            _firstExpiredShowTime = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsExpired => DueTime.Date < DateTime.Today;
 }

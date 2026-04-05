@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignColors;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -40,6 +40,7 @@ public class Settings : ObservableRecipient
     private double _maxPanelWidth = 350;
     private bool _isDebugShowInTaskBar = false;
     private bool _autooutwork = true;
+    private bool _delayedCleanupEnabled = false;
     private bool _isMainWindowVisible = true;
     private bool _isExpiredMarkEnabled = false;
     private Color _expiredMarkColor = Color.FromRgb(0x33, 0x33, 0x33);
@@ -199,6 +200,17 @@ public class Settings : ObservableRecipient
         {
             if (value == _autooutwork) return;
             _autooutwork = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool DelayedCleanupEnabled
+    {
+        get => _delayedCleanupEnabled;
+        set
+        {
+            if (value == _delayedCleanupEnabled) return;
+            _delayedCleanupEnabled = value;
             OnPropertyChanged();
         }
     }
