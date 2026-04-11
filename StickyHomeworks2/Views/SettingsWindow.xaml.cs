@@ -58,6 +58,7 @@ public partial class SettingsWindow : MyWindow
     } = false;
 
     public WallpaperPickingService WallpaperPickingService { get; }
+    public ClassIslandIpcService ClassIslandIpcService { get; }
 
     private CancellationTokenSource _cts;
     private string _savePath;
@@ -68,9 +69,11 @@ public partial class SettingsWindow : MyWindow
 
 
     public SettingsWindow(WallpaperPickingService wallpaperPickingService,
-        SettingsService settingsService)
+        SettingsService settingsService,
+        ClassIslandIpcService classIslandIpcService)
     {
         WallpaperPickingService = wallpaperPickingService;
+        ClassIslandIpcService = classIslandIpcService;
 
         InitializeComponent();
         DataContext = this;
@@ -189,6 +192,50 @@ public partial class SettingsWindow : MyWindow
 
     private void MyDrawerHost_OnDrawerClosing(object? sender, DrawerClosingEventArgs e)
     {
+    }
+
+    private async void ButtonRefreshClassIslandSubjects_OnClick(object sender, RoutedEventArgs e)
+    {
+        var subjects = await ClassIslandIpcService.GetSubjectsAsync();
+        if (subjects.Count == 0)
+        {
+            System.Windows.MessageBox.Show("无法获取科目列表，请确保 ClassIsland 正在运行且已启用联动。", "提示");
+            return;
+        }
+        
+        var existing = Settings.ClassIslandSubjects.Select(s => s.Name).ToHashSet();
+        foreach (var subject in subjects)
+        {
+            if (!existing.Contains(subject))
+                Settings.ClassIslandSubjects.Add(new SubjectAction(subject));
+        }
+        
+        System.Windows.MessageBox.Show($"已刷新，共 {Settings.ClassIslandSubjects.Count} 个科目。", "提示");
+    }
+
+    private async void ButtonImportClassIslandSubjects_OnClick(object sender, RoutedEventArgs e)
+    {
+        var subjects = await ClassIslandIpcService.GetSubjectsAsync();
+        if (subjects.Count == 0)
+        {
+            System.Windows.MessageBox.Show("无法获取科目列表，请确保 ClassIsland 正在运行且已启用联动。", "提示");
+            return;
+        }
+        
+        var existing = Settings.Subjects.ToHashSet();
+        int importedCount = 0;
+        foreach (var subject in subjects)
+        {
+            if (!existing.Contains(subject))
+            {
+                Settings.Subjects.Add(subject);
+                importedCount++;
+            }
+        }
+        
+        System.Windows.MessageBox.Show(importedCount > 0 
+            ? $"成功导入 {importedCount} 个科目至 StickyHomeworks。" 
+            : "没有新科目需要导入。", "提示");
     }
 
     private void ButtonDebugToastText_OnClick(object sender, RoutedEventArgs e)
@@ -970,5 +1017,10 @@ exit /b 0
             FileName = "https://sh2.xn--fjqu59cvx0aoqi.icu/doc/guide/",
             UseShellExecute = true
         });
+    }
+
+    private void SettingsExpanderCard_Loaded()
+    {
+
     }
 }

@@ -29,7 +29,8 @@
               xmlns:sys="clr-namespace:System;assembly=System.Runtime"
               xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
               xmlns:ci="clr-namespace:StickyHomeworks"
-              xmlns:views="clr-namespace:StickyHomeworks.Views" xmlns:markdig="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf">
+              xmlns:views="clr-namespace:StickyHomeworks.Views" 
+              xmlns:markdig="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf">
     <Window.Resources>
         <Style TargetType="ListBoxItem"
                 BasedOn="{StaticResource MaterialDesignListBoxItem}"
@@ -373,6 +374,10 @@
                     <TabItem  Header="基本">
                         <ScrollViewer>
                             <StackPanel Style="{StaticResource SettingsPageStackPanelStyle}">
+                                <TextBlock Text="基本"
+                                    Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                                <TextBlock Margin="0 8 0 12" Opacity="0.75"
+                                    Text="配置StickyHomeworks2一些基础性的功能"/>
                                 <!-- 开机自启 -->
                                 <ely:SettingsCard IconGlyph="AutomaticStart"
                                         Header="开机自启"
@@ -436,6 +441,10 @@
                     <TabItem Header="外观">
                         <ScrollViewer>
                             <StackPanel Style="{StaticResource SettingsPageStackPanelStyle}">
+                                <TextBlock Text="外观"
+                                    Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                                <TextBlock Margin="0 8 0 12" Opacity="0.75"
+                                    Text="个性化StickyHomeworks2多样的外貌"/>
                                 <ely:IconText Kind="CogOutline"
                                         Text="基本"
                                         Margin="0 0 0 8"/>
@@ -716,55 +725,55 @@
                     <TabItem Header="科目">
                         <Grid Margin="12"
                                 MaxWidth="750">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <DockPanel Grid.Row="0"
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <DockPanel Grid.Row="0"
                                     Margin="0 0 0 8">
-                                <Button DockPanel.Dock="Right"
+                                        <Button DockPanel.Dock="Right"
                                         Click="ButtonAddSubject_OnClick"
                                         Style="{StaticResource MaterialDesignFlatButton}">
-                                    <ely:IconText Kind="Add"
+                                            <ely:IconText Kind="Add"
                                             Text="添加科目"/>
-                                </Button>
-                                <TextBlock Text="科目"
+                                        </Button>
+                                        <TextBlock Text="科目"
                                         VerticalAlignment="Center"/>
-                            </DockPanel>
-                            <ListBox Grid.Row="1"
+                                    </DockPanel>
+                                    <ListBox Grid.Row="1"
                                     ItemsSource="{Binding Settings.Subjects}"
                                      SelectionMode="Single"
                                      HorizontalContentAlignment="Stretch"
                                      SelectedIndex="{Binding ViewModel.SubjectSelectedIndex}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding}"
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding}"
                                                     VerticalAlignment="Center"/>
-                                            <StackPanel Grid.Column="1"
+                                                    <StackPanel Grid.Column="1"
                                                     Orientation="Horizontal"
                                                         Visibility="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType=ListBoxItem}, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                                <Button Content="{materialDesign:PackIcon EditOutline}"
+                                                        <Button Content="{materialDesign:PackIcon EditOutline}"
                                                         Style="{StaticResource MaterialDesignToolForegroundButton}"
                                                         Margin="4 -8"
                                                         ToolTip="编辑"
                                                         Click="ButtonEditSubject_OnClick"/>
-                                                <Button Content="{materialDesign:PackIcon DeleteOutline}"
+                                                        <Button Content="{materialDesign:PackIcon DeleteOutline}"
                                                         Style="{StaticResource MaterialDesignToolForegroundButton}"
                                                         Margin="4 -8"
                                                         ToolTip="删除"
                                                         Foreground="IndianRed"
                                                         Click="ButtonDeleteSubject_OnClick"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Grid>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
                     </TabItem>
 
                     <!-- 标签 -->
@@ -957,30 +966,53 @@
                         </Grid>
                     </TabItem>
 
+                    <!-- ClassIsland -->
+                    <TabItem Header="CI联动">
+                        <ScrollViewer>
+                            <StackPanel Style="{StaticResource SettingsPageStackPanelStyle}">
+                                <TextBlock Text="ClassIsland 联动"
+                                    Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                                <TextBlock Margin="0 8 0 12" Opacity="0.75"
+                                    Text="通过 ClassIsland IPC 服务，根据课程状态自动控制主界面的显示与隐藏"/>
 
-                        <!-- 关于 -->
+                                <ely:SettingsCard IconGlyph="LanConnect"
+                                    Header="启用 ClassIsland 联动"
+                                    Description="连接 ClassIsland IPC 服务，监听课程状态变化"
+                                    IsOn="{Binding Settings.IsClassIslandIpcEnabled, Mode=TwoWay}"/>
+
+                                <controls:ClassIslandSubjectsCard 
+                                    Subjects="{Binding Settings.ClassIslandSubjects}"
+                                    RefreshClicked="ButtonRefreshClassIslandSubjects_OnClick"
+                                    ImportClicked="ButtonImportClassIslandSubjects_OnClick"
+                                    Margin="0 0 0 6"/>
+
+                                <ely:SettingsCard IconGlyph="Connection"
+                                    Header="连接状态"
+                                    Description="ICP服务活动状态">
+                                    <ely:SettingsCard.Switcher>
+                                        <TextBlock Text="{Binding ClassIslandIpcService.ConnectionStatus}"
+                                            Opacity="0.75" VerticalAlignment="Center"/>
+                                    </ely:SettingsCard.Switcher>
+                                </ely:SettingsCard>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+
+                    <!-- 关于 -->
                     <TabItem Header="关于">
                         <ScrollViewer>
-
                             <StackPanel Margin="6"
                                     MaxWidth="750">
-                                <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                        IsSelectionEnabled="False"
-                                        PreviewMouseWheel="UIElement_OnPreviewMouseWheel"
-                                        ContextMenu="{x:Null}">
-                                    <FlowDocument FontFamily="{StaticResource HarmonyOsSans}">
-                                        <Paragraph Style="{StaticResource MarkdownHeadline1Style}">
-                                            关于StickyHomework2
-                                        </Paragraph>
-                                    </FlowDocument>
-                                </FlowDocumentScrollViewer>
-
+                                <TextBlock Margin="0 6" Text="关于"
+                                    Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                                <TextBlock Margin="0 2 0 12" Opacity="0.75"
+                                    Text="关于StickyHomeworks2"/>
                                 <materialDesign:Card ClipContent="False">
                                     <StackPanel>
                                         <Image Source="/Assets/banner.png"
-                                                Stretch="UniformToFill"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"/>
+
+/>
                                         <Grid HorizontalAlignment="Stretch"
                                                 Margin="12">
                                             <Grid.ColumnDefinitions>

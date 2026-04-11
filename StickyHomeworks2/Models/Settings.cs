@@ -47,7 +47,9 @@ public class Settings : ObservableRecipient
     private ObservableCollection<Color> _savedColors = new();
     private Color _titleColor = Colors.White;
     private FontWeight _titleFontWeight = FontWeights.Normal;
-    private int _titleFontWeightValue = 400; // 400 = Normal
+    private int _titleFontWeightValue = 400;
+    private bool _isClassIslandIpcEnabled = false;
+    private ObservableCollection<SubjectAction> _classIslandSubjects = new();
 
 
 
@@ -476,5 +478,31 @@ public class Settings : ObservableRecipient
             OnPropertyChanged();
         }
     }
+
+    #region ClassIsland
+
+    public bool IsClassIslandIpcEnabled
+    {
+        get => _isClassIslandIpcEnabled;
+        set
+        {
+            if (value == _isClassIslandIpcEnabled) return;
+            _isClassIslandIpcEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ObservableCollection<SubjectAction> ClassIslandSubjects
+    {
+        get => _classIslandSubjects;
+        set
+        {
+            if (Equals(value, _classIslandSubjects)) return;
+            _classIslandSubjects = value;
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
 }
 

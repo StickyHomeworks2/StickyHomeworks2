@@ -54,7 +54,6 @@ public partial class MainWindow : Window
         ProfileService = profileService;
         SettingsService = settingsService;
         TimeMachineService = AppEx.GetService<TimeMachineService>();
-        //Automation.AddAutomationFocusChangedEventHandler(OnFocusChangedHandler);
         InitializeComponent();
         focusObserverService.FocusChanged += FocusObserverServiceOnFocusChanged;
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
@@ -62,6 +61,69 @@ public partial class MainWindow : Window
         this.StateChanged += OnWindowStateChanged;
         DataContext = this;
         this.TrayIconView.TrayRightMouseUp += TrayIconView_TrayMouseRightClick;
+        
+        var ipcService = AppEx.GetService<ClassIslandIpcService>();
+        if (ipcService != null)
+        {
+            ipcService.ClassStateChanged += OnClassStateChanged;
+            SettingsService.Settings.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(Settings.IsClassIslandIpcEnabled))
+                    _ = SettingsService.Settings.IsClassIslandIpcEnabled ? ipcService.ConnectAsync() : Task.Run(ipcService.Disconnect);
+            };
+        }
+    }
+
+    private void OnClassStateChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            var ipcService = AppEx.GetService<ClassIslandIpcService>();
+            var settings = SettingsService.Settings;
+            if (ipcService == null || !settings.IsClassIslandIpcEnabled) return;
+            
+            var isInClass = !string.IsNullOrEmpty(ipcService.CurrentSubjectName);
+            var subjectAction = settings.ClassIslandSubjects.FirstOrDefault(s => s.Name == ipcService.CurrentSubjectName);
+            
+            bool shouldHide;
+            if (subjectAction == null || !subjectAction.IsMonitored)
+            {
+                if (isInClass) return;
+                shouldHide = settings.ClassIslandSubjects.Any(s => s.IsMonitored && s.ActionMode == SubjectActionMode.ShowInClassHideAfter);
+            }
+            else
+            {
+                switch (subjectAction.ActionMode)
+                {
+                    case SubjectActionMode.HideInClass:
+                        shouldHide = isInClass;
+                        break;
+                    case SubjectActionMode.ShowInClass:
+                        shouldHide = !isInClass;
+                        break;
+                    case SubjectActionMode.HideInClassShowAfter:
+                        shouldHide = isInClass;
+                        break;
+                    case SubjectActionMode.ShowInClassHideAfter:
+                        shouldHide = !isInClass;
+                        break;
+                    default:
+                        return;
+                }
+            }
+            
+            if (shouldHide && settings.IsMainWindowVisible)
+            {
+                settings.IsMainWindowVisible = false;
+                Hide();
+            }
+            else if (!shouldHide && !settings.IsMainWindowVisible)
+            {
+                settings.IsMainWindowVisible = true;
+                Show();
+                Activate();
+            }
+        });
     }
 
     private void FocusObserverServiceOnFocusChanged(object? sender, EventArgs e)

@@ -233,6 +233,9 @@
                     <Path Data="M275.413333 115.925333v716.117334a10.666667 10.666667 0 0 0 1.408 6.144c1.28 1.92 3.413333 3.114667 5.973334 4.181333 1.152 0.512 2.517333 0.896 3.925333 0.896 3.072 0 5.76-1.237333 8.021333-3.413333l170.24-168.917334 103.125334 241.493334a12.032 12.032 0 0 0 15.36 5.845333l84.949333-35.626667a11.989333 11.989333 0 0 0 6.058667-6.4 10.624 10.624 0 0 0-0.128-8.362666l-108.16-253.397334h213.205333c2.474667 0 4.693333-0.256 6.442667-1.450666a12.714667 12.714667 0 0 0 4.181333-5.845334c0.896-2.090667 1.536-4.010667 1.152-5.888-0.426667-1.962667-1.834667-3.584-3.541333-5.248L294.741333 108.202667c-3.157333-3.285333-9.728 0.853333-19.328 7.722666z" Fill="#FFF4F4F5" HorizontalAlignment="Left" Stretch="Fill" VerticalAlignment="Top" Stroke="Black" Width="9.07" Height="14.275" Margin="-1,-1,0,0"/>
                 </Border>
             </Canvas>
+            <Rectangle HorizontalAlignment="Left" Height="7" Margin="1.5,126.5,0,0" Stroke="#FF303030" VerticalAlignment="Top" Width="7" Fill="#FF303030"/>
+            <Rectangle HorizontalAlignment="Left" Height="7" Margin="210,126.5,0,0" Stroke="#FF303030" VerticalAlignment="Top" Width="20" Fill="#FF303030"/>
+            <Rectangle HorizontalAlignment="Left" Height="7" Margin="231,126.5,0,0" Stroke="#FF303030" VerticalAlignment="Top" Width="7" Fill="#FF303030"/>
         </Grid>
 
     </Grid>

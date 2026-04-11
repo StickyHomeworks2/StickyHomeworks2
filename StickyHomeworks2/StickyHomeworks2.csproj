@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -42,6 +42,7 @@
     <Resource Include="Assets\**" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ClassIsland.Shared.IPC" Version="2.0.3.1" />
     <PackageReference Include="Emoji.Wpf" Version="0.3.4" />
     <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
     <PackageReference Include="Markdig" Version="0.42.0" />

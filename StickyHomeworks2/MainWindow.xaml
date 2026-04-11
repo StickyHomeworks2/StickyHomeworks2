@@ -383,12 +383,12 @@
                     <!--<Image Source="/Assets/光辉矢愿_瞄准.png" Height="81" Width="81"
                            HorizontalAlignment="Center"
                            Margin="0 0 0 8"/>-->
-                    <materialDesign:PackIcon Kind="MoveResizeVariant" 
+                    <!--materialDesign:PackIcon Kind="MoveResizeVariant" 
                                              Height="80" Width="80"
                                              HorizontalAlignment="Center"
-                                             Margin="8"/>
-                    <!--<controls:WindowMovingDemo Margin="0 0 0 8" ToolTip="窗口操作演示"/>-->
-                    <TextBlock Text="窗口已经解锁，拖动以移动窗口，拉伸边缘以调整窗口大小。"
+                                             Margin="8"/-->
+                        <controls:WindowMovingDemo Margin="0 0 0 30" ToolTip="窗口操作演示"/>
+                        <TextBlock Text="窗口已经解锁，拖动以移动窗口，拉伸边缘以调整窗口大小。"
                                TextWrapping="Wrap" 
                                HorizontalAlignment="Center"
                                TextAlignment="Center"/>
