@@ -94,6 +94,17 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
 
     public void Disconnect()
     {
+        if (_ipcClient != null)
+        {
+            try
+            {
+                (_ipcClient as IDisposable)?.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
+        }
         _ipcClient = null;
         _lessonsService = null;
         IsConnected = false;

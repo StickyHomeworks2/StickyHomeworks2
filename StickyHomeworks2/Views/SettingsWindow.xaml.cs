@@ -62,10 +62,10 @@ public partial class SettingsWindow : MyWindow
 
     private CancellationTokenSource _cts;
     private string _savePath;
-    private const string UpdateInfoUrl = "http://eb48d3a3.xy.proaa.top/latest.json";
+    private const string UpdateInfoUrl = "https://api.classisband.xyz/api/latest.json";
     private const string LocalAppData = "StickyHomeworks2Updater";
     private readonly HttpClient _httpClient;
-    private const string ChangelogUrl = "https://eb48d3a3.xy.proaa.top/changelog.md";
+    private const string ChangelogUrl = "https://api.classisband.xyz/api/changelog.md";
 
 
     public SettingsWindow(WallpaperPickingService wallpaperPickingService,
@@ -427,7 +427,7 @@ public partial class SettingsWindow : MyWindow
             using (var client = new HttpClient())
             {
                 client.Timeout = TimeSpan.FromSeconds(10);
-                var updateInfo = await client.GetFromJsonAsync<UpdateInfo>("https://eb48d3a3.xy.proaa.top/latest.json");
+                var updateInfo = await client.GetFromJsonAsync<UpdateInfo>(UpdateInfoUrl);
 
 
 
@@ -591,14 +591,13 @@ public partial class SettingsWindow : MyWindow
         var updaterBatPath = Path.Combine(extractDir, "update.bat");
         var currentExePath = Process.GetCurrentProcess().MainModule.FileName;
         var appDirectory = Path.GetDirectoryName(currentExePath);
+        var updateTempDir = Path.GetDirectoryName(zipFilePath);
 
         try
         {
-            // 清理文件夹
             if (Directory.Exists(extractDir))
                 Directory.Delete(extractDir, true);
             Directory.CreateDirectory(extractDir);
-
 
             Dispatcher.Invoke(() =>
             {
@@ -607,11 +606,15 @@ public partial class SettingsWindow : MyWindow
                 DownloadProgress.IsIndeterminate = true;
             });
 
-            UpdateStatusTextBlock.Text = "开始安装...";
-
             await Task.Run(() => ZipFile.ExtractToDirectory(zipFilePath, extractDir, overwriteFiles: true));
 
-          
+            var sourceDir = extractDir;
+            var subDirs = Directory.GetDirectories(extractDir);
+            if (subDirs.Length == 1 && Directory.GetFiles(extractDir).Length == 0)
+            {
+                sourceDir = subDirs[0];
+            }
+
             var batContent = $@"
 @echo off
 chcp 65001 >nul
@@ -620,16 +623,14 @@ title StickyHomeworks2 更新程序
 
 echo.
 echo 正在应用更新，请稍候...
-echo 解压目录: {extractDir}
+echo 解压目录: {sourceDir}
 echo 主程序目录: {appDirectory}
 echo.
 echo 等待退出...
 timeout /t 3 >nul
 
+robocopy ""{sourceDir}"" ""{appDirectory}"" /E /Z /R:3 /W:5 /V /LOG:""{Path.Combine(extractDir, "update.log")}""
 
-robocopy ""{extractDir}"" ""{appDirectory}"" /E /Z /R:3 /W:5 /V /LOG:""{Path.Combine(extractDir, "update.log")}"" 
-
-:: robocopy 成功返回码为 0-7，失败为 >=8
 if %errorlevel% geq 8 (
     echo.
     echo [!] 更新失败: %errorlevel%
@@ -642,14 +643,13 @@ echo.
 echo [!] 更新已成功应用。
 echo 正在启动主程序...
 
-
 start "" """"{currentExePath}""
-
 
 echo 清理临时文件...
 if exist ""{extractDir}"" rd /s /q ""{extractDir}""
-del ""%~f0""
+if exist ""{updateTempDir}"" rd /s /q ""{updateTempDir}""
 
+(goto) 2>nul & del ""%~f0""
 exit /b 0
 ";
 
