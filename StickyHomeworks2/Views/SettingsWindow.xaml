@@ -994,6 +994,8 @@
                                             Opacity="0.75" VerticalAlignment="Center"/>
                                     </ely:SettingsCard.Switcher>
                                 </ely:SettingsCard>
+
+                                
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
@@ -1136,7 +1138,23 @@
                                 <TextBlock Margin="0 12">
                                     <Run Text="仅供调试，除非你能知道您在做什么，请不要使用以下按钮。"></Run>
                                 </TextBlock>
+                                <ely:SettingsCard IconGlyph="School"
+                                    Header="当前科目"
+                                    Description="ClassIsland 当前识别的科目">
+                                    <ely:SettingsCard.Switcher>
+                                        <TextBlock Text="{Binding ClassIslandIpcService.CurrentSubjectName}"
+                                            Opacity="0.75" VerticalAlignment="Center"/>
+                                    </ely:SettingsCard.Switcher>
+                                </ely:SettingsCard>
 
+                                <ely:SettingsCard IconGlyph="Clock"
+                                    Header="当前时间状态"
+                                    Description="ClassIsland 当前时间状态">
+                                    <ely:SettingsCard.Switcher>
+                                        <TextBlock Text="{Binding ClassIslandIpcService.CurrentState}"
+            Opacity="0.75" VerticalAlignment="Center"/>
+                                    </ely:SettingsCard.Switcher>
+                                </ely:SettingsCard>
                                 <MenuItem Icon="{materialDesign:PackIcon BugOutline}"
                                         Header="崩溃测试"
                                         Click="ButtonCrash_OnClick"/>
@@ -1149,6 +1167,9 @@
                                 <MenuItem Icon="{materialDesign:PackIcon LightningBoltOutline}"
                                         Header="测试作业编辑窗口"
                                         Click="MenuItemTestHomeworkEditWindow_OnClick"/>
+                                <MenuItem Icon="{materialDesign:PackIcon LanConnect}"
+                                        Header="测试IPC联动"
+                                        Click="ButtonTestIpcEvent_OnClick"/>
 
                                 <RichTextBox>
                                     <FlowDocument IsHyphenationEnabled="False"

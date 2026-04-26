@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using ClassIsland.Shared.Enums;
 using ClassIsland.Shared.IPC;
 using ClassIsland.Shared.IPC.Abstractions.Services;
 using dotnetCampus.Ipc.CompilerServices.GeneratedProxies;
@@ -13,12 +14,27 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
     private readonly SettingsService _settingsService;
     private IpcClient? _ipcClient;
     private IPublicLessonsService? _lessonsService;
+    private TimeState _currentState;
     private string _currentSubjectName = "";
+    private string _previousSubjectName = "";
     private bool _isConnected;
     private string _connectionStatus = "未连接";
+    private CancellationTokenSource? _pollingCts;
+    private Task? _pollingTask;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler? ClassStateChanged;
+
+    public TimeState CurrentState
+    {
+        get => _currentState;
+        private set
+        {
+            if (value == _currentState) return;
+            _currentState = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentState)));
+        }
+    }
 
     public string CurrentSubjectName
     {
@@ -26,10 +42,13 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
         private set
         {
             if (value == _currentSubjectName) return;
+            _previousSubjectName = _currentSubjectName;
             _currentSubjectName = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentSubjectName)));
         }
     }
+
+    public string PreviousSubjectName => _previousSubjectName;
 
     public bool IsConnected
     {
@@ -58,35 +77,53 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
         _settingsService = settingsService;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
+        System.Diagnostics.Debug.WriteLine($"[IPC] StartAsync: IsClassIslandIpcEnabled={_settingsService.Settings.IsClassIslandIpcEnabled}");
         if (_settingsService.Settings.IsClassIslandIpcEnabled)
-            await ConnectAsync();
+        {
+            _ = Task.Run(async () =>
+            {
+                System.Diagnostics.Debug.WriteLine("[IPC] StartAsync: 开始连接任务...");
+                await ConnectAsync();
+                System.Diagnostics.Debug.WriteLine($"[IPC] StartAsync: 连接完成, IsConnected={IsConnected}");
+            }, cancellationToken);
+        }
+        return Task.CompletedTask;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        Disconnect();
+        await DisconnectAsync();
     }
 
     public async Task ConnectAsync()
     {
+        System.Diagnostics.Debug.WriteLine("[IPC] ConnectAsync: 开始连接...");
         try
         {
-            Disconnect();
+            await DisconnectAsync();
+            
             _ipcClient = new IpcClient();
-            _ipcClient.JsonIpcProvider.AddNotifyHandler(IpcRoutedNotifyIds.OnClassNotifyId, OnClassChanged);
-            _ipcClient.JsonIpcProvider.AddNotifyHandler(IpcRoutedNotifyIds.OnBreakingTimeNotifyId, OnBreakingTime);
-            _ipcClient.JsonIpcProvider.AddNotifyHandler(IpcRoutedNotifyIds.OnAfterSchoolNotifyId, OnAfterSchool);
+            // 只监听 CurrentTimeStateChangedNotifyId 事件
             _ipcClient.JsonIpcProvider.AddNotifyHandler(IpcRoutedNotifyIds.CurrentTimeStateChangedNotifyId, OnTimeStateChanged);
-            await _ipcClient.Connect();
+            
+            // 参考 Demo: 不使用 await
+            _ = _ipcClient.Connect();
+            
+            // 等待一段时间后获取服务
+            await Task.Delay(500);
+            
             _lessonsService = _ipcClient.Provider.CreateIpcProxy<IPublicLessonsService>(_ipcClient.PeerProxy!);
             IsConnected = true;
             ConnectionStatus = "已连接";
-            RefreshCurrentSubject();
+            System.Diagnostics.Debug.WriteLine("[IPC] ConnectAsync: 连接成功");
+            RefreshState();
+            StartPolling();
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[IPC] ConnectAsync: 连接失败 - {ex}");
             IsConnected = false;
             ConnectionStatus = "连接失败";
         }
@@ -94,22 +131,57 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
 
     public void Disconnect()
     {
-        if (_ipcClient != null)
-        {
-            try
-            {
-                (_ipcClient as IDisposable)?.Dispose();
-            }
-            catch
-            {
-                // ignored
-            }
-        }
+        _ = DisconnectAsync();
+    }
+
+    private async Task DisconnectAsync()
+    {
+        var oldClient = _ipcClient;
         _ipcClient = null;
         _lessonsService = null;
         IsConnected = false;
         ConnectionStatus = "未连接";
+        CurrentState = TimeState.None;
         CurrentSubjectName = "";
+        
+        _pollingCts?.Cancel();
+        _pollingCts = null;
+        
+        if (oldClient != null)
+        {
+            await Task.Delay(100);
+        }
+    }
+
+    private void StartPolling()
+    {
+        _pollingCts?.Cancel();
+        _pollingCts = new CancellationTokenSource();
+        _pollingTask = PollingLoopAsync(_pollingCts.Token);
+    }
+
+    private async Task PollingLoopAsync(CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await Task.Delay(2000, token);
+                if (_ipcClient == null) break;
+                
+                var oldState = _currentState;
+                var oldSubject = _currentSubjectName;
+                RefreshState();
+                
+                if (_currentState != oldState || _currentSubjectName != oldSubject)
+                {
+                    ClassStateChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     public async Task<List<string>> GetSubjectsAsync()
@@ -127,40 +199,27 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
         }
     }
 
-    public void RefreshCurrentSubject()
+    public void RefreshState()
     {
         if (_lessonsService == null) return;
         try
         {
-            CurrentSubjectName = _lessonsService.CurrentSubject?.Name ?? "";
+            CurrentState = _lessonsService.CurrentState;
+            // 过滤掉 "???" 无效科目名
+            var name = _lessonsService.CurrentSubject?.Name ?? "";
+            if (name == "???") name = "";
+            CurrentSubjectName = name;
         }
         catch
         {
+            CurrentState = TimeState.None;
             CurrentSubjectName = "";
         }
     }
 
-    private void OnClassChanged()
-    {
-        RefreshCurrentSubject();
-        ClassStateChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnBreakingTime()
-    {
-        CurrentSubjectName = "";
-        ClassStateChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnAfterSchool()
-    {
-        CurrentSubjectName = "";
-        ClassStateChanged?.Invoke(this, EventArgs.Empty);
-    }
-
     private void OnTimeStateChanged()
     {
-        RefreshCurrentSubject();
+        RefreshState();
         ClassStateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

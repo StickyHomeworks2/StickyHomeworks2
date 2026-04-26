@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ClassIsland.Shared.Enums;
 using ElysiaFramework;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Xaml.Behaviors;
@@ -63,13 +64,18 @@ public partial class MainWindow : Window
         this.TrayIconView.TrayRightMouseUp += TrayIconView_TrayMouseRightClick;
         
         var ipcService = AppEx.GetService<ClassIslandIpcService>();
+        System.Diagnostics.Debug.WriteLine($"[IPC] MainWindow构造: ipcService={(ipcService != null ? "存在" : "null")}");
         if (ipcService != null)
         {
             ipcService.ClassStateChanged += OnClassStateChanged;
+            System.Diagnostics.Debug.WriteLine($"[IPC] MainWindow构造: 已订阅ClassStateChanged事件, IsConnected={ipcService.IsConnected}");
             SettingsService.Settings.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(Settings.IsClassIslandIpcEnabled))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[IPC] IsClassIslandIpcEnabled变更: {SettingsService.Settings.IsClassIslandIpcEnabled}");
                     _ = SettingsService.Settings.IsClassIslandIpcEnabled ? ipcService.ConnectAsync() : Task.Run(ipcService.Disconnect);
+                }
             };
         }
     }
@@ -82,30 +88,55 @@ public partial class MainWindow : Window
             var settings = SettingsService.Settings;
             if (ipcService == null || !settings.IsClassIslandIpcEnabled) return;
             
-            var isInClass = !string.IsNullOrEmpty(ipcService.CurrentSubjectName);
-            var subjectAction = settings.ClassIslandSubjects.FirstOrDefault(s => s.Name == ipcService.CurrentSubjectName);
+            // 使用 TimeState 判断是否在上课
+            var isInClass = ipcService.CurrentState == TimeState.OnClass;
+            var currentSubjectAction = settings.ClassIslandSubjects.FirstOrDefault(s => s.Name == ipcService.CurrentSubjectName);
+            var previousSubjectAction = settings.ClassIslandSubjects.FirstOrDefault(s => s.Name == ipcService.PreviousSubjectName);
             
             bool shouldHide;
-            if (subjectAction == null || !subjectAction.IsMonitored)
+            if (isInClass)
             {
-                if (isInClass) return;
-                shouldHide = settings.ClassIslandSubjects.Any(s => s.IsMonitored && s.ActionMode == SubjectActionMode.ShowInClassHideAfter);
+                // 上课时：检查当前科目是否被监控
+                if (currentSubjectAction == null || !currentSubjectAction.IsMonitored)
+                {
+                    return;
+                }
+                
+                switch (currentSubjectAction.ActionMode)
+                {
+                    case SubjectActionMode.HideInClass:
+                    case SubjectActionMode.HideInClassShowAfter:
+                        shouldHide = true;
+                        break;
+                    case SubjectActionMode.ShowInClass:
+                    case SubjectActionMode.ShowInClassHideAfter:
+                        shouldHide = false;
+                        break;
+                    default:
+                        return;
+                }
             }
             else
             {
-                switch (subjectAction.ActionMode)
+                // 下课/放学/课间：检查之前科目是否被监控
+                if (previousSubjectAction == null || !previousSubjectAction.IsMonitored)
+                {
+                    return;
+                }
+                
+                switch (previousSubjectAction.ActionMode)
                 {
                     case SubjectActionMode.HideInClass:
-                        shouldHide = isInClass;
+                        shouldHide = false;
                         break;
                     case SubjectActionMode.ShowInClass:
-                        shouldHide = !isInClass;
+                        shouldHide = true;
                         break;
                     case SubjectActionMode.HideInClassShowAfter:
-                        shouldHide = isInClass;
+                        shouldHide = false;
                         break;
                     case SubjectActionMode.ShowInClassHideAfter:
-                        shouldHide = !isInClass;
+                        shouldHide = true;
                         break;
                     default:
                         return;

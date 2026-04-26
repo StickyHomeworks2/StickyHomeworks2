@@ -238,6 +238,17 @@ public partial class SettingsWindow : MyWindow
             : "没有新科目需要导入。", "提示");
     }
 
+    private void ButtonTestIpcEvent_OnClick(object sender, RoutedEventArgs e)
+    {
+        System.Windows.MessageBox.Show(
+            $"连接状态: {ClassIslandIpcService.ConnectionStatus}\n" +
+            $"当前时间状态: {ClassIslandIpcService.CurrentState}\n" +
+            $"当前科目: {ClassIslandIpcService.CurrentSubjectName}\n" +
+            $"上一科目: {ClassIslandIpcService.PreviousSubjectName}\n" +
+            $"是否连接: {ClassIslandIpcService.IsConnected}",
+            "IPC 状态");
+    }
+
     private void ButtonDebugToastText_OnClick(object sender, RoutedEventArgs e)
     {
         
