@@ -64,16 +64,13 @@ public partial class MainWindow : Window
         this.TrayIconView.TrayRightMouseUp += TrayIconView_TrayMouseRightClick;
         
         var ipcService = AppEx.GetService<ClassIslandIpcService>();
-        System.Diagnostics.Debug.WriteLine($"[IPC] MainWindow构造: ipcService={(ipcService != null ? "存在" : "null")}");
         if (ipcService != null)
         {
             ipcService.ClassStateChanged += OnClassStateChanged;
-            System.Diagnostics.Debug.WriteLine($"[IPC] MainWindow构造: 已订阅ClassStateChanged事件, IsConnected={ipcService.IsConnected}");
             SettingsService.Settings.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(Settings.IsClassIslandIpcEnabled))
                 {
-                    System.Diagnostics.Debug.WriteLine($"[IPC] IsClassIslandIpcEnabled变更: {SettingsService.Settings.IsClassIslandIpcEnabled}");
                     _ = SettingsService.Settings.IsClassIslandIpcEnabled ? ipcService.ConnectAsync() : Task.Run(ipcService.Disconnect);
                 }
             };
@@ -102,19 +99,11 @@ public partial class MainWindow : Window
                     return;
                 }
                 
-                switch (currentSubjectAction.ActionMode)
-                {
-                    case SubjectActionMode.HideInClass:
-                    case SubjectActionMode.HideInClassShowAfter:
-                        shouldHide = true;
-                        break;
-                    case SubjectActionMode.ShowInClass:
-                    case SubjectActionMode.ShowInClassHideAfter:
-                        shouldHide = false;
-                        break;
-                    default:
-                        return;
-                }
+                // 0=隐藏, 1=显示, 2=隐藏&下课显示, 3=显示&下课隐藏
+                var mode = currentSubjectAction.ActionMode;
+                if (mode == 0 || mode == 2) shouldHide = true;
+                else if (mode == 1 || mode == 3) shouldHide = false;
+                else return;
             }
             else
             {
@@ -124,23 +113,11 @@ public partial class MainWindow : Window
                     return;
                 }
                 
-                switch (previousSubjectAction.ActionMode)
-                {
-                    case SubjectActionMode.HideInClass:
-                        shouldHide = false;
-                        break;
-                    case SubjectActionMode.ShowInClass:
-                        shouldHide = true;
-                        break;
-                    case SubjectActionMode.HideInClassShowAfter:
-                        shouldHide = false;
-                        break;
-                    case SubjectActionMode.ShowInClassHideAfter:
-                        shouldHide = true;
-                        break;
-                    default:
-                        return;
-                }
+                // 0=隐藏→下课显示, 1=显示→下课隐藏, 2=隐藏→下课显示, 3=显示→下课隐藏
+                var mode = previousSubjectAction.ActionMode;
+                if (mode == 0 || mode == 2) shouldHide = false;
+                else if (mode == 1 || mode == 3) shouldHide = true;
+                else return;
             }
             
             if (shouldHide && settings.IsMainWindowVisible)

@@ -2,19 +2,11 @@ using System.ComponentModel;
 
 namespace StickyHomeworks.Models;
 
-public enum SubjectActionMode
-{
-    HideInClass = 0,
-    ShowInClass = 1,
-    HideInClassShowAfter = 2,
-    ShowInClassHideAfter = 3
-}
-
 public class SubjectAction : INotifyPropertyChanged
 {
     private string _name = "";
     private bool _isMonitored;
-    private SubjectActionMode _actionMode;
+    private int _actionMode;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -30,7 +22,10 @@ public class SubjectAction : INotifyPropertyChanged
         set { _isMonitored = value; OnPropertyChanged(nameof(IsMonitored)); }
     }
 
-    public SubjectActionMode ActionMode
+    /// <summary>
+    /// 0=上课时隐藏, 1=上课时显示, 2=上课时隐藏&下课时显示, 3=上课时显示&下课时隐藏
+    /// </summary>
+    public int ActionMode
     {
         get => _actionMode;
         set { _actionMode = value; OnPropertyChanged(nameof(ActionMode)); }
@@ -38,7 +33,7 @@ public class SubjectAction : INotifyPropertyChanged
 
     public SubjectAction() { }
 
-    public SubjectAction(string name, bool isMonitored = false, SubjectActionMode actionMode = SubjectActionMode.HideInClass)
+    public SubjectAction(string name, bool isMonitored = false, int actionMode = 0)
     {
         Name = name;
         IsMonitored = isMonitored;
