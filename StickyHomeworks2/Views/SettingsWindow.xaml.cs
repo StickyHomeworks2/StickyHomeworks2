@@ -78,12 +78,14 @@ public partial class SettingsWindow : MyWindow
         InitializeComponent();
         DataContext = this;
         Settings = settingsService.Settings;
+        Settings.PropertyChanged += SettingsOnPropertyChanged;
         settingsService.PropertyChanged += (sender, args) =>
         {
             if (args.PropertyName == "Settings")
             {
-                settingsService.Settings.PropertyChanged += SettingsOnPropertyChanged;
+                Settings.PropertyChanged -= SettingsOnPropertyChanged;
                 Settings = settingsService.Settings;
+                Settings.PropertyChanged += SettingsOnPropertyChanged;
             }
         };
         var style = (Style)FindResource("NotificationsListBoxItemStyle");
@@ -113,7 +115,6 @@ public partial class SettingsWindow : MyWindow
 
     protected override void OnContentRendered(EventArgs e)
     {
-        Settings.PropertyChanged += SettingsOnPropertyChanged;
         base.OnContentRendered(e);
     }
 
@@ -320,7 +321,6 @@ public partial class SettingsWindow : MyWindow
         {
             await WallpaperPickingService.GetWallpaperAsync();
         }
-        GC.Collect();
     }
 
     private void MenuItemExperimentalSettings_OnClick(object sender, RoutedEventArgs e)
@@ -457,8 +457,6 @@ public partial class SettingsWindow : MyWindow
                 {
                     versionStatusTextBlock.Text = $"有新版本：{updateInfo.Version}";
                     UpdateStatusTextBlock.Text = $"更新可用";
-                    DownloadProgress.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E88E5"));
-                    DownloadProgress.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#BBDEFB"));
                     UpdateIcon.Kind = PackIconKind.Upload;
                     DownloadUpdatesButton.Tag = updateInfo.Url;
                     DownloadUpdatesButton.Visibility = Visibility.Visible;
@@ -478,8 +476,6 @@ public partial class SettingsWindow : MyWindow
                     CheckUpdatesButton.Visibility = Visibility.Visible;
                     DownloadProgress.Visibility = Visibility.Collapsed;
                     DownloadUpdatesButton.Visibility = Visibility.Collapsed; 
-                    DownloadProgress.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1E88E5"));
-                    DownloadProgress.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#BBDEFB"));
                 }
             }
         }

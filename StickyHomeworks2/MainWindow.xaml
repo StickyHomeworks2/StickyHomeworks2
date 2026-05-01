@@ -47,6 +47,7 @@
     </Window.Style>
     <Window.Resources>
         <converter:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+        <converter:OpacityToBackgroundConverter x:Key="OpacityToBackgroundConverter"/>
         <Style x:Key="MarkdownParagraphBaseStyle" TargetType="Paragraph">
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="FontSize" Value="20"/>
@@ -126,9 +127,14 @@
                 </Grid.RowDefinitions>
                 <!-- 背景 -->
                 <Border Grid.Row="0"
-                        Grid.RowSpan="3"
-                        Background="{DynamicResource MaterialDesignPaper}"
-                        Opacity="{Binding SettingsService.Settings.Opacity}" />
+                        Grid.RowSpan="3">
+                    <Border.Background>
+                        <MultiBinding Converter="{StaticResource OpacityToBackgroundConverter}">
+                            <Binding Source="{StaticResource MaterialDesignPaper}"/>
+                            <Binding Path="SettingsService.Settings.Opacity"/>
+                        </MultiBinding>
+                    </Border.Background>
+                </Border>
                 <!-- 标题栏 -->
                 <materialDesign:ColorZone Grid.Row="0"
                                           Mode="PrimaryMid"

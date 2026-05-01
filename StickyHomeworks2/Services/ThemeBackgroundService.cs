@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using ElysiaFramework;
 using System.Windows.Media;
@@ -84,15 +84,17 @@ public class ThemeBackgroundService : IHostedService
         ThemeService.SetTheme(SettingsService.Settings.Theme, primary, secondary);
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         UpdateTheme();
-        await WallpaperPickingService.GetWallpaperAsync();
-        //UpdateTheme();
+        _ = WallpaperPickingService.GetWallpaperAsync();
         UpdateStopWatch.Start();
+        return Task.CompletedTask;
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public Task StopAsync(CancellationToken cancellationToken)
     {
+        SystemEvents.UserPreferenceChanged -= SystemEventsOnUserPreferenceChanged;
+        return Task.CompletedTask;
     }
 }

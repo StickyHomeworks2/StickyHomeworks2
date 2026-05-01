@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,13 +10,13 @@ namespace StickyHomeworks.Services;
 public class SettingsService : ObservableRecipient, IHostedService
 {
     private Settings _settings = new();
+    private PropertyChangedEventHandler? _settingsHandler;
 
     public SettingsService(IHostApplicationLifetime applicationLifetime)
     {
         PropertyChanged += OnPropertyChanged;
-        Settings.PropertyChanged += (o, args) => OnSettingsChanged?.Invoke(o, args);
+        SubscribeSettings();
         LoadSettings();
-        //applicationLifetime.ApplicationStopping.Register(SaveSettings);
         OnSettingsChanged += OnOnSettingsChanged;
     }
 
@@ -25,19 +25,22 @@ public class SettingsService : ObservableRecipient, IHostedService
         SaveSettings();
     }
 
+    private void SubscribeSettings()
+    {
+        if (_settingsHandler != null)
+            Settings.PropertyChanged -= _settingsHandler;
+        _settingsHandler = (o, args) => OnSettingsChanged?.Invoke(o, args);
+        Settings.PropertyChanged += _settingsHandler;
+    }
+
     public void LoadSettings()
     {
         if (!File.Exists("./Settings.json"))
-        {
             return;
-        }
         var json = File.ReadAllText("./Settings.json");
         var r = JsonSerializer.Deserialize<Settings>(json);
         if (r != null)
-        {
             Settings = r;
-            //Settings.PropertyChanged += (sender, args) => SaveSettings();
-        }
     }
 
     public void SaveSettings()
@@ -50,18 +53,12 @@ public class SettingsService : ObservableRecipient, IHostedService
     private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(Settings))
-        {
-            Settings.PropertyChanged += (o, args) => OnSettingsChanged?.Invoke(o, args);
-        }
+            SubscribeSettings();
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-    }
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-    }
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public Settings Settings
     {

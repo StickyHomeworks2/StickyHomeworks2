@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
+using System.Windows.Threading;
 using Microsoft.Xaml.Behaviors;
 
 namespace StickyHomeworks.Behaviors;
@@ -12,9 +13,22 @@ namespace StickyHomeworks.Behaviors;
 public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
 {
     private static HashSet<Thread> _recursionProtection = new HashSet<Thread>();
+    private DispatcherTimer? _debounceTimer;
+    private string? _pendingXaml;
 
     protected override void OnAttached()
     {
+        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _debounceTimer.Tick += (s, e) =>
+        {
+            _debounceTimer.Stop();
+            if (_pendingXaml != null)
+            {
+                SetDocumentXaml(this, _pendingXaml);
+                _pendingXaml = null;
+            }
+        };
+
         AssociatedObject.TextChanged += (obj2, e2) =>
         {
             var sw = new Stopwatch();
@@ -22,11 +36,19 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
             RichTextBox richTextBox2 = obj2 as RichTextBox;
             if (richTextBox2 != null)
             {
-                SetDocumentXaml(this, XamlWriter.Save(richTextBox2.Document));
+                var xaml = XamlWriter.Save(richTextBox2.Document);
+                _pendingXaml = xaml;
+                _debounceTimer.Stop();
+                _debounceTimer.Start();
             }
-
         };
         base.OnAttached();
+    }
+
+    protected override void OnDetaching()
+    {
+        _debounceTimer?.Stop();
+        base.OnDetaching();
     }
 
     public static string GetDocumentXaml(DependencyObject obj)
@@ -59,14 +81,9 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
                     return;
                 var richTextBox = b.AssociatedObject;
 
-                // Parse the XAML to a document (or use XamlReader.Parse())
-
                 var documentXaml = GetDocumentXaml(b);
                 richTextBox.Document = RichTextBoxHelper.ConvertDocument(documentXaml);
                 richTextBox.Document.IsOptimalParagraphEnabled = true;
-
-                // When the document changes update the source
-                
             }
         ));
 

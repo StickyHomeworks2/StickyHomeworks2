@@ -11,6 +11,7 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
 {
     private Profile _profile = new();
     private readonly SettingsService _settingsService;
+    private PropertyChangedEventHandler? _profileHandler;
 
     public event EventHandler? ProfileSaved;
 
@@ -18,30 +19,29 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
     {
         _settingsService = settingsService;
         LoadProfile();
-        Profile.PropertyChanged += (sender, args) => SaveProfile();
+        SubscribeProfile();
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    private void SubscribeProfile()
     {
+        if (_profileHandler != null)
+            Profile.PropertyChanged -= _profileHandler;
+        _profileHandler = (sender, args) => SaveProfile();
+        Profile.PropertyChanged += _profileHandler;
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-    }
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public void LoadProfile()
     {
         if (!File.Exists("./Profile.json"))
-        {
             return;
-        }
         var json = File.ReadAllText("./Profile.json");
         var r = JsonSerializer.Deserialize<Profile>(json);
         if (r != null)
-        {
             Profile = r;
-            Profile.PropertyChanged += (sender, args) => SaveProfile();
-        }
     }
 
     public List<Homework> CleanupOutdated()
@@ -55,6 +55,7 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
         foreach (var i in rm) Profile.Homeworks.Remove(i);
         return rm;
     }
+
     public List<Homework> GetExpiredHomeworks() => Profile.Homeworks.Where(i => i.DueTime.Date < DateTime.Today.Date).ToList();
 
     public void SaveProfile()
@@ -71,22 +72,14 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
             if (Equals(value, _profile)) return;
             _profile = value;
             OnPropertyChanged();
+            SubscribeProfile();
         }
     }
-
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
     }
 }

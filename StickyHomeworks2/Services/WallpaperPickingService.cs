@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -193,37 +193,42 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
                 ));
             if (bitmap is null)
             {
+                IsWorking = false;
                 return;
             }
 
-            double dpiX = 1, dpiY = 1;
-            Application.Current.Dispatcher.Invoke(() =>
+            try
             {
-                var mw = (MainWindow)Application.Current.MainWindow!;
-                mw.GetCurrentDpi(out dpiX, out dpiY);
-            });
-            WallpaperImage = BitmapConveters.ConvertToBitmapImage(bitmap, (int)(750 * dpiX));
-            var w = new Stopwatch();
-            w.Start();
-            var right = SettingsService.Settings.TargetLightValue - 0.5;
-            var left = SettingsService.Settings.TargetLightValue + 0.5;
-            var r = ColorOctTreeNode.ProcessImage(bitmap)
-                .OrderByDescending(i =>
+                double dpiX = 1, dpiY = 1;
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var c = (Color)ColorConverter.ConvertFromString(i.Key);
-                    WallpaperPickingService.ColorToHsv(c, out var h, out var s, out var v);
-                    return (s + v * (-(v - right) * (v - left) * 4)) * Math.Log2(i.Value);
-                })
-                .ThenByDescending(i => i.Value)
-                .ToList();
-            WallpaperColorPlatte.Clear();
-            for (var i = 0; i < Math.Min(r.Count, 5); i++)
+                    var mw = (MainWindow)Application.Current.MainWindow!;
+                    mw.GetCurrentDpi(out dpiX, out dpiY);
+                });
+                WallpaperImage = BitmapConveters.ConvertToBitmapImage(bitmap, (int)(750 * dpiX));
+                var right = SettingsService.Settings.TargetLightValue - 0.5;
+                var left = SettingsService.Settings.TargetLightValue + 0.5;
+                var r = ColorOctTreeNode.ProcessImage(bitmap)
+                    .OrderByDescending(i =>
+                    {
+                        var c = (Color)ColorConverter.ConvertFromString(i.Key);
+                        WallpaperPickingService.ColorToHsv(c, out var h, out var s, out var v);
+                        return (s + v * (-(v - right) * (v - left) * 4)) * Math.Log2(i.Value);
+                    })
+                    .ThenByDescending(i => i.Value)
+                    .ToList();
+                WallpaperColorPlatte.Clear();
+                for (var i = 0; i < Math.Min(r.Count, 5); i++)
+                {
+                    WallpaperColorPlatte.Add((Color)ColorConverter.ConvertFromString(r[i].Key));
+                }
+            }
+            finally
             {
-                WallpaperColorPlatte.Add((Color)ColorConverter.ConvertFromString(r[i].Key));
+                bitmap.Dispose();
             }
         });
 
-        // Update cached platte
         if (SettingsService.Settings.WallpaperColorPlatte.Count < SettingsService.Settings.SelectedPlatteIndex + 1 ||
             SettingsService.Settings.SelectedPlatteIndex == -1 ||
             WallpaperColorPlatte.Count < SettingsService.Settings.SelectedPlatteIndex + 1 ||
@@ -239,18 +244,17 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
         }
 
         IsWorking = false;
-        GC.Collect();
         WallpaperColorPlatteChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return new Task(() => {});
-    }
+    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        return new Task(() => { });
+        SystemEvents.UserPreferenceChanged -= SystemEventsOnUserPreferenceChanged;
+        RegistryNotifier.Stop();
+        UpdateTimer.Stop();
+        return Task.CompletedTask;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

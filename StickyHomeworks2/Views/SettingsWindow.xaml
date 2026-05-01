@@ -147,7 +147,7 @@
                 <models:ContributionMember
                     AvatarImage="/Assets/jizilin6732.jpg"
                     Name="晒~居"
-                        Description="软件作者，写代码也一样水（划掉）"/>
+                        Description="软件作者，Died（划掉）"/>
                 <models:ContributionMember
                     AvatarImage="/Assets/ClassIsband.jpg"
                     Name="ClassIsband"
@@ -875,9 +875,7 @@
                                                     Minimum="0"
                                                     Maximum="100"
                                                     Value="0"
-                                                         Style="{StaticResource MaterialDesignLinearProgressBar}"
-                                                         Foreground="#1E88E5"
-                                                    Background="#BBDEFB"/>
+                                                         Style="{StaticResource MaterialDesignLinearProgressBar}"/>
                                             <TextBlock x:Name="versionStatusTextBlock"
                                                     FontSize="15"
                                                     Margin="0,10,0,0"
@@ -1081,11 +1079,8 @@
                                                           PreviewMouseWheel="UIElement_OnPreviewMouseWheel"
                                                           ContextMenu="{x:Null}">
                                     <FlowDocument FontFamily="{StaticResource HarmonyOsSans}">
-                                        <Paragraph Foreground="#ff0000">
-                                            注意！该项目处于开发阶段，请勿用于生产环境！
-                                        </Paragraph>
                                         <Paragraph>
-                                            目前大部分功能尚不完善，可能会出现bug，会在后期的版本中完善或修复。
+                                            目前小部分功能尚不完善，可能会出现bug，会在后期的版本中完善或修复。
                                         </Paragraph>
                                         <Paragraph>
                                             饼要一个一个画，功能要一个一个实现（

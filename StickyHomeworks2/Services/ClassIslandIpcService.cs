@@ -77,8 +77,25 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
     public Task StartAsync(CancellationToken cancellationToken)
     {
         if (_settingsService.Settings.IsClassIslandIpcEnabled)
-            _ = ConnectAsync();
+            _ = ConnectWithRetryAsync(cancellationToken);
         return Task.CompletedTask;
+    }
+
+    private async Task ConnectWithRetryAsync(CancellationToken cancellationToken)
+    {
+        for (var i = 0; i < 3; i++)
+        {
+            try
+            {
+                await ConnectAsync();
+                if (IsConnected) return;
+            }
+            catch
+            {
+                // ignored
+            }
+            await Task.Delay(1000, cancellationToken);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -99,7 +116,7 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
             _ = _ipcClient.Connect();
 
             // 等待连接完成
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             _lessonsService = _ipcClient.Provider.CreateIpcProxy<IPublicLessonsService>(_ipcClient.PeerProxy!);
             IsConnected = true;
