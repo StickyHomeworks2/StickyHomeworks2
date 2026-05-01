@@ -15,6 +15,7 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
     private static HashSet<Thread> _recursionProtection = new HashSet<Thread>();
     private DispatcherTimer? _debounceTimer;
     private string? _pendingXaml;
+    private bool _isLoading;
 
     protected override void OnAttached()
     {
@@ -31,6 +32,9 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
 
         AssociatedObject.TextChanged += (obj2, e2) =>
         {
+            if (_isLoading)
+                return;
+            
             var sw = new Stopwatch();
             sw.Start();
             RichTextBox richTextBox2 = obj2 as RichTextBox;
@@ -82,8 +86,10 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
                 var richTextBox = b.AssociatedObject;
 
                 var documentXaml = GetDocumentXaml(b);
+                b._isLoading = true;
                 richTextBox.Document = RichTextBoxHelper.ConvertDocument(documentXaml);
                 richTextBox.Document.IsOptimalParagraphEnabled = true;
+                b._isLoading = false;
             }
         ));
 

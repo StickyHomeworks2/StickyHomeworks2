@@ -1,4 +1,4 @@
-﻿<Window x:Class="StickyHomeworks.Views.HomeworkEditWindow"
+<Window x:Class="StickyHomeworks.Views.HomeworkEditWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -9,6 +9,7 @@
         xmlns:behaviors="clr-namespace:StickyHomeworks.Behaviors"
         xmlns:stickyHomeworks="clr-namespace:StickyHomeworks"
         xmlns:converter="clr-namespace:StickyHomeworks.Converter"
+        xmlns:emoji="clr-namespace:Emoji.Wpf;assembly=Emoji.Wpf"
         mc:Ignorable="d"
         WindowStyle="None"
         Topmost="True"
@@ -99,9 +100,11 @@
                     <ely:IconText Kind="FormatBold" Text="文本"/>
                     <Grid>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom">
-                            <Button Content="{materialDesign:PackIcon EmoticonOutline}"
+                            <Button x:Name="EmojiButton"
+                                    Content="{materialDesign:PackIcon EmoticonOutline}"
                                     VerticalAlignment="Center"
                                     Margin="4 0"
+                                    Click="ButtonEmoji_OnClick"
                                     Style="{StaticResource MaterialDesignToolForegroundButton}" />
                             <Button Content="{materialDesign:PackIcon ImageAddOutline}"
                                     VerticalAlignment="Center"
@@ -275,6 +278,13 @@
                     <ely:IconText Kind="Check" Text="确定"/>
                 </Button>
             </StackPanel>
+            <Popup x:Name="EmojiPickerPopup" PlacementTarget="{Binding ElementName=EmojiButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                <Border Background="{DynamicResource MaterialDesignPaper}" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" Width="320" MaxHeight="400">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <WrapPanel x:Name="EmojiPanel" Margin="8" />
+                    </ScrollViewer>
+                </Border>
+            </Popup>
         </Grid>
     </materialDesign:Card>
 </Window>

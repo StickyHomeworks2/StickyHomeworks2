@@ -76,6 +76,63 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         DataContext = this;
         InitializeComponent();
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
+        Loaded += HomeworkEditWindow_Loaded;
+    }
+
+    private static readonly string[] CommonEmojis = new[]
+    {
+        "😀", "😃", "😄", "😁", "😅", "😂", "🤣", "😊", "😇", "🙂",
+        "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛",
+        "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩", "🥳", "😏",
+        "📚", "📖", "📝", "✏️", "📓", "📔", "📒", "📕", "📗", "📘",
+        "✅", "❌", "⚠️", "🔔", "📌", "📎", "📁", "📂", "🗂️", "📅",
+        "⏰", "⏱️", "⏲️", "🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖",
+        "👍", "👎", "👏", "🙌", "🤝", "💪", "🙏", "✌️", "🤞", "👌",
+        "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "💯", "💥",
+        "⭐", "🌟", "✨", "🎉", "🎊", "🎈", "🎁", "🏆", "🥇", "🎯",
+        "🔥", "💡", "📢", "💬", "💭", "🗯️", "♨️", "🔴", "🟠", "🟡"
+    };
+
+    private void HomeworkEditWindow_Loaded(object? sender, RoutedEventArgs e)
+    {
+        foreach (var emoji in CommonEmojis)
+        {
+            var btn = new Button
+            {
+                Content = emoji,
+                Style = (Style)FindResource("MaterialDesignFlatButton"),
+                Margin = new Thickness(2),
+                Padding = new Thickness(4),
+                FontSize = 20,
+                MinWidth = 36,
+                MinHeight = 36
+            };
+            btn.Click += (s, e) =>
+            {
+                InsertEmoji(emoji);
+                EmojiPickerPopup.IsOpen = false;
+            };
+            EmojiPanel.Children.Add(btn);
+        }
+    }
+
+    private void InsertEmoji(string emoji)
+    {
+        var richTextBox = RelatedRichTextBox;
+        if (richTextBox == null)
+            return;
+        
+        var textRange = richTextBox.Selection;
+        if (textRange != null)
+        {
+            var start = textRange.Start.GetInsertionPosition(LogicalDirection.Forward);
+            textRange.Text = emoji;
+            var end = textRange.End.GetInsertionPosition(LogicalDirection.Backward);
+            var emojiRange = new TextRange(start, end);
+            emojiRange.ClearAllProperties();
+            textRange.Select(end, end);
+            richTextBox.Focus();
+        }
     }
 
     protected override void OnInitialized(EventArgs e)
@@ -245,6 +302,11 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         if (sender is ListBox l)
             l.SelectedIndex = -1;
         ViewModel.IsUpdatingColor = false;
+    }
+
+    private void ButtonEmoji_OnClick(object sender, RoutedEventArgs e)
+    {
+        EmojiPickerPopup.IsOpen = true;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

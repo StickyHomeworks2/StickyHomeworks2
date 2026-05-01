@@ -159,10 +159,10 @@ public class ColorOctTreeNode
                     if (processed % step == 0)
                     {
                         var idx = x * pixelSize;
-                        byte b = row[idx];
-                        byte g = row[idx + 1];
-                        byte r = row[idx + 2];
-                        var color = Color.FromArgb(r, g, b);
+                        byte blue = row[idx];
+                        byte green = row[idx + 1];
+                        byte red = row[idx + 2];
+                        var color = Color.FromArgb(red, green, blue);
                         
                         root.AddColor(color, 0);
                         pixelsAdded++;
