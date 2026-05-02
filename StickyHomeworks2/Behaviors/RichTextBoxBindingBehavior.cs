@@ -1,11 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
-using System.Windows.Threading;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Xaml.Behaviors;
 
 namespace StickyHomeworks.Behaviors;
@@ -13,45 +16,87 @@ namespace StickyHomeworks.Behaviors;
 public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
 {
     private static HashSet<Thread> _recursionProtection = new HashSet<Thread>();
-    private DispatcherTimer? _debounceTimer;
-    private string? _pendingXaml;
     private bool _isLoading;
+    private const string ImageMarker = "⌘IMG:";
+    private readonly Dictionary<Image, string> _imageCache = new();
 
     protected override void OnAttached()
     {
-        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        _debounceTimer.Tick += (s, e) =>
-        {
-            _debounceTimer.Stop();
-            if (_pendingXaml != null)
-            {
-                SetDocumentXaml(this, _pendingXaml);
-                _pendingXaml = null;
-            }
-        };
-
-        AssociatedObject.TextChanged += (obj2, e2) =>
-        {
-            if (_isLoading)
-                return;
-            
-            var sw = new Stopwatch();
-            sw.Start();
-            RichTextBox richTextBox2 = obj2 as RichTextBox;
-            if (richTextBox2 != null)
-            {
-                var xaml = XamlWriter.Save(richTextBox2.Document);
-                _pendingXaml = xaml;
-                _debounceTimer.Stop();
-                _debounceTimer.Start();
-            }
-        };
         base.OnAttached();
+    }
+
+    public string SaveDocument()
+    {
+        if (AssociatedObject == null)
+            return string.Empty;
+        return SaveDocumentWithEmbeddedImages(AssociatedObject.Document);
+    }
+
+    private string SaveDocumentWithEmbeddedImages(FlowDocument doc)
+    {
+        var tempDoc = new FlowDocument();
+
+        foreach (var block in doc.Blocks.ToList())
+        {
+            if (block is BlockUIContainer { Child: Image { Source: BitmapImage bitmap } img })
+            {
+                if (!_imageCache.TryGetValue(img, out var cachedData))
+                {
+                    var pngBytes = BitmapToPngBytes(bitmap);
+                    if (pngBytes != null)
+                    {
+                        var b64 = Convert.ToBase64String(pngBytes);
+                        cachedData = $"{b64}|{img.Width}|{img.Height}";
+                        _imageCache[img] = cachedData;
+                    }
+                }
+                
+                if (cachedData != null)
+                {
+                    tempDoc.Blocks.Add(new Paragraph(new Run(ImageMarker + cachedData)));
+                }
+                else
+                {
+                    tempDoc.Blocks.Add(new Paragraph());
+                }
+            }
+            else if (block is Paragraph para)
+            {
+                tempDoc.Blocks.Add(CloneBlock(para));
+            }
+            else
+            {
+                tempDoc.Blocks.Add(CloneBlock(block));
+            }
+        }
+
+        return XamlWriter.Save(tempDoc);
+    }
+
+    private static Block CloneBlock(Block block)
+    {
+        var xaml = XamlWriter.Save(block);
+        return (Block)XamlReader.Parse(xaml);
+    }
+
+    private static byte[]? BitmapToPngBytes(BitmapImage bitmap)
+    {
+        try
+        {
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            using var ms = new MemoryStream();
+            encoder.Save(ms);
+            return ms.ToArray();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     protected override void OnDetaching()
     {
-        _debounceTimer?.Stop();
         base.OnDetaching();
     }
 
@@ -73,29 +118,22 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
             FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
             (obj, e) =>
             {
-                var sw = new Stopwatch();
-                sw.Start();
                 if (_recursionProtection.Contains(Thread.CurrentThread))
-                {
-                    Debug.WriteLine(sw.Elapsed.ToString());
                     return;
-                }
 
                 if (obj is not RichTextBoxBindingBehavior b)
                     return;
-                var richTextBox = b.AssociatedObject;
 
-                var documentXaml = GetDocumentXaml(b);
                 b._isLoading = true;
-                richTextBox.Document = RichTextBoxHelper.ConvertDocument(documentXaml);
-                richTextBox.Document.IsOptimalParagraphEnabled = true;
+                b.AssociatedObject.Document = RichTextBoxHelper.ConvertDocument(GetDocumentXaml(b));
+                b.AssociatedObject.Document.IsOptimalParagraphEnabled = true;
                 b._isLoading = false;
             }
         ));
 
     public string DocumentXaml
     {
-        get { return (string)GetValue(DocumentXamlProperty); }
-        set { SetValue(DocumentXamlProperty, value); }
+        get => (string)GetValue(DocumentXamlProperty);
+        set => SetValue(DocumentXamlProperty, value);
     }
 }
