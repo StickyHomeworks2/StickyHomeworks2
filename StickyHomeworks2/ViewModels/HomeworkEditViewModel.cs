@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -14,11 +14,11 @@ public class HomeworkEditViewModel : ObservableRecipient
     private bool _isItalic = false;
     private bool _isUnderlined = false;
     private bool _isStrikeThrough = false;
-    private TextSelection? _selection;
-    private bool _isRestoringSelection = false;
-    private TextPointer? _beforeTextPointerStart;
-    private TextPointer? _beforeTextPointerEnd;
     private ObservableCollection<FontFamily> _fontFamilies = new();
+
+    public bool IsRestoringSelection;
+    public TextPointer? BeforeTextPointerStart;
+    public TextPointer? BeforeTextPointerEnd;
     private FontFamily _font = new();
     private double _fontSize = 14.0;
     private bool _isUpdatingColor = false;
@@ -89,49 +89,7 @@ public class HomeworkEditViewModel : ObservableRecipient
         }
     }
 
-    public TextSelection? Selection
-    {
-        get => _selection;
-        set
-        {
-            if (Equals(value, _selection)) return;
-            _selection = value;
-            OnPropertyChanged();
-        }
-    }
 
-    public bool IsRestoringSelection
-    {
-        get => _isRestoringSelection;
-        set
-        {
-            if (value == _isRestoringSelection) return;
-            _isRestoringSelection = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public TextPointer? BeforeTextPointerStart
-    {
-        get => _beforeTextPointerStart;
-        set
-        {
-            if (Equals(value, _beforeTextPointerStart)) return;
-            _beforeTextPointerStart = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public TextPointer? BeforeTextPointerEnd
-    {
-        get => _beforeTextPointerEnd;
-        set
-        {
-            if (Equals(value, _beforeTextPointerEnd)) return;
-            _beforeTextPointerEnd = value;
-            OnPropertyChanged();
-        }
-    }
 
     public ObservableCollection<FontFamily> FontFamilies
     {

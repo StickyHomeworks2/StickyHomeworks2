@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -16,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ElysiaFramework;
+using Microsoft.Win32;
 using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
 
@@ -27,6 +29,7 @@ namespace StickyHomeworks.Views;
 public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
 {
     private RichTextBox _relatedRichTextBox = new();
+    private System.Windows.Threading.DispatcherTimer? _selectionChangedDebounceTimer;
     public MainWindow MainWindow { get; }
     public SettingsService SettingsService { get; }
     public TimeMachineService TimeMachineService { get; }
@@ -64,6 +67,8 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
             UnregisterOldTextBox(_relatedRichTextBox);
             RegisterNewTextBox(value);
             _relatedRichTextBox = value;
+            ViewModel.BeforeTextPointerStart = null;
+            ViewModel.BeforeTextPointerEnd = null;
             OnPropertyChanged();
         }
     }
@@ -135,6 +140,77 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void ButtonInsertImage_OnClick(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Filter = "图片文件|*.png;*.jpg;*.jpeg;*.bmp;*.gif|所有文件|*.*",
+            Title = "选择要插入的图片"
+        };
+        if (dlg.ShowDialog(this) == true && File.Exists(dlg.FileName))
+        {
+            InsertImageFromFile(dlg.FileName);
+        }
+    }
+
+    private void InsertImageFromFile(string filePath)
+    {
+        if (RelatedRichTextBox == null)
+            return;
+
+        var image = new Image
+        {
+            Source = new BitmapImage(new Uri(filePath, UriKind.Absolute)),
+            Stretch = Stretch.Uniform,
+            Width = 300.0,
+            Tag = 300.0
+        };
+        var source = (BitmapImage)image.Source;
+        image.Height = 300.0 * source.PixelHeight / source.PixelWidth;
+
+        var container = new BlockUIContainer(image);
+        container.SetValue(Paragraph.MarginProperty, new Thickness(0, 4, 0, 4));
+        RelatedRichTextBox.Document.Blocks.Add(container);
+        RelatedRichTextBox.CaretPosition = container.ElementEnd;
+        RelatedRichTextBox.Focus();
+    }
+
+    private void RichTextBoxOnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var hit = VisualTreeHelper.HitTest(RelatedRichTextBox, e.GetPosition(RelatedRichTextBox));
+        
+        Image? clickedImage = hit?.VisualHit switch
+        {
+            Image img => img,
+            TextBlock tb when VisualTreeHelper.GetParent(tb) is Image img => img,
+            _ => null
+        };
+
+        if (clickedImage != null)
+        {
+            var originalWidth = clickedImage.Tag is double d ? d : clickedImage.Width;
+            var currentZoom = Math.Round(clickedImage.Width / originalWidth * 100);
+            var originalHeight = clickedImage.Height;
+            var originalImageWidth = clickedImage.Width;
+            var originalImageHeight = clickedImage.Height;
+
+            void ApplyZoom(double zoomPercent)
+            {
+                var newWidth = originalWidth * zoomPercent / 100.0;
+                var ratio = originalImageHeight / originalImageWidth;
+                clickedImage.Width = newWidth;
+                clickedImage.Height = newWidth * ratio;
+            }
+
+            var dialog = new ImageResizeDialog(currentZoom, ApplyZoom, () => ApplyZoom(currentZoom)) { Owner = this };
+            if (dialog.ShowDialog() != true)
+            {
+                ApplyZoom(currentZoom);
+            }
+            e.Handled = true;
+        }
+    }
+
     protected override void OnInitialized(EventArgs e)
     {
         ViewModel.FontFamilies =
@@ -168,31 +244,60 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     {
         richTextBox.TextChanged += RichTextBoxOnTextChanged;
         richTextBox.SelectionChanged += RichTextBoxOnSelectionChanged;
+        richTextBox.PreviewMouseLeftButtonDown += RichTextBoxOnPreviewMouseLeftButtonDown;
     }
 
     private void RichTextBoxOnSelectionChanged(object sender, RoutedEventArgs e)
     {
         if (ViewModel.IsRestoringSelection)
             return;
-        Debug.WriteLine("selection changed!");
         if (RelatedRichTextBox.Selection.Start.Paragraph != null)
             ViewModel.SelectedParagraph = RelatedRichTextBox.Selection.Start.Paragraph;
-        // Update selection
+
         var s = RelatedRichTextBox.Selection;
         if (!MainWindow.IsActive)
         {
-            if (ViewModel is not { BeforeTextPointerStart: not null, BeforeTextPointerEnd: not null })
+            if (ViewModel.BeforeTextPointerStart == null || ViewModel.BeforeTextPointerEnd == null)
                 return;
+            if (!IsValidTextPointer(ViewModel.BeforeTextPointerStart) || !IsValidTextPointer(ViewModel.BeforeTextPointerEnd))
+            {
+                ViewModel.BeforeTextPointerStart = null;
+                ViewModel.BeforeTextPointerEnd = null;
+                return;
+            }
             ViewModel.IsRestoringSelection = true;
             RelatedRichTextBox.Selection.Select(ViewModel.BeforeTextPointerStart, ViewModel.BeforeTextPointerEnd);
             ViewModel.IsRestoringSelection = false;
             return;
         }
-        ViewModel.Selection = s;
+
         ViewModel.BeforeTextPointerStart = s.Start;
         ViewModel.BeforeTextPointerEnd = s.End;
+
+        _selectionChangedDebounceTimer?.Stop();
+        _selectionChangedDebounceTimer = new System.Windows.Threading.DispatcherTimer(
+            System.Windows.Threading.DispatcherPriority.Background,
+            Dispatcher)
+        {
+            Interval = TimeSpan.FromMilliseconds(150)
+        };
+        _selectionChangedDebounceTimer.Tick += (_, _) =>
+        {
+            _selectionChangedDebounceTimer?.Stop();
+            _selectionChangedDebounceTimer = null;
+            UpdateToolbarFromSelection();
+        };
+        _selectionChangedDebounceTimer.Start();
+    }
+
+    private void UpdateToolbarFromSelection()
+    {
+        if (RelatedRichTextBox == null)
+            return;
+
         ViewModel.IsRestoringSelection = true;
-        Debug.WriteLine("selection updated!");
+
+        var s = RelatedRichTextBox.Selection;
         var w = s.GetPropertyValue(TextElement.FontWeightProperty);
         if (w is FontWeight weight)
         {
@@ -230,6 +335,22 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     {
         richTextBox.TextChanged -= RichTextBoxOnTextChanged;
         richTextBox.SelectionChanged -= RichTextBoxOnSelectionChanged;
+        richTextBox.PreviewMouseLeftButtonDown -= RichTextBoxOnPreviewMouseLeftButtonDown;
+    }
+
+    private static bool IsValidTextPointer(TextPointer? pointer)
+    {
+        if (pointer == null)
+            return false;
+        try
+        {
+            _ = pointer.Parent;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void ListBoxTextStyles_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -266,9 +387,60 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
 
     private void ButtonEditingDone_OnClick(object sender, RoutedEventArgs e)
     {
+        SaveDocumentToHomework();
         EditingFinished?.Invoke(this, EventArgs.Empty);
         AppEx.GetService<ProfileService>().SaveProfile();
         // 备份由 MainWindow.ExitEditingMode 触发，此处不再重复调用
+    }
+
+    private void SaveDocumentToHomework()
+    {
+        if (RelatedRichTextBox == null)
+            return;
+
+        var behavior = FindRichTextBoxBindingBehavior(RelatedRichTextBox);
+        if (behavior == null)
+            return;
+
+        var xaml = behavior.SaveDocument();
+        if (string.IsNullOrEmpty(xaml))
+            return;
+
+        // 清空 TextPointer，防止 Document 被替换后 SelectionChanged 使用失效指针
+        ViewModel.BeforeTextPointerStart = null;
+        ViewModel.BeforeTextPointerEnd = null;
+
+        // 将保存的 XAML 写回到 Homework.Content
+        var homeworkControl = FindParentHomeworkControl(RelatedRichTextBox);
+        if (homeworkControl?.Homework != null)
+        {
+            homeworkControl.Homework.Content = xaml;
+        }
+    }
+
+    private static StickyHomeworks.Behaviors.RichTextBoxBindingBehavior? FindRichTextBoxBindingBehavior(RichTextBox richTextBox)
+    {
+        if (richTextBox == null)
+            return null;
+
+        var behaviors = Microsoft.Xaml.Behaviors.Interaction.GetBehaviors(richTextBox);
+        foreach (var behavior in behaviors)
+        {
+            if (behavior is StickyHomeworks.Behaviors.RichTextBoxBindingBehavior b)
+                return b;
+        }
+        return null;
+    }
+
+    private static StickyHomeworks.Controls.HomeworkControl? FindParentHomeworkControl(DependencyObject child)
+    {
+        while (child != null)
+        {
+            if (child is StickyHomeworks.Controls.HomeworkControl control)
+                return control;
+            child = System.Windows.Media.VisualTreeHelper.GetParent(child);
+        }
+        return null;
     }
 
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
