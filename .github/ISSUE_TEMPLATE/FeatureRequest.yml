@@ -2,7 +2,7 @@ name: 功能请求
 description: 为 StickyHomework2 提出一项新的功能。
 title: （将此栏【替换】为你的标题）
 labels: ["新功能", "待查看"]
-assignees: ["zji573432-cpu"]
+assignees: ["zji573432-cpu","belugaQAQ"]
 type: Feature
 body:
   - type: markdown
