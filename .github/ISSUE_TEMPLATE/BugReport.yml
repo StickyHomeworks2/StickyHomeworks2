@@ -2,7 +2,7 @@ name: Bug 反馈
 description: 在使用 StickyHomework2 的过程中遇到了 Bug
 title: （将此栏【替换】为你的标题）
 labels: ["Bug", "待查看"]
-assignees: ["zji573432-cpu"]
+assignees: ["zji573432-cpu","belugaQAQ"]
 type: Bug
 body:
   - type: markdown
