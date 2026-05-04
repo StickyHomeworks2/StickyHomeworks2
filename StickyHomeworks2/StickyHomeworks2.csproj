@@ -13,7 +13,9 @@
 	<ApplicationIcon>Assets\AppLogo.ico</ApplicationIcon>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UpdaterRepoRoot>$(MSBuildThisFileDirectory)..\StickyHomeworks2.Updater\</UpdaterRepoRoot>
-    <UpdaterOutputPath>$(UpdaterRepoRoot)bin\$(Configuration)\net8.0-windows\win-x64\publish\</UpdaterOutputPath>
+    <!-- 与默认 bin\...\publish 分离：嵌套 Publish 会继承外层 dotnet publish 的 PublishDir，必须显式指定否则 exe 会落到主工程的 ./publish -->
+    <UpdaterEmbeddedPublishDir>$(UpdaterRepoRoot)obj\embed-publish\$(Configuration)\win-x64\</UpdaterEmbeddedPublishDir>
+    <UpdaterOutputPath>$(UpdaterEmbeddedPublishDir)</UpdaterOutputPath>
     <UpdaterExePath>$(UpdaterOutputPath)StickyHomeworks2.Updater.exe</UpdaterExePath>
     <EmbeddedUpdaterPath>$(IntermediateOutputPath)Updater.exe</EmbeddedUpdaterPath>
   </PropertyGroup>
@@ -70,7 +72,9 @@
 
   <Target Name="BuildAndEmbedUpdater" BeforeTargets="BeforeBuild" Condition="'$(SkipEmbeddedUpdater)' != 'true'">
     <Message Text="正在构建 Updater 项目..." Importance="high" />
-    <MSBuild Projects="$(UpdaterRepoRoot)StickyHomeworks2.Updater.csproj" Targets="Publish" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSingleFile=true" />
+    <MSBuild Projects="$(UpdaterRepoRoot)StickyHomeworks2.Updater.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;PublishDir=$(UpdaterEmbeddedPublishDir);PublishReadyToRun=false" />
     
     <PropertyGroup>
       <UpdaterSourcePath>$(UpdaterOutputPath)StickyHomeworks2.Updater.exe</UpdaterSourcePath>
