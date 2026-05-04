@@ -31,7 +31,7 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <EditorConfigFiles Remove="E:\Coding\StickyHomeworks2\StickyHomeworks2\.editorconfig" />
+    <EditorConfigFiles Remove="$(MSBuildThisFileDirectory).editorconfig" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Assets\AppLogo.png" />
@@ -39,7 +39,7 @@
     <None Remove="Assets\光辉矢愿_瞄准.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="E:\Coding\StickyHomeworks2\StickyHomeworks2\.editorconfig" />
+    <None Include="$(MSBuildThisFileDirectory).editorconfig" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ElysiaFramework\ElysiaFramework.csproj" />
