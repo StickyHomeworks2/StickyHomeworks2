@@ -317,6 +317,7 @@ public partial class MainWindow : Window
 
     private void OnEditingFinished(object? sender, EventArgs e)
     {
+        ViewModel.IsCreatingMode = false;
         ExitEditingMode();
     }
 
