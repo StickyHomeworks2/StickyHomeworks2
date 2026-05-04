@@ -12,6 +12,10 @@
 	<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
 	<ApplicationIcon>Assets\AppLogo.ico</ApplicationIcon>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Updater 嵌入资源相关配置 -->
+    <UpdaterOutputPath>$(SolutionDir)StickyHomeworks2.Updater\bin\$(Configuration)\net8.0-windows\win-x64\publish\</UpdaterOutputPath>
+    <UpdaterExePath>$(UpdaterOutputPath)StickyHomeworks2.Updater.exe</UpdaterExePath>
+    <EmbeddedUpdaterPath>$(IntermediateOutputPath)Updater.exe</EmbeddedUpdaterPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
@@ -59,4 +63,32 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="WindowsShortcutFactory" Version="1.1.0" />
   </ItemGroup>
+
+  <!-- Updater 项目构建依赖 -->
+  <ItemGroup>
+    <ProjectReference Include="..\StickyHomeworks2.Updater\StickyHomeworks2.Updater.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- 构建 Updater 并嵌入资源 -->
+  <Target Name="BuildAndEmbedUpdater" BeforeTargets="BeforeBuild">
+    <Message Text="正在构建 Updater 项目..." Importance="high" />
+    <MSBuild Projects="$(SolutionDir)StickyHomeworks2.Updater\StickyHomeworks2.Updater.csproj" Targets="Publish" Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSingleFile=true" />
+    
+    <PropertyGroup>
+      <UpdaterSourcePath>$(SolutionDir)StickyHomeworks2.Updater\bin\$(Configuration)\net8.0-windows\win-x64\publish\StickyHomeworks2.Updater.exe</UpdaterSourcePath>
+    </PropertyGroup>
+    
+    <Copy SourceFiles="$(UpdaterSourcePath)" DestinationFolder="$(IntermediateOutputPath)" />
+    <Message Text="Updater.exe 已复制到: $(IntermediateOutputPath)StickyHomeworks2.Updater.exe" Importance="high" />
+    
+    <ItemGroup>
+      <EmbeddedResource Include="$(IntermediateOutputPath)StickyHomeworks2.Updater.exe" LogicalName="StickyHomeworks2.Assets.Updater.exe" />
+    </ItemGroup>
+    <Message Text="Updater.exe 已嵌入为资源: StickyHomeworks2.Assets.Updater.exe" Importance="high" />
+  </Target>
+
+  <!-- 清理时删除嵌入的 Updater -->
+  <Target Name="CleanUpdater" AfterTargets="Clean">
+    <Delete Files="$(IntermediateOutputPath)StickyHomeworks2.Updater.exe" Condition="Exists('$(IntermediateOutputPath)StickyHomeworks2.Updater.exe')" />
+  </Target>
 </Project>

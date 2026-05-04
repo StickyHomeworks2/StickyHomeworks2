@@ -18,8 +18,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ElysiaFramework;
 using Microsoft.Win32;
+using StickyHomeworks;
 using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
+using StickyHomeworks2.Helpers;
+using StickyHomeworks2.Views;
 
 namespace StickyHomeworks.Views;
 
@@ -140,6 +143,155 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void ButtonInsertLink_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (RelatedRichTextBox?.Document == null)
+            return;
+
+        var rtb = RelatedRichTextBox;
+        var sel = rtb.Selection;
+
+        if (!sel.IsEmpty)
+        {
+            if (sel.Start.Paragraph != sel.End.Paragraph)
+            {
+                MessageBox.Show(this,
+                    "无法在跨多个段落的选区插入链接。请将选区限定在同一段落内，或分多次插入。",
+                    "插入链接",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+        }
+        else if (rtb.CaretPosition.Paragraph == null)
+        {
+            MessageBox.Show(this,
+                "请将光标放在文本段落中再插入链接。",
+                "插入链接",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var defaultDisplay = sel.IsEmpty ? null : sel.Text;
+
+        var dlg = new InsertLinkWindow(defaultDisplay);
+        if (Application.Current?.MainWindow != null && Application.Current.MainWindow.IsVisible)
+            dlg.Owner = Application.Current.MainWindow;
+        else
+            dlg.Owner = this;
+
+        if (dlg.ShowDialog() != true || dlg.ResultUri == null)
+            return;
+
+        TextPointer insertPos;
+        if (!sel.IsEmpty)
+        {
+            var clear = new TextRange(sel.Start, sel.End);
+            insertPos = clear.Start;
+            clear.Text = string.Empty;
+            insertPos = clear.Start;
+        }
+        else
+        {
+            insertPos = rtb.CaretPosition;
+        }
+
+        if (insertPos.Paragraph == null)
+        {
+            MessageBox.Show(this, "无法确定插入位置。", "插入链接", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var hyperlink = new Hyperlink(new Run(dlg.ResultDisplayText))
+        {
+            NavigateUri = dlg.ResultUri,
+            Foreground = RichTextBoxHelper.DefaultHyperlinkForeground
+        };
+        HyperlinkBehavior.SetConfirmNavigation(hyperlink, true);
+
+        InsertInlineAtTextPointer(insertPos, hyperlink);
+        rtb.CaretPosition = hyperlink.ContentEnd;
+        rtb.Focus();
+        SaveDocumentToHomework();
+    }
+
+    /// <summary>
+    /// 若指针位于 Run 中间则拆分为两段，以便在边界插入内联元素。
+    /// </summary>
+    private static TextPointer PrepareInsertionPosition(TextPointer position)
+    {
+        if (position.Parent is not Run run || string.IsNullOrEmpty(run.Text))
+            return position;
+
+        var before = new TextRange(run.ContentStart, position).Text ?? string.Empty;
+        var beforeLen = before.Length;
+        if (beforeLen <= 0 || beforeLen >= run.Text.Length)
+            return position;
+
+        var tailText = run.Text.Substring(beforeLen);
+        run.Text = run.Text.Substring(0, beforeLen);
+        var tailRun = new Run(tailText);
+
+        switch (run.Parent)
+        {
+            case Paragraph p:
+                p.Inlines.InsertAfter(run, tailRun);
+                break;
+            case Hyperlink h:
+                h.Inlines.InsertAfter(run, tailRun);
+                break;
+            case Span span:
+                span.Inlines.InsertAfter(run, tailRun);
+                break;
+            default:
+                return position;
+        }
+
+        return run.ContentEnd;
+    }
+
+    private static void InsertInlineAtTextPointer(TextPointer pos, Inline inline)
+    {
+        pos = PrepareInsertionPosition(pos);
+
+        var backward = pos.GetAdjacentElement(LogicalDirection.Backward) as Inline;
+        var forward = pos.GetAdjacentElement(LogicalDirection.Forward) as Inline;
+
+        InlineCollection? coll = null;
+        for (var p = pos.Parent; p != null; p = LogicalTreeHelper.GetParent(p))
+        {
+            if (p is Hyperlink hl)
+            {
+                coll = hl.Inlines;
+                break;
+            }
+
+            if (p is Paragraph paragraph)
+            {
+                coll = paragraph.Inlines;
+                break;
+            }
+        }
+
+        if (coll == null)
+            return;
+
+        if (backward != null && coll.Contains(backward))
+        {
+            coll.InsertAfter(backward, inline);
+            return;
+        }
+
+        if (forward != null && coll.Contains(forward))
+        {
+            coll.InsertBefore(forward, inline);
+            return;
+        }
+
+        coll.Add(inline);
+    }
+
     private void ButtonInsertImage_OnClick(object sender, RoutedEventArgs e)
     {
         var dlg = new OpenFileDialog
@@ -177,6 +329,9 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
 
     private void RichTextBoxOnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (RichTextBoxHyperlinkClickHelper.TryHandleHyperlinkMouseLeftButtonDown(RelatedRichTextBox, e))
+            return;
+
         var hit = VisualTreeHelper.HitTest(RelatedRichTextBox, e.GetPosition(RelatedRichTextBox));
         
         Image? clickedImage = hit?.VisualHit switch

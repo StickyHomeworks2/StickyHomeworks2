@@ -47,6 +47,9 @@ public partial class MainWindow : Window
     public event EventHandler? OnHomeworkEditorUpdated;
 
     private DispatcherTimer _setBottomTimer;
+    private readonly WindowFocusObserverService _focusObserverService;
+    private readonly ClassIslandIpcService? _classIslandIpcService;
+    private readonly PropertyChangedEventHandler _settingsClassIslandIpcPropertyChanged;
 
     public MainWindow(ProfileService profileService,
                       SettingsService settingsService,
@@ -55,26 +58,31 @@ public partial class MainWindow : Window
         ProfileService = profileService;
         SettingsService = settingsService;
         TimeMachineService = AppEx.GetService<TimeMachineService>();
+        _focusObserverService = focusObserverService;
         InitializeComponent();
-        focusObserverService.FocusChanged += FocusObserverServiceOnFocusChanged;
+        _focusObserverService.FocusChanged += FocusObserverServiceOnFocusChanged;
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
         ViewModel.PropertyChanging += ViewModelOnPropertyChanging;
         this.StateChanged += OnWindowStateChanged;
         DataContext = this;
         this.TrayIconView.TrayRightMouseUp += TrayIconView_TrayMouseRightClick;
-        
-        var ipcService = AppEx.GetService<ClassIslandIpcService>();
-        if (ipcService != null)
+
+        _classIslandIpcService = AppEx.GetService<ClassIslandIpcService>();
+        _settingsClassIslandIpcPropertyChanged = SettingsOnPropertyChangedForClassIslandIpc;
+        if (_classIslandIpcService != null)
         {
-            ipcService.ClassStateChanged += OnClassStateChanged;
-            SettingsService.Settings.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(Settings.IsClassIslandIpcEnabled))
-                {
-                    _ = SettingsService.Settings.IsClassIslandIpcEnabled ? ipcService.ConnectAsync() : Task.Run(ipcService.Disconnect);
-                }
-            };
+            _classIslandIpcService.ClassStateChanged += OnClassStateChanged;
+            SettingsService.Settings.PropertyChanged += _settingsClassIslandIpcPropertyChanged;
         }
+    }
+
+    private void SettingsOnPropertyChangedForClassIslandIpc(object? s, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(Settings.IsClassIslandIpcEnabled) || _classIslandIpcService == null)
+            return;
+        _ = SettingsService.Settings.IsClassIslandIpcEnabled
+            ? _classIslandIpcService.ConnectAsync()
+            : Task.Run(_classIslandIpcService.Disconnect);
     }
 
     private void OnClassStateChanged(object? sender, EventArgs e)
@@ -806,10 +814,28 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        // 清理托盘图标
-        this.TrayIconView.Dispose();
-        // 移除事件处理
-        this.TrayIconView.TrayRightMouseUp -= TrayIconView_TrayMouseRightClick;
+        _focusObserverService.FocusChanged -= FocusObserverServiceOnFocusChanged;
+        ViewModel.PropertyChanged -= ViewModelOnPropertyChanged;
+        ViewModel.PropertyChanging -= ViewModelOnPropertyChanging;
+        StateChanged -= OnWindowStateChanged;
+        StateChanged -= MainWindow_OnStateChanged;
+        Activated -= MainWindow_OnActivated;
+        Deactivated -= MainWindow_OnDeactivated;
+
+        if (_classIslandIpcService != null)
+        {
+            _classIslandIpcService.ClassStateChanged -= OnClassStateChanged;
+            SettingsService.Settings.PropertyChanged -= _settingsClassIslandIpcPropertyChanged;
+        }
+
+        var homeworkEdit = AppEx.GetService<HomeworkEditWindow>();
+        homeworkEdit.EditingFinished -= OnEditingFinished;
+        homeworkEdit.SubjectChanged -= OnSubjectChanged;
+
+        _setBottomTimer?.Stop();
+
+        TrayIconView.TrayRightMouseUp -= TrayIconView_TrayMouseRightClick;
+        TrayIconView.Dispose();
         base.OnClosed(e);
     }
 }

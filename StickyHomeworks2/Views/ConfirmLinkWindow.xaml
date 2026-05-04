@@ -3,65 +3,121 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:StickyHomeworks2.Views"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
         mc:Ignorable="d"
+        d:DesignHeight="280"
+        d:DesignWidth="520"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="14"
         FontFamily="{StaticResource HarmonyOsSans}"
-        Title="打开外部链接？"
+        Title="打开外部链接"
         Width="520"
-        Height="220"
-        MinWidth="500"
-        MinHeight="300"
-        Background="#303030"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
+        MinWidth="400"
+        MinHeight="200"
+        MaxHeight="560"
+        SizeToContent="Height"
+        Background="{DynamicResource MaterialDesignPaper}"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
 
     <Grid Margin="20">
-        <!-- 外部留白 -->
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <!-- 提示文本 -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,20">
-                <TextBlock Text="确定打开链接?" FontSize="16" Foreground="White"/>
-            </StackPanel>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-            <!-- 链接显示区域 -->
-            <Border Background="#424242"
-                    CornerRadius="4"
-                    Padding="12"
-                    Margin="0,0,0,15"
-                    BorderBrush="#666666"
-                    BorderThickness="1">
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              MaxHeight="100">
-                    <StackPanel>
-                        <TextBlock x:Name="LinkUriTextBlock"
-                                   TextWrapping="Wrap"
-                                   FontSize="14"
-                                   Foreground="White"
-                                   TextAlignment="Left"/>
-                        <TextBlock x:Name="LinkTextTextBlock"
-                                   TextWrapping="Wrap"
-                                   FontSize="13"
-                                   Foreground="LightGray"
-                                   TextAlignment="Left"
-                                   Margin="0,5,0,0"/>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
+        <materialDesign:Card Grid.Row="0"
+                             Padding="20"
+                             materialDesign:ElevationAssist.Elevation="Dp3"
+                             Background="{DynamicResource MaterialDesignPaper}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- 按钮区域 -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0">
-                <Button Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                        Margin="0 0 12 0"
-                        Click="YesButton_Click">
-                    <ely:IconText Kind="Check" Text="确定" IconMargin="3 0 0 0" RenderTransformOrigin="0.632,1.665" Foreground="Green"/>
-                </Button>
-                <Button Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                        Click="NoButton_Click">
-                    <ely:IconText Kind="Close" Text="取消" IconMargin="3 0 0 0" RenderTransformOrigin="0.632,1.665" Foreground="Red"/>
-                </Button>
-            </StackPanel>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                    <materialDesign:PackIcon Kind="OpenInNew"
+                                             Width="22"
+                                             Height="22"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                               Text="在浏览器中打开此链接？"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1"
+                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                           Opacity="0.85"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,10"
+                           Text="链接将交给系统默认浏览器处理,请确认地址可信后再继续。"/>
+
+                <TextBlock Grid.Row="2"
+                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                           Margin="0,0,0,4"
+                           Text="链接地址"/>
+
+                <Border Grid.Row="3"
+                        Background="{DynamicResource MaterialDesignDivider}"
+                        Padding="10,8"
+                        Margin="0,0,0,12">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  MaxHeight="120">
+                        <TextBox x:Name="LinkUriTextBox"
+                                 IsReadOnly="True"
+                                 IsTabStop="True"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 TextWrapping="Wrap"
+                                 FontSize="13"
+                                 FontFamily="Consolas, Cascadia Mono, HarmonyOS Sans SC"
+                                 VerticalContentAlignment="Top"
+                                 GotKeyboardFocus="LinkUriTextBox_OnGotKeyboardFocus"/>
+                    </ScrollViewer>
+                </Border>
+
+                <StackPanel x:Name="LinkTextPanel" Grid.Row="4" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                               Margin="0,0,0,4"
+                               Text="链接文本"/>
+                    <TextBlock x:Name="LinkTextTextBlock"
+                               TextWrapping="Wrap"
+                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                               Opacity="0.9"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="0,0,12,0"
+                    MinWidth="100"
+                    IsDefault="True"
+                    Click="YesButton_Click">
+                <ely:IconText Kind="Check" Text="打开" IconMargin="4 0 0 0"/>
+            </Button>
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    MinWidth="100"
+                    IsCancel="True"
+                    Click="NoButton_Click">
+                <ely:IconText Kind="Close" Text="取消" IconMargin="4 0 0 0"/>
+            </Button>
         </StackPanel>
     </Grid>
 </Window>

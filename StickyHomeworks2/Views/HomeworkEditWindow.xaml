@@ -115,6 +115,8 @@
                             <Button Content="{materialDesign:PackIcon LinkAdd}"
                                     VerticalAlignment="Center"
                                     Margin="4 0"
+                                    Click="ButtonInsertLink_OnClick"
+                                    ToolTip="插入链接"
                                     Style="{StaticResource MaterialDesignToolForegroundButton}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">

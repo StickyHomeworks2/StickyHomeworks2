@@ -1,39 +1,34 @@
-﻿using StickyHomeworks2.Views;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using StickyHomeworks2.Views;
 
-namespace StickyHomeworks2.Helpers
+namespace StickyHomeworks2.Helpers;
+
+public static class LinkConfirmationHelper
 {
-    public static class LinkConfirmationHelper
+    public static void ConfirmAndOpenLink(string linkUri, string linkText)
     {
-        public static void ConfirmAndOpenLink(string linkUri, string linkText)
-        {
-            // 弹出确认窗口
-            ConfirmLinkWindow confirmWindow = new ConfirmLinkWindow(linkUri, linkText);
-            confirmWindow.ShowDialog();
+        var confirmWindow = new ConfirmLinkWindow(linkUri, linkText);
+        if (Application.Current?.MainWindow != null && Application.Current.MainWindow.IsVisible)
+            confirmWindow.Owner = Application.Current.MainWindow;
+        confirmWindow.ShowDialog();
 
-            // 如果用户确认打开链接
-            if (confirmWindow.IsConfirmed)
-            {
-                ProcessStartInfo psi = new ProcessStartInfo
-                {
-                    FileName = linkUri,
-                    UseShellExecute = true
-                };
-                try
-                {
-                    Process.Start(psi);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"无法打开链接: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
+        if (!confirmWindow.IsConfirmed)
+            return;
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = linkUri,
+            UseShellExecute = true
+        };
+        try
+        {
+            Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"无法打开链接: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

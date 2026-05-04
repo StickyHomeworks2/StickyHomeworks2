@@ -19,6 +19,7 @@ using Stfu.Linq;
 using StickyHomeworks.Models;
 using StickyHomeworks.Services;
 using StickyHomeworks.Views;
+using StickyHomeworks2.Helpers;
 
 namespace StickyHomeworks.Controls;
 
@@ -137,5 +138,11 @@ public partial class HomeworkControl : UserControl
         {
             App.GetService<MainWindow>().OnTextBoxEnter();
         }
+    }
+
+    private void RichTextBox_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is RichTextBox rtb && RichTextBoxHyperlinkClickHelper.TryHandleHyperlinkMouseLeftButtonDown(rtb, e))
+            return;
     }
 }

@@ -12,7 +12,6 @@ using StickyHomeworks2.Helpers;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -60,11 +59,15 @@ public partial class SettingsWindow : MyWindow
     public WallpaperPickingService WallpaperPickingService { get; }
     public ClassIslandIpcService ClassIslandIpcService { get; }
 
+    private readonly SettingsService _settingsService;
+    private readonly PropertyChangedEventHandler _settingsServiceRootPropertyChanged;
+
     private CancellationTokenSource _cts;
     private string _savePath;
+    private string _updateVersion;
     private const string UpdateInfoUrl = "https://api.classisband.xyz/api/latest.json";
     private const string LocalAppData = "StickyHomeworks2Updater";
-    private readonly HttpClient _httpClient;
+    private HttpClient? _httpClient;
     private const string ChangelogUrl = "https://api.classisband.xyz/api/changelog.md";
 
 
@@ -74,20 +77,14 @@ public partial class SettingsWindow : MyWindow
     {
         WallpaperPickingService = wallpaperPickingService;
         ClassIslandIpcService = classIslandIpcService;
+        _settingsService = settingsService;
+        _settingsServiceRootPropertyChanged = SettingsServiceOnRootPropertyChanged;
 
         InitializeComponent();
         DataContext = this;
         Settings = settingsService.Settings;
         Settings.PropertyChanged += SettingsOnPropertyChanged;
-        settingsService.PropertyChanged += (sender, args) =>
-        {
-            if (args.PropertyName == "Settings")
-            {
-                Settings.PropertyChanged -= SettingsOnPropertyChanged;
-                Settings = settingsService.Settings;
-                Settings.PropertyChanged += SettingsOnPropertyChanged;
-            }
-        };
+        _settingsService.PropertyChanged += _settingsServiceRootPropertyChanged;
         var style = (Style)FindResource("NotificationsListBoxItemStyle");
         //style.Setters.Add(new EventSetter(ListBoxItem.MouseDoubleClickEvent, new System.Windows.Input.MouseEventHandler(EventSetter_OnHandler)));
 
@@ -95,15 +92,38 @@ public partial class SettingsWindow : MyWindow
         _savePath = System.IO.Path.Combine(exeDir, "UpdateTemp", "StickyHomeworks2.zip");
         System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_savePath));
 
+        EnsureHttpClient();
+    }
+
+    private void EnsureHttpClient()
+    {
+        if (_httpClient != null)
+            return;
         _httpClient = new HttpClient();
         _httpClient.Timeout = TimeSpan.FromSeconds(15);
-
     }
 
     private void SettingsOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
     }
 
+    private void SettingsServiceOnRootPropertyChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(SettingsService.Settings))
+            return;
+        Settings.PropertyChanged -= SettingsOnPropertyChanged;
+        Settings = _settingsService.Settings;
+        Settings.PropertyChanged += SettingsOnPropertyChanged;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        Settings.PropertyChanged -= SettingsOnPropertyChanged;
+        _settingsService.PropertyChanged -= _settingsServiceRootPropertyChanged;
+        _httpClient?.Dispose();
+        _httpClient = null;
+        base.OnClosed(e);
+    }
 
     protected override void OnInitialized(EventArgs e)
     {
@@ -418,6 +438,45 @@ public partial class SettingsWindow : MyWindow
 
     //<<<更新逻辑:开始>>>
 
+    /// <summary>
+    /// 从嵌入资源提取 Updater.exe 到临时目录
+    /// </summary>
+    /// <returns>提取后的 Updater.exe 文件路径</returns>
+    private string ExtractUpdater()
+    {
+        var extractDir = Path.Combine(Path.GetTempPath(), LocalAppData);
+        var updaterPath = Path.Combine(extractDir, "Updater.exe");
+
+        try
+        {
+            // 确保目录存在
+            if (!Directory.Exists(extractDir))
+            {
+                Directory.CreateDirectory(extractDir);
+            }
+
+            // 从嵌入资源提取
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("StickyHomeworks2.Assets.Updater.exe");
+            
+            if (stream == null)
+            {
+                throw new InvalidOperationException("无法找到嵌入的 Updater.exe 资源。请确保项目已正确配置嵌入资源。");
+            }
+
+            using var fileStream = new FileStream(updaterPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            stream.CopyTo(fileStream);
+
+            System.Diagnostics.Debug.WriteLine($"Updater.exe 已提取到: {updaterPath}");
+            return updaterPath;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"提取 Updater.exe 失败: {ex.Message}");
+            throw new InvalidOperationException($"提取 Updater.exe 失败: {ex.Message}", ex);
+        }
+    }
+
     private async Task CheckForUpdatesAsync()
     {
         if (!CheckUpdatesButton.IsEnabled) return;                
@@ -455,6 +514,7 @@ public partial class SettingsWindow : MyWindow
                
                 if (IsNewerVersion(currentVersion, updateInfo.Version))
                 {
+                    _updateVersion = updateInfo.Version;
                     versionStatusTextBlock.Text = $"有新版本：{updateInfo.Version}";
                     UpdateStatusTextBlock.Text = $"更新可用";
                     UpdateIcon.Kind = PackIconKind.Upload;
@@ -594,74 +654,21 @@ public partial class SettingsWindow : MyWindow
         if (!File.Exists(zipFilePath))
             throw new FileNotFoundException("更新包未找到。", zipFilePath);
 
-        var extractDir = Path.Combine(Path.GetTempPath(), LocalAppData);
-        var updaterBatPath = Path.Combine(extractDir, "update.bat");
         var currentExePath = Process.GetCurrentProcess().MainModule.FileName;
         var appDirectory = Path.GetDirectoryName(currentExePath);
-        var updateTempDir = Path.GetDirectoryName(zipFilePath);
+        var currentPid = Environment.ProcessId;
 
         try
         {
-            if (Directory.Exists(extractDir))
-                Directory.Delete(extractDir, true);
-            Directory.CreateDirectory(extractDir);
-
             Dispatcher.Invoke(() =>
             {
-                UpdateStatusTextBlock.Text = "正在解压...";
-                versionStatusTextBlock.Text = "正在解压更新包...";
+                UpdateStatusTextBlock.Text = "准备重启...";
+                versionStatusTextBlock.Text = "正在准备更新程序...";
                 DownloadProgress.IsIndeterminate = true;
             });
 
-            await Task.Run(() => ZipFile.ExtractToDirectory(zipFilePath, extractDir, overwriteFiles: true));
-
-            var sourceDir = extractDir;
-            var subDirs = Directory.GetDirectories(extractDir);
-            if (subDirs.Length == 1 && Directory.GetFiles(extractDir).Length == 0)
-            {
-                sourceDir = subDirs[0];
-            }
-
-            var batContent = $@"
-@echo off
-chcp 65001 >nul
-color 0a
-title StickyHomeworks2 更新程序
-
-echo.
-echo 正在应用更新，请稍候...
-echo 解压目录: {sourceDir}
-echo 主程序目录: {appDirectory}
-echo.
-echo 等待退出...
-timeout /t 3 >nul
-
-robocopy ""{sourceDir}"" ""{appDirectory}"" /E /Z /R:3 /W:5 /V /LOG:""{Path.Combine(extractDir, "update.log")}""
-
-if %errorlevel% geq 8 (
-    echo.
-    echo [!] 更新失败: %errorlevel%
-    echo 请手动重启程序。
-    timeout /t 10 >nul
-    exit /b 1
-)
-
-echo.
-echo [!] 更新已成功应用。
-echo 正在启动主程序...
-
-start "" """"{currentExePath}""
-
-echo 清理临时文件...
-if exist ""{extractDir}"" rd /s /q ""{extractDir}""
-if exist ""{updateTempDir}"" rd /s /q ""{updateTempDir}""
-
-(goto) 2>nul & del ""%~f0""
-exit /b 0
-";
-
-          
-            await File.WriteAllTextAsync(updaterBatPath, batContent, new UTF8Encoding(true));
+            // 提取嵌入的 Updater.exe
+            var updaterPath = ExtractUpdater();
 
             Dispatcher.Invoke(() =>
             {
@@ -669,31 +676,28 @@ exit /b 0
                 versionStatusTextBlock.Text = "即将重启并应用更新...";
             });
 
-
-        
+            // 构建启动参数
             var startInfo = new ProcessStartInfo
             {
-                FileName = updaterBatPath,        
+                FileName = updaterPath,
+                Arguments = $"--zip \"{zipFilePath}\" --version \"{_updateVersion}\" --app-dir \"{appDirectory}\" --parent-pid {currentPid}",
                 UseShellExecute = true,
-                WorkingDirectory = extractDir,
-                CreateNoWindow = false,                  
+                CreateNoWindow = false,
                 WindowStyle = ProcessWindowStyle.Normal,
                 ErrorDialog = false
             };
 
             Process.Start(startInfo);
 
-      
             System.Windows.Application.Current.Shutdown();
         }
         catch (Exception ex)
         {
-
+            var extractDir = Path.Combine(Path.GetTempPath(), LocalAppData);
             var logPath = Path.Combine(extractDir, "update_error.log");
 
             try
             {
-                
                 var logContent = $@"[更新失败] {DateTime.Now:yyyy-MM-dd HH:mm:ss}
 错误信息: {ex.Message}
 异常类型: {ex.GetType().FullName}
@@ -713,21 +717,18 @@ exit /b 0
             catch (Exception logEx)
             {
                 System.Diagnostics.Debug.WriteLine($"无法写入日志: {logEx.Message}");
-
             }
 
             string message = $"更新失败 \n\n错误: {ex.Message}\n\n日志已保存至:\n{logPath}\n\n。";
 
-
             Dispatcher.Invoke(() =>
             {
-            System.Windows.Forms.MessageBox.Show(
+                System.Windows.Forms.MessageBox.Show(
                     message,
                     "更新失败",
-                (MessageBoxButtons)MessageBoxButton.OK,
-                (MessageBoxIcon)MessageBoxImage.Error);
+                    (MessageBoxButtons)MessageBoxButton.OK,
+                    (MessageBoxIcon)MessageBoxImage.Error);
             });
-
 
             try
             {
@@ -738,11 +739,9 @@ exit /b 0
             }
             catch { }
 
-
             System.Diagnostics.Debug.WriteLine($"更新失败: {ex.Message}");
 
-
-        System.Windows.Application.Current.Shutdown();
+            System.Windows.Application.Current.Shutdown();
         }
     }
 
@@ -865,8 +864,8 @@ exit /b 0
     {
         try
         {
-            // 获取Markdown内容
-            string markdown = await _httpClient.GetStringAsync(ChangelogUrl);
+            EnsureHttpClient();
+            string markdown = await _httpClient!.GetStringAsync(ChangelogUrl);
 
             // 使用R0enderToFlowDocument 渲染
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>

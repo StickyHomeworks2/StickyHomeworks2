@@ -30,11 +30,14 @@ namespace StickyHomeworks2.Helpers
 
         private static void OnConfirmNavigationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var hyperlink = d as Hyperlink;
-            if (hyperlink != null)
-            {
+            if (d is not Hyperlink hyperlink)
+                return;
+
+            if (e.OldValue is bool wasOn && wasOn)
+                hyperlink.RequestNavigate -= Hyperlink_RequestNavigate;
+
+            if (e.NewValue is bool isOn && isOn)
                 hyperlink.RequestNavigate += Hyperlink_RequestNavigate;
-            }
         }
 
         private static void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)

@@ -19,29 +19,59 @@
       WindowStartupLocation="CenterScreen"
       ResizeMode="NoResize">
 
-    <Grid Margin="20 5 17 0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="190"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" TextWrapping="Wrap">
-            <Run Text="awa" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="40" FontWeight="Bold"/>
+    <materialDesign:DialogHost Identifier="SingleInstanceWarning"
+                               DialogTheme="Inherit"
+                               CloseOnClickAway="True">
+        <materialDesign:DialogHost.Resources>
+            <StackPanel x:Key="WhyNotMultiInstanceDialogContent"
+                        Margin="24"
+                        MaxWidth="440">
+                <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Text="为什么不建议多开实例"
+                           Margin="0,0,0,12"
+                           TextWrapping="Wrap"/>
+                <TextBlock Style="{StaticResource MaterialDesignBody1TextBlock}"
+                           TextWrapping="Wrap"
+                           LineHeight="22">
+                    同时运行多个实例，可能会导致：资源占用翻倍、数据冲突或丢失、功能异常或崩溃等。
+                    <LineBreak/><LineBreak/>
+                    因此，开发者不推荐、也不允许用户多开实例。若您在生产环境中强行使用此类功能，开发者不对该行为产生的后果承担任何责任。
+                </TextBlock>
+                <Button HorizontalAlignment="Right"
+                        Margin="0,20,0,0"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Content="知道了"
+                        Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"/>
+            </StackPanel>
+        </materialDesign:DialogHost.Resources>
+
+        <Grid Margin="20 5 17 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="190"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" TextWrapping="Wrap">
+                <Run Text="awa" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="40" FontWeight="Bold"/>
                 <LineBreak/>
-            <Run Text="没门！" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="25" FontWeight="Bold"/>
+                <Run Text="没门！" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="25" FontWeight="Bold"/>
                 <LineBreak/><LineBreak/>
-            <Run Text="应用正在运行中，请勿" FontSize="15" Foreground="White"/>
-            <Run Text="重复启动实例"  FontSize="15"  Foreground="Red"/>
-            <Run Text=" ！" FontSize="15" Foreground="White"/>
-        </TextBlock>
-        <StackPanel Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal">
-            <Button Style="{StaticResource MaterialDesignRaisedDarkButton}"   Margin="0 0 6 0" >
-                <ely:IconText Kind="Information" Text="为什么" IconMargin="3 0 0 0"
-                    ToolTip="同时运行多个实例,可能会导致:资源占用翻倍,数据冲突或丢失,功能异常或崩溃.....等&#x0a;         因此,开发者不推荐不允许用户多开示例,如您在生产环境中使用此类功能&#x0a;   
-                       开发者不对此行为产生的后果承担任何责任!"/>
-            </Button>
-            <Button Style="{StaticResource MaterialDesignOutlinedDarkButton}" Margin="0 0 6 0" Click="ButtonIgnore_OnClick">
-                <ely:IconText Kind="Close" Text="关闭" IconMargin="3 0 0 0" RenderTransformOrigin="0.632,1.665"/>
-            </Button>
-        </StackPanel>
-    </Grid>
+                <Run Text="应用正在运行中，请勿" FontSize="15" Foreground="White"/>
+                <Run Text="重复启动实例" FontSize="15" Foreground="Red"/>
+                <Run Text=" ！" FontSize="15" Foreground="White"/>
+            </TextBlock>
+            <StackPanel Grid.Row="1" HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Style="{StaticResource MaterialDesignRaisedDarkButton}"
+                        Margin="0 0 6 0"
+                        Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}"
+                        CommandParameter="{StaticResource WhyNotMultiInstanceDialogContent}">
+                    <ely:IconText Kind="Information" Text="为什么" IconMargin="3 0 0 0"/>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                        Margin="0 0 6 0"
+                        Click="ButtonIgnore_OnClick">
+                    <ely:IconText Kind="Close" Text="关闭" IconMargin="3 0 0 0" RenderTransformOrigin="0.632,1.665"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </materialDesign:DialogHost>
 </ely:MyWindow>

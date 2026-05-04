@@ -9,12 +9,24 @@ using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using StickyHomeworks2.Helpers;
 
 namespace StickyHomeworks;
 
 public static class RichTextBoxHelper
 {
-    private const string ImageMarker = "⌘IMG:";
+    /// <summary>作业富文本中超链接的默认前景色（FlowDocument 内不继承外层隐式样式，需在加载/插入时显式应用）。</summary>
+    public static Brush DefaultHyperlinkForeground { get; } = CreateDefaultHyperlinkBrush();
+
+    private static Brush CreateDefaultHyperlinkBrush()
+    {
+        var b = new SolidColorBrush(Color.FromRgb(0x1A, 0x73, 0xE8));
+        b.Freeze();
+        return b;
+    }
+
+    /// <summary>与 <see cref="T:StickyHomeworks.Behaviors.RichTextBoxBindingBehavior"/> 保存逻辑共用的行内图片占位前缀。</summary>
+    public const string EmbeddedImageMarkerPrefix = "⌘IMG:";
 
     public static FlowDocument ConvertDocument(string xaml)
     {
@@ -36,6 +48,7 @@ public static class RichTextBoxHelper
             doc.IsOptimalParagraphEnabled = true;
             RestoreEmbeddedImages(doc);
             RestoreEmojiRendering(doc);
+            ApplyHyperlinkPresentation(doc);
             return doc;
         }
         catch (Exception ex)
@@ -85,9 +98,9 @@ public static class RichTextBoxHelper
                 var runs = para.Inlines.OfType<Run>().ToList();
                 foreach (var run in runs)
                 {
-                    if (run.Text.StartsWith(ImageMarker))
+                    if (run.Text.StartsWith(EmbeddedImageMarkerPrefix, StringComparison.Ordinal))
                     {
-                        var data = run.Text.Substring(ImageMarker.Length);
+                        var data = run.Text.Substring(EmbeddedImageMarkerPrefix.Length);
                         var parts = data.Split('|');
                         if (parts.Length < 3)
                             continue;
@@ -136,6 +149,60 @@ public static class RichTextBoxHelper
         {
             doc.Blocks.Remove(para);
             doc.Blocks.Add(container);
+        }
+    }
+
+    /// <summary>
+    /// FlowDocument 中的 <see cref="Hyperlink"/> 不参与父级控件资源查找，隐式样式无效；
+    /// 在从 XAML 加载后对每个链接设置前景色与「确认后打开」行为。
+    /// </summary>
+    public static void ApplyHyperlinkPresentation(FlowDocument doc)
+    {
+        foreach (var block in doc.Blocks)
+            VisitBlockForHyperlinks(block);
+    }
+
+    private static void VisitBlockForHyperlinks(Block block)
+    {
+        switch (block)
+        {
+            case Paragraph p:
+                foreach (var inline in p.Inlines)
+                    VisitInlineForHyperlinks(inline);
+                break;
+            case Section s:
+                foreach (var b in s.Blocks)
+                    VisitBlockForHyperlinks(b);
+                break;
+            case Table t:
+                foreach (var rg in t.RowGroups)
+                foreach (var row in rg.Rows)
+                foreach (var cell in row.Cells)
+                foreach (var b in cell.Blocks)
+                    VisitBlockForHyperlinks(b);
+                break;
+            case List list:
+                foreach (var item in list.ListItems)
+                foreach (var b in item.Blocks)
+                    VisitBlockForHyperlinks(b);
+                break;
+        }
+    }
+
+    private static void VisitInlineForHyperlinks(Inline inline)
+    {
+        switch (inline)
+        {
+            case Hyperlink h:
+                h.Foreground = DefaultHyperlinkForeground;
+                HyperlinkBehavior.SetConfirmNavigation(h, true);
+                foreach (var child in h.Inlines)
+                    VisitInlineForHyperlinks(child);
+                break;
+            case Span span:
+                foreach (var child in span.Inlines)
+                    VisitInlineForHyperlinks(child);
+                break;
         }
     }
 }
