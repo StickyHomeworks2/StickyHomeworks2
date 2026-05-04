@@ -12,8 +12,8 @@
       TextOptions.TextFormattingMode="Ideal" 
       TextOptions.TextRenderingMode="Auto"        
       FontFamily="{StaticResource HarmonyOsSans}"
-      Height="280" 
-      Width="500"
+      Height="350" 
+      Width="650"
       Title="警告"
       Background="#303030" 
       WindowStartupLocation="CenterScreen"
@@ -47,29 +47,35 @@
 
         <Grid Margin="20 5 17 0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="190"/>
+                <RowDefinition Height="250"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" TextWrapping="Wrap">
-                <Run Text="awa" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="40" FontWeight="Bold"/>
+                <Run Text="ヽ(｀Д´)ﾉ" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="60" FontWeight="Bold"/>
                 <LineBreak/>
-                <Run Text="没门！" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="25" FontWeight="Bold"/>
-                <LineBreak/><LineBreak/>
-                <Run Text="应用正在运行中，请勿" FontSize="15" Foreground="White"/>
-                <Run Text="重复启动实例" FontSize="15" Foreground="Red"/>
-                <Run Text=" ！" FontSize="15" Foreground="White"/>
+                <Run Text="想多开？没门！" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="40" FontWeight="Bold"/>
+                <LineBreak/><LineBreak/><LineBreak/>
+                <Run Text="一个应用正在被运行中，请勿要" FontSize="25" Foreground="White"/>
+                <Run Text="重复的启动实例" FontSize="25" Foreground="Red"/>
+                <Run Text=" ！" FontSize="25" Foreground="White"/>
             </TextBlock>
             <StackPanel Grid.Row="1" HorizontalAlignment="Right" Orientation="Horizontal">
                 <Button Style="{StaticResource MaterialDesignRaisedDarkButton}"
-                        Margin="0 0 6 0"
+                        Margin="0 0 30 0"
                         Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}"
                         CommandParameter="{StaticResource WhyNotMultiInstanceDialogContent}">
+                    <Button.RenderTransform>
+                        <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
+                    </Button.RenderTransform>
                     <ely:IconText Kind="Information" Text="为什么" IconMargin="3 0 0 0"/>
                 </Button>
                 <Button Style="{StaticResource MaterialDesignOutlinedDarkButton}"
-                        Margin="0 0 6 0"
+                        Margin="0 0 30 0"
                         Click="ButtonIgnore_OnClick">
-                    <ely:IconText Kind="Close" Text="关闭" IconMargin="3 0 0 0" RenderTransformOrigin="0.632,1.665"/>
+                    <Button.RenderTransform>
+                        <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
+                    </Button.RenderTransform>
+                    <ely:IconText Kind="Close" Text="关闭" IconMargin="3 0 0 0" RenderTransformOrigin="0.633,1.665"/>
                 </Button>
             </StackPanel>
         </Grid>

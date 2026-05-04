@@ -220,7 +220,7 @@ public partial class SettingsWindow : MyWindow
         var subjects = await ClassIslandIpcService.GetSubjectsAsync();
         if (subjects.Count == 0)
         {
-            System.Windows.MessageBox.Show("无法获取科目列表，请确保 ClassIsland 正在运行且已启用联动。", "提示");
+            await ShowMaterialAlertAsync("提示", "无法获取科目列表，请确保 ClassIsland 正在运行且已启用联动。");
             return;
         }
         
@@ -231,7 +231,7 @@ public partial class SettingsWindow : MyWindow
                 Settings.ClassIslandSubjects.Add(new SubjectAction(subject));
         }
         
-        System.Windows.MessageBox.Show($"已刷新，共 {Settings.ClassIslandSubjects.Count} 个科目。", "提示");
+        await ShowMaterialAlertAsync("提示", $"已刷新，共 {Settings.ClassIslandSubjects.Count} 个科目。");
     }
 
     private async void ButtonImportClassIslandSubjects_OnClick(object sender, RoutedEventArgs e)
@@ -239,7 +239,7 @@ public partial class SettingsWindow : MyWindow
         var subjects = await ClassIslandIpcService.GetSubjectsAsync();
         if (subjects.Count == 0)
         {
-            System.Windows.MessageBox.Show("无法获取科目列表，请确保 ClassIsland 正在运行且已启用联动。", "提示");
+            await ShowMaterialAlertAsync("提示", "无法获取科目列表，请确保 ClassIsland 正在运行且已启用联动。");
             return;
         }
         
@@ -254,20 +254,20 @@ public partial class SettingsWindow : MyWindow
             }
         }
         
-        System.Windows.MessageBox.Show(importedCount > 0 
-            ? $"成功导入 {importedCount} 个科目至 StickyHomeworks。" 
-            : "没有新科目需要导入。", "提示");
+        await ShowMaterialAlertAsync("提示", importedCount > 0
+            ? $"成功导入 {importedCount} 个科目至 StickyHomeworks。"
+            : "没有新科目需要导入。");
     }
 
-    private void ButtonTestIpcEvent_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonTestIpcEvent_OnClick(object sender, RoutedEventArgs e)
     {
-        System.Windows.MessageBox.Show(
+        await ShowMaterialAlertAsync(
+            "IPC 状态",
             $"连接状态: {ClassIslandIpcService.ConnectionStatus}\n" +
             $"当前时间状态: {ClassIslandIpcService.CurrentState}\n" +
             $"当前科目: {ClassIslandIpcService.CurrentSubjectName}\n" +
             $"上一科目: {ClassIslandIpcService.PreviousSubjectName}\n" +
-            $"是否连接: {ClassIslandIpcService.IsConnected}",
-            "IPC 状态");
+            $"是否连接: {ClassIslandIpcService.IsConnected}");
     }
 
     private void ButtonDebugToastText_OnClick(object sender, RoutedEventArgs e)
@@ -291,6 +291,51 @@ public partial class SettingsWindow : MyWindow
     private async Task<object?> ShowDialog(string key)
     {
         return await DialogHost.Show(FindResource(key), "SettingsWindow");
+    }
+
+    /// <summary>与 Material Design 设置页一致的提示对话框（非系统 MessageBox）。</summary>
+    private async Task ShowMaterialAlertAsync(string title, string message)
+    {
+        var panel = new StackPanel
+        {
+            Margin = new Thickness(24),
+            MinWidth = 280,
+            MaxWidth = 440
+        };
+
+        var titleBlock = new TextBlock
+        {
+            Text = title,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        if (TryFindResource("MaterialDesignHeadline6TextBlock") is Style titleStyle)
+            titleBlock.Style = titleStyle;
+
+        var bodyBlock = new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            LineHeight = 22
+        };
+        if (TryFindResource("MaterialDesignBody1TextBlock") is Style bodyStyle)
+            bodyBlock.Style = bodyStyle;
+
+        var ok = new System.Windows.Controls.Button
+        {
+            Content = "确定",
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+            Margin = new Thickness(0, 20, 0, 0),
+            Command = DialogHost.CloseDialogCommand
+        };
+        if (TryFindResource("MaterialDesignFlatButton") is Style flatStyle)
+            ok.Style = flatStyle;
+
+        panel.Children.Add(titleBlock);
+        panel.Children.Add(bodyBlock);
+        panel.Children.Add(ok);
+
+        await DialogHost.Show(panel, "SettingsWindow");
     }
 
 
