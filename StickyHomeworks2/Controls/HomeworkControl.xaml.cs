@@ -72,6 +72,7 @@ public partial class HomeworkControl : UserControl
     public HomeworkControl()
     {
         InitializeComponent();
+        Loaded += (_, _) => RichTextBoxHyperlinkClickHelper.SetRequireCtrlToOpenHyperlinks(RichTextBox, IsEditing);
     }
 
     private void OnHomeworkChanged(Homework? oldValue, Homework? newValue)
@@ -105,6 +106,7 @@ public partial class HomeworkControl : UserControl
 
     private void IsEditingChanged(bool value)
     {
+        RichTextBoxHyperlinkClickHelper.SetRequireCtrlToOpenHyperlinks(RichTextBox, value);
         Debug.WriteLine($"IsEditing changed! {value} {IsSelected}");
         if (IsSelected && value)
         {

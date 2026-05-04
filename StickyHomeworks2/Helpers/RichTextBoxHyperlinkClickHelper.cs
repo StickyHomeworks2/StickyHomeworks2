@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace StickyHomeworks2.Helpers;
 
@@ -11,6 +12,50 @@ namespace StickyHomeworks2.Helpers;
 /// </summary>
 public static class RichTextBoxHyperlinkClickHelper
 {
+    /// <summary>
+    /// 为 true 时（例如侧栏编辑、独立编辑窗）：仅当用户按住 Ctrl 并左键点击链接时才打开链接，避免编辑时误触。
+    /// </summary>
+    public static readonly DependencyProperty RequireCtrlToOpenHyperlinksProperty =
+        DependencyProperty.RegisterAttached(
+            "RequireCtrlToOpenHyperlinks",
+            typeof(bool),
+            typeof(RichTextBoxHyperlinkClickHelper),
+            new PropertyMetadata(false));
+
+    public static void SetRequireCtrlToOpenHyperlinks(RichTextBox element, bool value) =>
+        element.SetValue(RequireCtrlToOpenHyperlinksProperty, value);
+
+    public static bool GetRequireCtrlToOpenHyperlinks(RichTextBox element) =>
+        (bool)element.GetValue(RequireCtrlToOpenHyperlinksProperty);
+
+    internal static RichTextBox? TryGetHostRichTextBox(Hyperlink hl)
+    {
+        var doc = GetFlowDocumentForHyperlink(hl);
+        if (doc == null)
+            return null;
+        if (Keyboard.FocusedElement is RichTextBox focusRtb && ReferenceEquals(focusRtb.Document, doc))
+            return focusRtb;
+        for (DependencyObject? d = Mouse.DirectlyOver as DependencyObject; d != null; d = VisualTreeHelper.GetParent(d))
+        {
+            if (d is RichTextBox rtb && ReferenceEquals(rtb.Document, doc))
+                return rtb;
+        }
+
+        return null;
+    }
+
+    private static FlowDocument? GetFlowDocumentForHyperlink(Hyperlink hl)
+    {
+        for (DependencyObject? o = hl; o != null;)
+        {
+            if (o is FlowDocument fd)
+                return fd;
+            o = o is TextElement te ? te.Parent : LogicalTreeHelper.GetParent(o);
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// 若点击落在带 <see cref="Hyperlink.NavigateUri"/> 的链接上，则弹出确认并视结果打开系统浏览器；此时将 <paramref name="e"/>.Handled 置为 true。
     /// </summary>
@@ -40,6 +85,10 @@ public static class RichTextBoxHyperlinkClickHelper
         {
             if (d is not Hyperlink hl || hl.NavigateUri == null)
                 continue;
+
+            if (GetRequireCtrlToOpenHyperlinks(richTextBox) &&
+                (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control)
+                return false;
 
             var linkText = new TextRange(hl.ContentStart, hl.ContentEnd).Text.Trim();
             LinkConfirmationHelper.ConfirmAndOpenLink(hl.NavigateUri.ToString(), linkText);

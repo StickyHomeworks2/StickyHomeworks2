@@ -491,6 +491,8 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         richTextBox.TextChanged -= RichTextBoxOnTextChanged;
         richTextBox.SelectionChanged -= RichTextBoxOnSelectionChanged;
         richTextBox.PreviewMouseLeftButtonDown -= RichTextBoxOnPreviewMouseLeftButtonDown;
+        var hw = FindParentHomeworkControl(richTextBox);
+        RichTextBoxHyperlinkClickHelper.SetRequireCtrlToOpenHyperlinks(richTextBox, hw?.IsEditing ?? false);
     }
 
     private static bool IsValidTextPointer(TextPointer? pointer)

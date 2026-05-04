@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Navigation;
 
 namespace StickyHomeworks2.Helpers
@@ -44,6 +41,12 @@ namespace StickyHomeworks2.Helpers
         {
             // 阻止默认行为
             e.Handled = true;
+
+            if (sender is Hyperlink hl &&
+                RichTextBoxHyperlinkClickHelper.TryGetHostRichTextBox(hl) is { } rtb &&
+                RichTextBoxHyperlinkClickHelper.GetRequireCtrlToOpenHyperlinks(rtb) &&
+                (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control)
+                return;
 
             // 获取链接内容
             string linkUri = e.Uri.ToString();
