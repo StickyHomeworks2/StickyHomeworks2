@@ -36,11 +36,22 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Setup Node (Web SPA)
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: npm
+        cache-dependency-path: StickyHomeworks2.Web/ClientApp/package-lock.json
+
     - name: Restore
       run: dotnet restore ${{ env.Solution_Name }}
 
+    - name: Web SPA dependencies
+      working-directory: StickyHomeworks2.Web/ClientApp
+      run: npm ci
+
     - name: Build
-      run: dotnet build ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} --no-restore
+      run: dotnet build ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} --no-restore -p:SkipEmbeddedUpdater=true
 
     - name: Test
       run: dotnet test --configuration ${{ matrix.configuration }} --no-build --verbosity normal
