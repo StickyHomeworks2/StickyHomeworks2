@@ -125,12 +125,17 @@
                     <RowDefinition />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+                <!-- 供 MultiBinding 跟踪主题色：DynamicResource 会随深浅色更新，勿用 StaticResource -->
+                <Border x:Name="ThemePaperBrushSource"
+                        Width="0" Height="0"
+                        Visibility="Collapsed"
+                        Background="{DynamicResource MaterialDesignPaper}" />
                 <!-- 背景 -->
                 <Border Grid.Row="0"
                         Grid.RowSpan="3">
                     <Border.Background>
                         <MultiBinding Converter="{StaticResource OpacityToBackgroundConverter}">
-                            <Binding Source="{StaticResource MaterialDesignPaper}"/>
+                            <Binding ElementName="ThemePaperBrushSource" Path="Background" />
                             <Binding Path="SettingsService.Settings.Opacity"/>
                         </MultiBinding>
                     </Border.Background>
