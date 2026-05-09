@@ -40,7 +40,12 @@ public class SettingsService : ObservableRecipient, IHostedService
         var json = File.ReadAllText("./Settings.json");
         var r = JsonSerializer.Deserialize<Settings>(json);
         if (r != null)
+        {
+            if (r.HomeworkTemplate == null)
+                r.HomeworkTemplate = new HomeworkTemplateConfig();
+            HomeworkTemplateConfig.Normalize(r.HomeworkTemplate);
             Settings = r;
+        }
     }
 
     public void SaveSettings()

@@ -18,8 +18,8 @@
               TextOptions.TextFormattingMode="Ideal"
               TextOptions.TextRenderingMode="Auto"
               Title="应用设置"
-        Height="550"
-        Width="1200"
+              Height="550"
+              Width="1200"
               Icon="/Assets/AppLogo.png"
               MinWidth="600"
               Closing="SettingsWindow_OnClosing"
@@ -776,6 +776,289 @@
                                 </Grid>
                     </TabItem>
 
+                    <!-- 作业模板 -->
+                    <TabItem Header="模板"
+                             Loaded="TabHomeworkTemplate_OnLoaded">
+                        <ScrollViewer>
+                            <StackPanel Style="{StaticResource SettingsPageStackPanelStyle}">
+                                <TextBlock Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                                           Text="作业模板"/>
+                                <TextBlock Margin="0 8 0 12"
+                                           Opacity="0.75"
+                                           TextWrapping="Wrap"
+                                           Text="配置作业编辑窗口中的快捷短语与作业条目"/>
+
+                                <!-- 快捷操作 -->
+                                <materialDesign:Card Margin="0 0 0 8"
+                                                     materialDesign:ElevationAssist.Elevation="Dp1"
+                                                     UniformCornerRadius="4">
+                                    <StackPanel Margin="16">
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="0 0 0 12">
+                                            <materialDesign:PackIcon Kind="FlashOutline"
+                                                                     VerticalAlignment="Center"
+                                                                     Width="22"
+                                                                     Height="22"
+                                                                     Margin="0 0 10 0"
+                                                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="快捷短语"
+                                                           Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                                                <TextBlock Margin="0 2 0 0"
+                                                           Opacity="0.75"
+                                                           TextWrapping="Wrap"
+                                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                           Text="在编辑窗口一键插入的短语，适合常用格式或固定前缀。"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <DockPanel Margin="0 -16 0 8">
+                                            <Button DockPanel.Dock="Right"
+                                                    Margin="8 0 0 0"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Click="ButtonHomeworkTemplateAddQuickAction_OnClick">
+                                                <ely:IconText Kind="Plus"
+                                                              Text="添加"/>
+                                            </Button>
+                                            <TextBox x:Name="TbHomeworkTemplateNewQuickAction"
+                                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                                     materialDesign:HintAssist.Hint="新快捷短语"/>
+                                        </DockPanel>
+                                        <ListBox MinHeight="88"
+                                                 MaxHeight="220"
+                                                 materialDesign:ListBoxItemAssist.ShowSelection="False"
+                                                 ItemsSource="{Binding Settings.HomeworkTemplate.QuickActions}"
+                                                 HorizontalContentAlignment="Stretch">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel Margin="0 2">
+                                                        <Button DockPanel.Dock="Right"
+                                                                Style="{StaticResource MaterialDesignToolForegroundButton}"
+                                                                ToolTip="删除"
+                                                                Click="ButtonHomeworkTemplateRemoveQuickAction_OnClick">
+                                                            <materialDesign:PackIcon Kind="DeleteOutline"/>
+                                                        </Button>
+                                                        <TextBlock Text="{Binding}"
+                                                                   VerticalAlignment="Center"
+                                                                   TextWrapping="Wrap"/>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </materialDesign:Card>
+
+                                <!-- 科目作业条目 -->
+                                <materialDesign:Card Margin="0 0 0 6"
+                                                     materialDesign:ElevationAssist.Elevation="Dp1"
+                                                     UniformCornerRadius="4">
+                                    <StackPanel Margin="16">
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="0 0 0 12">
+                                            <materialDesign:PackIcon Kind="BookEducationOutline"
+                                                                     VerticalAlignment="Center"
+                                                                     Width="22"
+                                                                     Height="22"
+                                                                     Margin="0 0 10 0"
+                                                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="科目作业条目"
+                                                           Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                                                <TextBlock Margin="0 2 0 0"
+                                                           Opacity="0.75"
+                                                           TextWrapping="Wrap"
+                                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                           Text="按科目单独维护作业条目与子任务；「科目」页无条目时此处无可选科目。"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <ComboBox Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                                  Margin="0 -12 0 12"
+                                                  materialDesign:HintAssist.Hint="选择科目"
+                                                  ItemsSource="{Binding Settings.Subjects}"
+                                                  SelectedItem="{Binding ViewModel.HomeworkTemplateSelectedSubject, Mode=TwoWay}"
+                                                  SelectionChanged="CbHomeworkTemplateSubject_OnSelectionChanged"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="12"/>
+                                                <ColumnDefinition Width="2*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <DockPanel Grid.Column="0">
+                                                <DockPanel DockPanel.Dock="Top"
+                                                           Margin="0 0 0 6">
+                                                    <TextBlock DockPanel.Dock="Top"
+                                                        Margin="0 0 0 6"
+                                                        Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                        Text="作业条目列表"/>
+                                                    <Button DockPanel.Dock="Right"
+                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                            Click="ButtonHomeworkTemplateAddSubjectBook_OnClick">
+                                                        <ely:IconText Kind="Plus"
+                                                                      Text="添加"/>
+                                                    </Button>
+                                                    <TextBox x:Name="TbHomeworkTemplateNewSubjectBook"
+                                                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                                             materialDesign:HintAssist.Hint="本科作业条目名称"/>
+                                                </DockPanel>
+                                                
+                                                <ListBox x:Name="LbHomeworkTemplateSubjectBooks"
+                                                         MinHeight="128"
+                                                         MaxHeight="240"
+                                                         SelectionChanged="LbHomeworkTemplateSubjectBooks_OnSelectionChanged"
+                                                         HorizontalContentAlignment="Stretch"/>
+                                            </DockPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Margin="0 0 0 6"
+                                                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                           Text="需完成子任务"/>
+                                                <DockPanel Margin="0 0 0 8">
+                                                    <Button DockPanel.Dock="Right"
+                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                            Click="ButtonHomeworkTemplateAddSubjectPart_OnClick">
+                                                        <ely:IconText Kind="Plus"
+                                                                      Text="添加"/>
+                                                    </Button>
+                                                    <TextBox x:Name="TbHomeworkTemplateNewSubjectPart"
+                                                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                                             materialDesign:HintAssist.Hint="子任务名称"/>
+                                                </DockPanel>
+                                                <ListBox x:Name="LbHomeworkTemplateSubjectParts"
+                                                         MinHeight="128"
+                                                         MaxHeight="240"
+                                                         materialDesign:ListBoxItemAssist.ShowSelection="False"
+                                                         HorizontalContentAlignment="Stretch">
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <DockPanel Margin="0 2">
+                                                                <Button DockPanel.Dock="Right"
+                                                                        Style="{StaticResource MaterialDesignToolForegroundButton}"
+                                                                        ToolTip="删除"
+                                                                        Click="ButtonHomeworkTemplateRemoveSubjectPart_OnClick">
+                                                                    <materialDesign:PackIcon Kind="DeleteOutline"/>
+                                                                </Button>
+                                                                <TextBlock Text="{Binding}"
+                                                                           VerticalAlignment="Center"
+                                                                           TextWrapping="Wrap"/>
+                                                            </DockPanel>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Button Margin="0 12 0 0"
+                                                HorizontalAlignment="Left"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Click="ButtonHomeworkTemplateDeleteSubjectBook_OnClick">
+                                            <ely:IconText Kind="DeleteOutline"
+                                                          Text="删除所选本科作业条目"/>
+                                        </Button>
+                                    </StackPanel>
+                                </materialDesign:Card>
+
+                                <!-- 通用作业条目 -->
+                                <materialDesign:Card Margin="0 0 0 8"
+                                    materialDesign:ElevationAssist.Elevation="Dp1"
+                                    UniformCornerRadius="4">
+                                    <StackPanel Margin="16">
+                                        <StackPanel Orientation="Horizontal"
+                                            Margin="0 0 0 12">
+                                            <materialDesign:PackIcon Kind="BookMultipleOutline"
+                                                 VerticalAlignment="Center"
+                                                 Width="22"
+                                                 Height="22"
+                                                 Margin="0 0 10 0"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="通用作业条目"
+                                                    Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                                                <TextBlock Margin="0 2 0 0"
+                                                    Opacity="0.75"
+                                                    TextWrapping="Wrap"
+                                                    Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                    Text="所有科目可用的作业条目名称；每条目可配置多个「子任务」供勾选插入。"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <DockPanel Margin="0 -12 0 12">
+                                            <Button DockPanel.Dock="Right"
+                                                Margin="8 0 0 0"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Click="ButtonHomeworkTemplateAddCommonBook_OnClick">
+                                                <ely:IconText Kind="Plus"
+                                                       Text="添加作业条目"/>
+                                            </Button>
+                                            <TextBox x:Name="TbHomeworkTemplateNewCommonBook"
+                                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                                materialDesign:HintAssist.Hint="作业条目名称"/>
+                                        </DockPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="12"/>
+                                                <ColumnDefinition Width="2*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <DockPanel Grid.Column="0">
+                                                <TextBlock DockPanel.Dock="Top"
+                                                    Margin="0 0 0 6"
+                                                    Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                    Text="作业条目列表"/>
+                                                <ListBox x:Name="LbHomeworkTemplateCommonBooks"
+                                                    MinHeight="128"
+                                                    MaxHeight="240"
+                                                    SelectionChanged="LbHomeworkTemplateCommonBooks_OnSelectionChanged"
+                                                    HorizontalContentAlignment="Stretch"/>
+                                            </DockPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Margin="0 0 0 6"
+                                                    Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                                                    Text="需完成子任务"/>
+                                                <DockPanel Margin="0 -10 0 8">
+                                                    <Button DockPanel.Dock="Right"
+                                                        Margin="8 0 0 0"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        Click="ButtonHomeworkTemplateAddCommonPart_OnClick">
+                                                        <ely:IconText Kind="Plus"
+                                                               Text="添加"/>
+                                                    </Button>
+                                                    <TextBox x:Name="TbHomeworkTemplateNewCommonPart"
+                                                        Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                                        materialDesign:HintAssist.Hint="子任务名称"/>
+                                                </DockPanel>
+                                                <ListBox x:Name="LbHomeworkTemplateCommonParts"
+                                                    MinHeight="128"
+                                                     MaxHeight="240"
+                                                     materialDesign:ListBoxItemAssist.ShowSelection="False"
+                                                     HorizontalContentAlignment="Stretch">
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <DockPanel Margin="0 2">
+                                                                <Button DockPanel.Dock="Right"
+                                                                    Style="{StaticResource MaterialDesignToolForegroundButton}"
+                                                                     ToolTip="删除"
+                                                                     Click="ButtonHomeworkTemplateRemoveCommonPart_OnClick">
+                                                                    <materialDesign:PackIcon Kind="DeleteOutline"/>
+                                                                </Button>
+                                                                <TextBlock Text="{Binding}"
+                                                                    VerticalAlignment="Center"
+                                                                    TextWrapping="Wrap"/>
+                                                            </DockPanel>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Button Margin="0 12 0 0"
+                                            HorizontalAlignment="Left"
+                                             Style="{StaticResource MaterialDesignOutlinedButton}"
+                                             Click="ButtonHomeworkTemplateDeleteCommonBook_OnClick">
+                                            <ely:IconText Kind="DeleteOutline"
+                                                 Text="删除所选通用作业条目"/>
+                                        </Button>
+                                    </StackPanel>
+                                </materialDesign:Card>
+                                
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
                     <!-- 标签 -->
                     <TabItem Header="标签">
                         <Grid Margin="12"
@@ -1102,9 +1385,9 @@
                                             鸣谢
                                         </Paragraph>
                                         <Paragraph>
-                                            <TextBlock>
-                                                由 <Hyperlink NavigateUri="https://www.yesongit.com/">苏州晔淞信息科技有限公司</Hyperlink> 提供云计算支持
-                                            </TextBlock>
+                                            <Run Text="由 " />
+                                            <Hyperlink NavigateUri="https://www.yesongit.com/">苏州晔淞信息科技有限公司</Hyperlink>
+                                            <Run Text=" 提供云计算支持" />
                                         </Paragraph>
                                     </FlowDocument>
                                 </FlowDocumentScrollViewer>

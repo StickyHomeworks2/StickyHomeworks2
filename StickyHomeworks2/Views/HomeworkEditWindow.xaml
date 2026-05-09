@@ -40,7 +40,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition/>
+                <RowDefinition Height="*" MinHeight="0"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -96,7 +96,7 @@
                         </ListBox.ItemContainerStyle>
                     </ListBox>
 
-                    <Separator Margin="-6 6"/>
+                    <Separator Grid.Row="3" Margin="2 8 2 8" />
                     <ely:IconText Kind="FormatBold" Text="文本"/>
                     <Grid>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom">
@@ -269,12 +269,44 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            
                         </StackPanel>
+                    </Expander>
+                    <Separator Grid.Row="3" Margin="2 8 2 8"/>
+                    <ely:IconText Kind="BookMultipleOutline" Text="作业模板" Margin="0 0 0 6"/>
+                    <Expander Padding="0"
+                              materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
+                              Margin="0 2 0 0"
+                              IsExpanded="False"
+                              d:IsExpanded="True">
+                        <Expander.Header>
+                            <TextBlock Text="快捷短语" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                        </Expander.Header>
+                        <WrapPanel x:Name="WpHomeworkTemplateQuickActions" Margin="0 4 0 0"/>
+                    </Expander>
+                    <Expander Padding="0"
+                              materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
+                              Margin="0 2 0 0"
+                              IsExpanded="False"
+                              d:IsExpanded="True">
+                        <Expander.Header>
+                            <TextBlock Text="本科作业条目" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                        </Expander.Header>
+                        <WrapPanel x:Name="WpHomeworkTemplateSubjectBooks" Margin="0 4 0 0"/>
+                    </Expander>
+                    <Expander Padding="0"
+                              materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
+                              Margin="0 2 0 0"
+                              IsExpanded="False"
+                              d:IsExpanded="True">
+                        <Expander.Header>
+                            <TextBlock Text="通用作业条目" Style="{StaticResource MaterialDesignCaptionTextBlock}"/>
+                        </Expander.Header>
+                        <WrapPanel x:Name="WpHomeworkTemplateCommonBooks" Margin="0 4 0 0"/>
                     </Expander>
                 </StackPanel>
             </ScrollViewer>
-            <Separator Grid.Row="2" Margin="2 8 2 0"></Separator>
+
+            <Separator Grid.Row="2" Margin="2 8 2 0"/>
             <StackPanel Grid.Row="3" Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         Margin="8">

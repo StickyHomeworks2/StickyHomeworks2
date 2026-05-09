@@ -14,6 +14,9 @@ public class SettingsViewModel : ObservableRecipient
     private int _tagSelectedIndex = -1;
     private string _debugRichTextBoxContent = "";
 
+    /// <summary>作业模板页：当前选中的科目（用于编辑该科目的作业条目）。</summary>
+    private string? _homeworkTemplateSelectedSubject;
+
     public int AppIconClickCount
     {
         get => _appIconClickCount;
@@ -109,6 +112,17 @@ public class SettingsViewModel : ObservableRecipient
         {
             if (value == _debugRichTextBoxContent) return;
             _debugRichTextBoxContent = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string? HomeworkTemplateSelectedSubject
+    {
+        get => _homeworkTemplateSelectedSubject;
+        set
+        {
+            if (_homeworkTemplateSelectedSubject == value) return;
+            _homeworkTemplateSelectedSubject = value;
             OnPropertyChanged();
         }
     }

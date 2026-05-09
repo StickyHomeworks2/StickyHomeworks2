@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -19,6 +20,7 @@ using System.Windows.Shapes;
 using ElysiaFramework;
 using Microsoft.Win32;
 using StickyHomeworks;
+using StickyHomeworks.Models;
 using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
 using StickyHomeworks2.Helpers;
@@ -31,8 +33,26 @@ namespace StickyHomeworks.Views;
 /// </summary>
 public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
 {
+    private sealed class HomeworkTemplatePartUi
+    {
+        public string Label { get; init; } = "";
+        public CheckBox CheckBox { get; init; } = null!;
+    }
+
+    private sealed class HomeworkTemplateBookUiRow
+    {
+        public string BookName { get; init; } = "";
+        public CheckBox BookCheckBox { get; init; } = null!;
+        public WrapPanel PagesPanel { get; init; } = null!;
+        public List<HomeworkTemplatePartUi> PartRows { get; } = new();
+    }
+
+    private readonly List<HomeworkTemplateBookUiRow> _homeworkTemplateBookUiRows = new();
+    private bool _syncingHomeworkTemplateBookUi;
+
     private RichTextBox _relatedRichTextBox = new();
     private System.Windows.Threading.DispatcherTimer? _selectionChangedDebounceTimer;
+    private System.Windows.Threading.DispatcherTimer? _templateUiRefreshDebounceTimer;
     public MainWindow MainWindow { get; }
     public SettingsService SettingsService { get; }
     public TimeMachineService TimeMachineService { get; }
@@ -58,6 +78,12 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     {
         if (!IsOpened)
             return;
+        _selectionChangedDebounceTimer?.Stop();
+        _selectionChangedDebounceTimer = null;
+        _templateUiRefreshDebounceTimer?.Stop();
+        _templateUiRefreshDebounceTimer = null;
+        ViewModel.BeforeTextPointerStart = null;
+        ViewModel.BeforeTextPointerEnd = null;
         IsOpened = false;
         Hide();
     }
@@ -73,6 +99,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
             ViewModel.BeforeTextPointerStart = null;
             ViewModel.BeforeTextPointerEnd = null;
             OnPropertyChanged();
+            BuildHomeworkTemplateChips();
         }
     }
 
@@ -122,6 +149,8 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
             };
             EmojiPanel.Children.Add(btn);
         }
+
+        BuildHomeworkTemplateChips();
     }
 
     private void InsertEmoji(string emoji)
@@ -423,6 +452,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
             ViewModel.IsRestoringSelection = true;
             RelatedRichTextBox.Selection.Select(ViewModel.BeforeTextPointerStart, ViewModel.BeforeTextPointerEnd);
             ViewModel.IsRestoringSelection = false;
+            RefreshHomeworkTemplateBookUi();
             return;
         }
 
@@ -443,6 +473,8 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
             UpdateToolbarFromSelection();
         };
         _selectionChangedDebounceTimer.Start();
+
+        RefreshHomeworkTemplateBookUi();
     }
 
     private void UpdateToolbarFromSelection()
@@ -484,10 +516,29 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
 
     private void RichTextBoxOnTextChanged(object sender, TextChangedEventArgs e)
     {
+        if (_templateUiRefreshDebounceTimer == null)
+        {
+            _templateUiRefreshDebounceTimer = new DispatcherTimer(
+                DispatcherPriority.Background,
+                Dispatcher)
+            {
+                Interval = TimeSpan.FromMilliseconds(80)
+            };
+            _templateUiRefreshDebounceTimer.Tick += (_, _) =>
+            {
+                _templateUiRefreshDebounceTimer?.Stop();
+                RefreshHomeworkTemplateBookUi();
+            };
+        }
+        else
+            _templateUiRefreshDebounceTimer.Stop();
+
+        _templateUiRefreshDebounceTimer.Start();
     }
 
     private void UnregisterOldTextBox(RichTextBox richTextBox)
     {
+        _templateUiRefreshDebounceTimer?.Stop();
         richTextBox.TextChanged -= RichTextBoxOnTextChanged;
         richTextBox.SelectionChanged -= RichTextBoxOnSelectionChanged;
         richTextBox.PreviewMouseLeftButtonDown -= RichTextBoxOnPreviewMouseLeftButtonDown;
@@ -542,6 +593,8 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         ViewModel.FontSize += 2;
     }
 
+    public void FlushEditingToModel() => SaveDocumentToHomework();
+
     private void ButtonEditingDone_OnClick(object sender, RoutedEventArgs e)
     {
         SaveDocumentToHomework();
@@ -567,11 +620,18 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         ViewModel.BeforeTextPointerStart = null;
         ViewModel.BeforeTextPointerEnd = null;
 
-        // 将保存的 XAML 写回到 Homework.Content
         var homeworkControl = FindParentHomeworkControl(RelatedRichTextBox);
         if (homeworkControl?.Homework != null)
         {
-            homeworkControl.Homework.Content = xaml;
+            behavior.SuppressDocumentXamlApply = true;
+            try
+            {
+                homeworkControl.Homework.Content = xaml;
+            }
+            finally
+            {
+                behavior.SuppressDocumentXamlApply = false;
+            }
         }
     }
 
@@ -600,9 +660,261 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         return null;
     }
 
+    private void BuildHomeworkTemplateChips()
+    {
+        if (!IsInitialized)
+            return;
+
+        WpHomeworkTemplateQuickActions.Children.Clear();
+        WpHomeworkTemplateSubjectBooks.Children.Clear();
+        WpHomeworkTemplateCommonBooks.Children.Clear();
+        _homeworkTemplateBookUiRows.Clear();
+
+        var template = SettingsService.Settings.HomeworkTemplate;
+        HomeworkTemplateConfig.Normalize(template);
+
+        var subject = MainWindow.ViewModel.SelectedHomework?.Subject ?? "";
+
+        foreach (var a in template.QuickActions)
+        {
+            var label = a;
+            WpHomeworkTemplateQuickActions.Children.Add(CreateHomeworkTemplateChip(label,
+                () => HomeworkTemplateRichTextHelper.InsertPlainAtCaret(RelatedRichTextBox, label)));
+        }
+
+        if (!string.IsNullOrEmpty(subject) &&
+            template.SubjectBooks.TryGetValue(subject, out var sb) &&
+            sb.Count > 0)
+        {
+            foreach (var kv in sb.OrderBy(static x => x.Key))
+                AddHomeworkTemplateBookGroup(WpHomeworkTemplateSubjectBooks, kv.Key, kv.Value);
+        }
+
+        if (template.CommonBooks.Count > 0)
+        {
+            foreach (var kv in template.CommonBooks.OrderBy(static x => x.Key))
+                AddHomeworkTemplateBookGroup(WpHomeworkTemplateCommonBooks, kv.Key, kv.Value);
+        }
+
+        RefreshHomeworkTemplateBookUi();
+    }
+
+    private void SaveHomeworkAndRestoreTemplateCaret(string? bookNameIfStillInDoc)
+    {
+        SaveDocumentToHomework();
+        var rtb = RelatedRichTextBox;
+        if (rtb != null)
+        {
+            HomeworkTemplateRichTextHelper.RestoreCaretAfterTemplateSave(rtb, bookNameIfStillInDoc);
+            RefreshHomeworkTemplateBookUi();
+        }
+    }
+
+    private bool ShouldForkNewHomeworkForAnotherBook(RichTextBox? rtb, string bookNameToCheck)
+    {
+        if (rtb?.Document == null || string.IsNullOrEmpty(bookNameToCheck))
+            return false;
+
+        foreach (var row in _homeworkTemplateBookUiRows)
+        {
+            if (string.Equals(row.BookName, bookNameToCheck, StringComparison.Ordinal))
+                continue;
+            if (HomeworkTemplateRichTextHelper.DocumentContainsBookLine(rtb, row.BookName))
+                return true;
+        }
+
+        return false;
+    }
+
+    private async Task ForkNewHomeworkAndEnsureBookLineAsync(string bookName)
+    {
+        MainWindow.ViewModel.IsUpdatingHomeworkSubject = true;
+        try
+        {
+            SaveDocumentToHomework();
+
+            var cur = MainWindow.ViewModel.SelectedHomework;
+            var hw = new Homework
+            {
+                Subject = cur?.Subject ?? "",
+                DueTime = cur?.DueTime ?? DateTime.Today
+            };
+            if (cur?.Tags != null)
+            {
+                foreach (var t in cur.Tags)
+                    hw.Tags.Add(t);
+            }
+
+            MainWindow.ProfileService.Profile.Homeworks.Add(hw);
+            MainWindow.ViewModel.SelectedHomework = hw;
+            MainWindow.ViewModel.EditingHomework = hw;
+            MainWindow.ProfileService.SaveProfile();
+
+            // 等新选中 Homework 绑定到 RichTextBox、FlowDocument 就绪后再插入模板行，避免作用在旧文档上。
+            await Dispatcher.InvokeAsync(static () => { }, DispatcherPriority.Loaded);
+
+            HomeworkTemplateRichTextHelper.EnsureBookLine(RelatedRichTextBox, bookName);
+            SaveHomeworkAndRestoreTemplateCaret(bookName);
+            MainWindow.RepositionHomeworkEditWindow();
+        }
+        finally
+        {
+            MainWindow.ViewModel.IsUpdatingHomeworkSubject = false;
+        }
+    }
+
+    private void RefreshHomeworkTemplateBookUi()
+    {
+        if (_homeworkTemplateBookUiRows.Count == 0)
+            return;
+
+        _syncingHomeworkTemplateBookUi = true;
+        try
+        {
+            var line = HomeworkTemplateRichTextHelper.GetCaretParagraphPlainText(RelatedRichTextBox);
+            foreach (var row in _homeworkTemplateBookUiRows)
+            {
+                var bookOnLine = HomeworkTemplateRichTextHelper.ParagraphLeadsWithBook(line, row.BookName);
+                row.BookCheckBox.IsChecked = bookOnLine;
+                row.PagesPanel.Visibility = bookOnLine ? Visibility.Visible : Visibility.Collapsed;
+
+                foreach (var part in row.PartRows)
+                {
+                    var pageOnLine = HomeworkTemplateRichTextHelper.LineContainsPartToken(line, part.Label);
+                    part.CheckBox.IsChecked = pageOnLine;
+                }
+            }
+        }
+        finally
+        {
+            _syncingHomeworkTemplateBookUi = false;
+        }
+    }
+
+    private Button CreateHomeworkTemplateChip(string label, Action onClick)
+    {
+        var flat = TryFindResource("MaterialDesignFlatButton") as Style;
+        var b = new Button
+        {
+            Content = label,
+            Margin = new Thickness(4, 2, 4, 2),
+            MinHeight = 32,
+            Padding = new Thickness(8, 4, 8, 4),
+            Style = flat
+        };
+        b.Click += (_, _) =>
+        {
+            onClick();
+            SaveDocumentToHomework();
+            RefreshHomeworkTemplateBookUi();
+        };
+        return b;
+    }
+
+    private void AddHomeworkTemplateBookGroup(Panel booksPanel, string bookName, ICollection<string> parts)
+    {
+        var sp = new StackPanel
+        {
+            Margin = new Thickness(0, 4, 8, 8),
+            Orientation = Orientation.Vertical
+        };
+
+        var chkStyle = TryFindResource("MaterialDesignCheckBox") as Style;
+        var cb = new CheckBox
+        {
+            Content = bookName,
+            Margin = new Thickness(4, 2, 4, 2),
+            MinHeight = 28,
+            VerticalContentAlignment = VerticalAlignment.Center
+        };
+        if (chkStyle != null)
+            cb.Style = chkStyle;
+
+        void OnBookChecked(bool wantLine)
+        {
+            if (_syncingHomeworkTemplateBookUi)
+                return;
+            if (!wantLine)
+            {
+                HomeworkTemplateRichTextHelper.RemoveBookLine(RelatedRichTextBox, bookName);
+                SaveHomeworkAndRestoreTemplateCaret(null);
+                return;
+            }
+            if (ShouldForkNewHomeworkForAnotherBook(RelatedRichTextBox, bookName))
+            {
+                _ = ForkNewHomeworkAndEnsureBookLineAsync(bookName);
+                return;
+            }
+
+            HomeworkTemplateRichTextHelper.EnsureBookLine(RelatedRichTextBox, bookName);
+            SaveHomeworkAndRestoreTemplateCaret(bookName);
+        }
+
+        cb.Checked += (_, _) => OnBookChecked(true);
+        cb.Unchecked += (_, _) => OnBookChecked(false);
+
+        sp.Children.Add(cb);
+
+        var wp = new WrapPanel
+        {
+            Visibility = Visibility.Collapsed,
+            Margin = new Thickness(24, 4, 0, 0)
+        };
+
+        var rowInfo = new HomeworkTemplateBookUiRow
+        {
+            BookName = bookName,
+            BookCheckBox = cb,
+            PagesPanel = wp
+        };
+
+        foreach (var p in parts)
+        {
+            var partLabel = p;
+            var partCb = CreateHomeworkTemplatePartCheckBox(bookName, partLabel);
+            wp.Children.Add(partCb);
+            rowInfo.PartRows.Add(new HomeworkTemplatePartUi { Label = partLabel, CheckBox = partCb });
+        }
+
+        sp.Children.Add(wp);
+        booksPanel.Children.Add(sp);
+        _homeworkTemplateBookUiRows.Add(rowInfo);
+    }
+
+    private CheckBox CreateHomeworkTemplatePartCheckBox(string bookName, string partLabel)
+    {
+        var chkStyle = TryFindResource("MaterialDesignCheckBox") as Style;
+        var cb = new CheckBox
+        {
+            Content = partLabel,
+            Margin = new Thickness(4, 2, 4, 2),
+            MinHeight = 26,
+            VerticalContentAlignment = VerticalAlignment.Center
+        };
+        if (chkStyle != null)
+            cb.Style = chkStyle;
+
+        void OnPart(bool want)
+        {
+            if (_syncingHomeworkTemplateBookUi)
+                return;
+            if (want)
+                HomeworkTemplateRichTextHelper.EnsurePartOnBookParagraph(RelatedRichTextBox, bookName, partLabel);
+            else
+                HomeworkTemplateRichTextHelper.RemoveLastPartOnBookParagraph(RelatedRichTextBox, bookName, partLabel);
+
+            SaveHomeworkAndRestoreTemplateCaret(bookName);
+        }
+
+        cb.Checked += (_, _) => OnPart(true);
+        cb.Unchecked += (_, _) => OnPart(false);
+        return cb;
+    }
+
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         SubjectChanged?.Invoke(this, EventArgs.Empty);
+        BuildHomeworkTemplateChips();
     }
 
     private void ButtonAddToColor_OnClick(object sender, RoutedEventArgs e)

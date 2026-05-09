@@ -423,6 +423,8 @@ public partial class MainWindow : Window
         RepositionEditingWindow();
         AppEx.GetService<HomeworkEditWindow>().TryOpen();
     }
+    
+    public void RepositionHomeworkEditWindow() => RepositionEditingWindow();
 
     private void RepositionEditingWindow()
     {
@@ -744,6 +746,11 @@ public partial class MainWindow : Window
 
     public void OnTextBoxEnter()
     {
+        // 编辑窗已打开时再按回车：先把当前条目正文写入模型，再继续新建（避免仅用 IsDrawerOpened 拦截而无法切换新建）
+        var editWin = AppEx.GetService<HomeworkEditWindow>();
+        if (ViewModel.IsDrawerOpened && editWin.IsOpened)
+            editWin.FlushEditingToModel();
+
         CreateHomework();
     }
 

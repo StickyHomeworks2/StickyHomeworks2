@@ -50,8 +50,7 @@ public class Settings : ObservableRecipient
     private int _titleFontWeightValue = 400;
     private bool _isClassIslandIpcEnabled = false;
     private ObservableCollection<SubjectAction> _classIslandSubjects = new();
-
-
+    private HomeworkTemplateConfig _homeworkTemplate = new();
 
     public double WindowX
     {
@@ -499,6 +498,23 @@ public class Settings : ObservableRecipient
         {
             if (Equals(value, _classIslandSubjects)) return;
             _classIslandSubjects = value;
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
+
+    #region HomeworkTemplate
+
+    /// <summary>作业模板（快捷操作、通用/科目作业条目）。</summary>
+    public HomeworkTemplateConfig HomeworkTemplate
+    {
+        get => _homeworkTemplate;
+        set
+        {
+            value ??= new HomeworkTemplateConfig();
+            if (ReferenceEquals(_homeworkTemplate, value)) return;
+            _homeworkTemplate = value;
             OnPropertyChanged();
         }
     }

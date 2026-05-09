@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace StickyHomeworks2.Helpers;
 
@@ -35,13 +36,24 @@ public static class RichTextBoxHyperlinkClickHelper
             return null;
         if (Keyboard.FocusedElement is RichTextBox focusRtb && ReferenceEquals(focusRtb.Document, doc))
             return focusRtb;
-        for (DependencyObject? d = Mouse.DirectlyOver as DependencyObject; d != null; d = VisualTreeHelper.GetParent(d))
+        for (DependencyObject? d = Mouse.DirectlyOver as DependencyObject; d != null; d = GetNavigateLookupParentStep(d))
         {
             if (d is RichTextBox rtb && ReferenceEquals(rtb.Document, doc))
                 return rtb;
         }
 
         return null;
+    }
+
+    private static DependencyObject? GetNavigateLookupParentStep(DependencyObject d)
+    {
+        if (d is Visual || d is Visual3D)
+            return VisualTreeHelper.GetParent(d);
+
+        if (d is FrameworkContentElement fce && fce.Parent != null)
+            return fce.Parent;
+
+        return LogicalTreeHelper.GetParent(d);
     }
 
     private static FlowDocument? GetFlowDocumentForHyperlink(Hyperlink hl)
@@ -55,11 +67,6 @@ public static class RichTextBoxHyperlinkClickHelper
 
         return null;
     }
-
-    /// <summary>
-    /// 若点击落在带 <see cref="Hyperlink.NavigateUri"/> 的链接上，则弹出确认并视结果打开系统浏览器；此时将 <paramref name="e"/>.Handled 置为 true。
-    /// </summary>
-    /// <returns>是否已按链接处理（含已弹出确认框）。</returns>
     public static bool TryHandleHyperlinkMouseLeftButtonDown(RichTextBox? richTextBox, MouseButtonEventArgs e)
     {
         if (richTextBox?.Document == null)

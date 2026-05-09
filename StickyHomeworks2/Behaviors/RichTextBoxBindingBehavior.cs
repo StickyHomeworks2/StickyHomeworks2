@@ -22,6 +22,7 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
     private static readonly IEqualityComparer<Image> ImageReferenceComparer = new ImageReferenceEqualityComparer();
 
     private int _applyXamlDepth;
+    internal bool SuppressDocumentXamlApply { get; set; }
 
     private sealed class ImageReferenceEqualityComparer : IEqualityComparer<Image>
     {
@@ -137,7 +138,11 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
         if (d is not RichTextBoxBindingBehavior b)
             return;
 
-        if (b.AssociatedObject == null)
+        if (b.SuppressDocumentXamlApply)
+            return;
+
+        var rtb = b.AssociatedObject;
+        if (rtb is null)
             return;
 
         if (b._applyXamlDepth > 0)
@@ -147,8 +152,24 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
         try
         {
             var xaml = e.NewValue as string ?? string.Empty;
-            b.AssociatedObject.Document = RichTextBoxHelper.ConvertDocument(xaml);
-            b.AssociatedObject.Document.IsOptimalParagraphEnabled = true;
+            var doc = RichTextBoxHelper.ConvertDocument(xaml);
+            rtb.Document = doc;
+            if (rtb.Document != null)
+                rtb.Document.IsOptimalParagraphEnabled = true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"RichTextBoxBindingBehavior.OnDocumentXamlPropertyChanged: {ex}");
+            try
+            {
+                var fallback = new FlowDocument(new Paragraph());
+                fallback.IsOptimalParagraphEnabled = true;
+                rtb.Document = fallback;
+            }
+            catch (Exception fallbackEx)
+            {
+                Debug.WriteLine($"RichTextBoxBindingBehavior: fallback FlowDocument failed: {fallbackEx.Message}");
+            }
         }
         finally
         {

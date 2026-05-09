@@ -9,6 +9,7 @@ using StickyHomeworks.Models;
 using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
 using StickyHomeworks2.Helpers;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -21,6 +22,7 @@ using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace StickyHomeworks.Views;
 /// <summary>
@@ -70,6 +72,9 @@ public partial class SettingsWindow : MyWindow
     private HttpClient? _httpClient;
     private const string ChangelogUrl = "https://api.classisband.xyz/api/changelog.md";
 
+    private readonly ObservableCollection<string> _homeworkTemplateCommonBookKeys = new();
+    private readonly ObservableCollection<string> _homeworkTemplateSubjectBookKeys = new();
+    private DispatcherTimer? _homeworkTemplatePersistDebounceTimer;
 
     public SettingsWindow(WallpaperPickingService wallpaperPickingService,
         SettingsService settingsService,
@@ -83,6 +88,8 @@ public partial class SettingsWindow : MyWindow
         InitializeComponent();
         DataContext = this;
         Settings = settingsService.Settings;
+        LbHomeworkTemplateCommonBooks.ItemsSource = _homeworkTemplateCommonBookKeys;
+        LbHomeworkTemplateSubjectBooks.ItemsSource = _homeworkTemplateSubjectBookKeys;
         Settings.PropertyChanged += SettingsOnPropertyChanged;
         _settingsService.PropertyChanged += _settingsServiceRootPropertyChanged;
         var style = (Style)FindResource("NotificationsListBoxItemStyle");
@@ -192,8 +199,10 @@ public partial class SettingsWindow : MyWindow
     private void SettingsWindow_OnClosing(object? sender, CancelEventArgs e)
     {
         e.Cancel = true;
+        _homeworkTemplatePersistDebounceTimer?.Stop();
+        _homeworkTemplatePersistDebounceTimer = null;
+        PersistHomeworkTemplate();
         Hide();
-        AppEx.GetService<SettingsService>().SaveSettings();
         IsOpened = false;
     }
 
@@ -1074,4 +1083,257 @@ public partial class SettingsWindow : MyWindow
     {
 
     }
+
+    #region 作业模板
+
+    private void PersistHomeworkTemplate()
+    {
+        HomeworkTemplateConfig.Normalize(Settings.HomeworkTemplate);
+        Settings.HomeworkTemplate.PruneSubjectBooksNotInSubjects(Settings.Subjects);
+        _settingsService.SaveSettings();
+    }
+
+    private void RequestPersistHomeworkTemplate()
+    {
+        if (_homeworkTemplatePersistDebounceTimer == null)
+        {
+            _homeworkTemplatePersistDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+            _homeworkTemplatePersistDebounceTimer.Tick += (_, _) =>
+            {
+                _homeworkTemplatePersistDebounceTimer?.Stop();
+                PersistHomeworkTemplate();
+            };
+        }
+        else
+            _homeworkTemplatePersistDebounceTimer.Stop();
+
+        _homeworkTemplatePersistDebounceTimer.Start();
+    }
+
+    private void RefreshHomeworkTemplateCommonBookKeys()
+    {
+        _homeworkTemplateCommonBookKeys.Clear();
+        foreach (var k in Settings.HomeworkTemplate.CommonBooks.Keys.OrderBy(static x => x))
+            _homeworkTemplateCommonBookKeys.Add(k);
+    }
+
+    private void RefreshHomeworkTemplateSubjectBookKeys()
+    {
+        _homeworkTemplateSubjectBookKeys.Clear();
+        var subject = ViewModel.HomeworkTemplateSelectedSubject;
+        if (string.IsNullOrEmpty(subject))
+            return;
+        if (!Settings.HomeworkTemplate.SubjectBooks.TryGetValue(subject, out var inner))
+            return;
+        foreach (var k in inner.Keys.OrderBy(static x => x))
+            _homeworkTemplateSubjectBookKeys.Add(k);
+    }
+
+    private Dictionary<string, ObservableCollection<string>> GetOrCreateSubjectBooksInner(string subject)
+    {
+        if (!Settings.HomeworkTemplate.SubjectBooks.TryGetValue(subject, out var inner))
+        {
+            inner = new Dictionary<string, ObservableCollection<string>>();
+            Settings.HomeworkTemplate.SubjectBooks[subject] = inner;
+        }
+
+        return inner;
+    }
+
+    private void TabHomeworkTemplate_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        HomeworkTemplateConfig.Normalize(Settings.HomeworkTemplate);
+        Settings.HomeworkTemplate.PruneSubjectBooksNotInSubjects(Settings.Subjects);
+        RefreshHomeworkTemplateCommonBookKeys();
+        if (ViewModel.HomeworkTemplateSelectedSubject == null ||
+            !Settings.Subjects.Contains(ViewModel.HomeworkTemplateSelectedSubject))
+            ViewModel.HomeworkTemplateSelectedSubject = Settings.Subjects.FirstOrDefault();
+        RefreshHomeworkTemplateSubjectBookKeys();
+        LbHomeworkTemplateCommonParts.ItemsSource = null;
+        LbHomeworkTemplateSubjectParts.ItemsSource = null;
+        PersistHomeworkTemplate();
+    }
+
+    private void ButtonHomeworkTemplateAddQuickAction_OnClick(object sender, RoutedEventArgs e)
+    {
+        var text = TbHomeworkTemplateNewQuickAction.Text.Trim();
+        if (string.IsNullOrEmpty(text))
+            return;
+        Settings.HomeworkTemplate.QuickActions.Add(text);
+        TbHomeworkTemplateNewQuickAction.Clear();
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void ButtonHomeworkTemplateRemoveQuickAction_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement fe || fe.DataContext is not string text)
+            return;
+        Settings.HomeworkTemplate.QuickActions.Remove(text);
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void ButtonHomeworkTemplateAddCommonBook_OnClick(object sender, RoutedEventArgs e)
+    {
+        var name = TbHomeworkTemplateNewCommonBook.Text.Trim();
+        if (string.IsNullOrEmpty(name))
+            return;
+        if (Settings.HomeworkTemplate.CommonBooks.ContainsKey(name))
+            return;
+        Settings.HomeworkTemplate.CommonBooks[name] = new ObservableCollection<string>();
+        TbHomeworkTemplateNewCommonBook.Clear();
+        RefreshHomeworkTemplateCommonBookKeys();
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void ButtonHomeworkTemplateDeleteCommonBook_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (LbHomeworkTemplateCommonBooks.SelectedItem is not string key)
+            return;
+        Settings.HomeworkTemplate.CommonBooks.Remove(key);
+        RefreshHomeworkTemplateCommonBookKeys();
+        LbHomeworkTemplateCommonParts.ItemsSource = null;
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void LbHomeworkTemplateCommonBooks_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LbHomeworkTemplateCommonBooks.SelectedItem is not string key)
+        {
+            LbHomeworkTemplateCommonParts.ItemsSource = null;
+            return;
+        }
+
+        if (!Settings.HomeworkTemplate.CommonBooks.TryGetValue(key, out var parts))
+        {
+            parts = new ObservableCollection<string>();
+            Settings.HomeworkTemplate.CommonBooks[key] = parts;
+        }
+
+        LbHomeworkTemplateCommonParts.ItemsSource = parts;
+    }
+
+    private void ButtonHomeworkTemplateAddCommonPart_OnClick(object sender, RoutedEventArgs e)
+    {
+        var text = TbHomeworkTemplateNewCommonPart.Text.Trim();
+        if (string.IsNullOrEmpty(text))
+            return;
+        if (LbHomeworkTemplateCommonBooks.SelectedItem is not string key)
+            return;
+        if (!Settings.HomeworkTemplate.CommonBooks.TryGetValue(key, out var parts))
+        {
+            parts = new ObservableCollection<string>();
+            Settings.HomeworkTemplate.CommonBooks[key] = parts;
+        }
+
+        parts.Add(text);
+        TbHomeworkTemplateNewCommonPart.Clear();
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void ButtonHomeworkTemplateRemoveCommonPart_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement fe || fe.DataContext is not string part)
+            return;
+        if (LbHomeworkTemplateCommonParts.ItemsSource is not ObservableCollection<string> oc)
+            return;
+        oc.Remove(part);
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void CbHomeworkTemplateSubject_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshHomeworkTemplateSubjectBookKeys();
+        LbHomeworkTemplateSubjectBooks.SelectedIndex = -1;
+        LbHomeworkTemplateSubjectParts.ItemsSource = null;
+    }
+
+    private void ButtonHomeworkTemplateAddSubjectBook_OnClick(object sender, RoutedEventArgs e)
+    {
+        var subject = ViewModel.HomeworkTemplateSelectedSubject;
+        if (string.IsNullOrEmpty(subject))
+            return;
+        var name = TbHomeworkTemplateNewSubjectBook.Text.Trim();
+        if (string.IsNullOrEmpty(name))
+            return;
+        var inner = GetOrCreateSubjectBooksInner(subject);
+        if (!inner.ContainsKey(name))
+            inner[name] = new ObservableCollection<string>();
+        TbHomeworkTemplateNewSubjectBook.Clear();
+        RefreshHomeworkTemplateSubjectBookKeys();
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void ButtonHomeworkTemplateDeleteSubjectBook_OnClick(object sender, RoutedEventArgs e)
+    {
+        var subject = ViewModel.HomeworkTemplateSelectedSubject;
+        if (string.IsNullOrEmpty(subject))
+            return;
+        if (LbHomeworkTemplateSubjectBooks.SelectedItem is not string bookKey)
+            return;
+        if (!Settings.HomeworkTemplate.SubjectBooks.TryGetValue(subject, out var inner))
+            return;
+        inner.Remove(bookKey);
+        RefreshHomeworkTemplateSubjectBookKeys();
+        LbHomeworkTemplateSubjectParts.ItemsSource = null;
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void LbHomeworkTemplateSubjectBooks_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var subject = ViewModel.HomeworkTemplateSelectedSubject;
+        if (string.IsNullOrEmpty(subject))
+        {
+            LbHomeworkTemplateSubjectParts.ItemsSource = null;
+            return;
+        }
+
+        if (LbHomeworkTemplateSubjectBooks.SelectedItem is not string bookKey)
+        {
+            LbHomeworkTemplateSubjectParts.ItemsSource = null;
+            return;
+        }
+
+        var inner = GetOrCreateSubjectBooksInner(subject);
+        if (!inner.TryGetValue(bookKey, out var parts))
+        {
+            parts = new ObservableCollection<string>();
+            inner[bookKey] = parts;
+        }
+
+        LbHomeworkTemplateSubjectParts.ItemsSource = parts;
+    }
+
+    private void ButtonHomeworkTemplateAddSubjectPart_OnClick(object sender, RoutedEventArgs e)
+    {
+        var subject = ViewModel.HomeworkTemplateSelectedSubject;
+        if (string.IsNullOrEmpty(subject))
+            return;
+        var text = TbHomeworkTemplateNewSubjectPart.Text.Trim();
+        if (string.IsNullOrEmpty(text))
+            return;
+        if (LbHomeworkTemplateSubjectBooks.SelectedItem is not string bookKey)
+            return;
+        var inner = GetOrCreateSubjectBooksInner(subject);
+        if (!inner.TryGetValue(bookKey, out var parts))
+        {
+            parts = new ObservableCollection<string>();
+            inner[bookKey] = parts;
+        }
+
+        parts.Add(text);
+        TbHomeworkTemplateNewSubjectPart.Clear();
+        RequestPersistHomeworkTemplate();
+    }
+
+    private void ButtonHomeworkTemplateRemoveSubjectPart_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement fe || fe.DataContext is not string part)
+            return;
+        if (LbHomeworkTemplateSubjectParts.ItemsSource is not ObservableCollection<string> oc)
+            return;
+        oc.Remove(part);
+        RequestPersistHomeworkTemplate();
+    }
+
+    #endregion
 }
