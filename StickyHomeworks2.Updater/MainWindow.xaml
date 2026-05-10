@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="StickyHomeworks2 更新程序"
-        Height="180" Width="500"
+        Height="260" Width="600"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -20,42 +20,74 @@
     </Window.Resources>
 
     <materialDesign:Card Margin="20" UniformCornerRadius="8">
-        <Grid Margin="24,20,24,20">
+        <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Title -->
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                <ProgressBar x:Name="ProgressRing"
-                             Width="28" Height="28"
-                             IsIndeterminate="True"
-                             Style="{StaticResource MaterialDesignCircularProgressBar}"
-                             Margin="0,0,12,0" />
+            <Grid Grid.Row="0"
+                  Margin="32,32,32,20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
                 <TextBlock x:Name="TitleText"
-                           Text="海内存知己，天涯若比邻。"
-                           FontSize="20"
+                           Grid.Row="0"
+                           Text="海内存知己，天涯若比邻"
+                           FontSize="22"
                            FontWeight="Bold"
                            Foreground="{DynamicResource MaterialDesignBody}"
-                           VerticalAlignment="Center" />
-            </StackPanel>
+                           Margin="0,0,0,8" />
 
-            <!-- Status -->
-            <TextBlock x:Name="StatusText"
-                       Grid.Row="1"
-                       Text="正在部署更新..."
-                       Foreground="{DynamicResource MaterialDesignBody}"
-                       FontSize="15"
-                       Margin="0,0,0,20" />
+                <TextBlock Grid.Row="1"
+                           Text="StickyHomeworks2 正在部署更新。&#x0a;此操作可能需要几分钟，请稍候。"
+                           TextWrapping="Wrap"
+                           FontSize="14"
+                           Foreground="{DynamicResource MaterialDesignBody}"
+                           Margin="0,0,0,20" />
 
-            <!-- Progress Bar -->
-            <ProgressBar x:Name="ProgressBar"
-                         Grid.Row="2"
-                         Minimum="0" Maximum="100" Value="0"
-                         Height="6"
-                         Style="{StaticResource MaterialDesignLinearProgressBar}" />
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ProgressBar x:Name="ProgressBar"
+                                 Grid.Column="0"
+                                 VerticalAlignment="Center"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="0"
+                                 Height="4"
+                                 Style="{StaticResource MaterialDesignLinearProgressBar}" />
+
+                    <TextBlock x:Name="PercentText"
+                               Grid.Column="1"
+                               Text="0%"
+                               Width="40"
+                               TextAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="12,0,0,0"
+                               FontSize="14"
+                               Foreground="{DynamicResource MaterialDesignBody}" />
+                </Grid>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Background="Transparent"
+                    BorderThickness="0,1,0,0"
+                    BorderBrush="{DynamicResource MaterialDesignDivider}"
+                    Padding="32,14,32,16">
+                <TextBlock x:Name="StatusText"
+                           Text="准备更新..."
+                           FontSize="12"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource MaterialDesignBody}" />
+            </Border>
         </Grid>
     </materialDesign:Card>
 </Window>

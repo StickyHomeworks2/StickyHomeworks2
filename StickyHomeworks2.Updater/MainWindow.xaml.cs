@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 
 namespace StickyHomeworks2.Updater;
 
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
         Dispatcher.Invoke(() =>
         {
             ProgressBar.Value = value;
+            PercentText.Text = $"{value}%";
             StatusText.Text = status;
         });
     }
@@ -224,9 +226,9 @@ public partial class MainWindow : Window
         Dispatcher.Invoke(() =>
         {
             TitleText.Text = "更新失败";
-            ProgressRing.IsIndeterminate = false;
-            ProgressRing.Visibility = Visibility.Collapsed;
-            ProgressBar.Foreground = System.Windows.Media.Brushes.Red;
+            ProgressBar.Value = 0;
+            PercentText.Text = "0%";
+            ProgressBar.Foreground = TryFindResource("MaterialDesignValidationErrorBrush") as Brush ?? Brushes.IndianRed;
             StatusText.Text = message;
         });
     }
