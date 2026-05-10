@@ -233,10 +233,10 @@ public partial class SettingsWindow : MyWindow
             return;
         }
         
-        var existing = Settings.ClassIslandSubjects.Select(s => s.Name).ToHashSet();
+        var existing = Settings.ClassIslandSubjects.Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var subject in subjects)
         {
-            if (!existing.Contains(subject))
+            if (existing.Add(subject))
                 Settings.ClassIslandSubjects.Add(new SubjectAction(subject));
         }
         
@@ -252,11 +252,11 @@ public partial class SettingsWindow : MyWindow
             return;
         }
         
-        var existing = Settings.Subjects.ToHashSet();
+        var existing = Settings.Subjects.ToHashSet(StringComparer.OrdinalIgnoreCase);
         int importedCount = 0;
         foreach (var subject in subjects)
         {
-            if (!existing.Contains(subject))
+            if (existing.Add(subject))
             {
                 Settings.Subjects.Add(subject);
                 importedCount++;

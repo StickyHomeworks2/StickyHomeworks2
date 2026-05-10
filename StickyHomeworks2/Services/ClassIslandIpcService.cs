@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using ClassIsland.Shared.Enums;
 using ClassIsland.Shared.IPC;
@@ -188,7 +189,12 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
         {
             var profileService = _ipcClient.Provider.CreateIpcProxy<IPublicProfileService>(_ipcClient.PeerProxy!);
             var profile = await Task.Run(() => profileService.Profile);
-            return profile?.Subjects?.Select(s => s.Value.Name).Where(n => !string.IsNullOrEmpty(n)).ToList() ?? [];
+            // ClassIsland Profile.Subjects 常为「多 key、同显示名」；不去重会出现同一科目重复多行
+            return profile?.Subjects?
+                .Select(s => s.Value.Name?.Trim())
+                .Where(n => !string.IsNullOrEmpty(n))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? [];
         }
         catch
         {
