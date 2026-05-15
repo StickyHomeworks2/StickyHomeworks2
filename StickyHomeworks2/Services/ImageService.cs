@@ -22,6 +22,10 @@ public class ImageService
 
     public const double DefaultImageWidth = 300.0;
 
+    public const double MaxCompressedWidth = 800.0;
+
+    public const int JpegQuality = 85;
+
     private static readonly string[] AllowedImageExtensions = { ".png", ".jpg", ".jpeg", ".bmp", ".gif" };
 
     public string InsertImageFromFile(RichTextBox richTextBox, string filePath)
@@ -119,11 +123,40 @@ public class ImageService
 
     public string EncodeImageToBase64(BitmapImage bitmap, double width, double height)
     {
-        var pngBytes = BitmapToPngBytes(bitmap);
-        if (pngBytes == null) return null;
+        var compressed = CompressBitmap(bitmap);
+        var jpegBytes = BitmapToJpegBytes(compressed);
+        if (jpegBytes == null) return null;
 
-        var b64 = Convert.ToBase64String(pngBytes);
+        var b64 = Convert.ToBase64String(jpegBytes);
         return $"{b64}|{width}|{height}";
+    }
+
+    public BitmapImage CompressBitmap(BitmapImage original)
+    {
+        if (original == null) return null;
+
+        if (original.PixelWidth <= MaxCompressedWidth && original.PixelHeight <= MaxCompressedWidth)
+            return original;
+
+        var scale = MaxCompressedWidth / original.PixelWidth;
+        var newWidth = (int)(original.PixelWidth * scale);
+        var newHeight = (int)(original.PixelHeight * scale);
+
+        var resized = new TransformedBitmap(original, new ScaleTransform(scale, scale));
+
+        var encoder = new JpegBitmapEncoder { QualityLevel = JpegQuality };
+        encoder.Frames.Add(BitmapFrame.Create(resized));
+        using var ms = new MemoryStream();
+        encoder.Save(ms);
+
+        ms.Position = 0;
+        var result = new BitmapImage();
+        result.BeginInit();
+        result.StreamSource = ms;
+        result.CacheOption = BitmapCacheOption.OnLoad;
+        result.EndInit();
+        result.Freeze();
+        return result;
     }
 
     public bool TryDecodeBase64ToImage(string markerText, out Image image)
@@ -218,11 +251,11 @@ public class ImageService
         return clickedImage != null;
     }
 
-    private static byte[] BitmapToPngBytes(BitmapImage bitmap)
+    private byte[] BitmapToJpegBytes(BitmapImage bitmap)
     {
         try
         {
-            var encoder = new PngBitmapEncoder();
+            var encoder = new JpegBitmapEncoder { QualityLevel = JpegQuality };
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
             using var ms = new MemoryStream();
             encoder.Save(ms);
@@ -230,7 +263,7 @@ public class ImageService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"ImageService.BitmapToPngBytes: {ex.Message}");
+            Debug.WriteLine($"ImageService.BitmapToJpegBytes: {ex.Message}");
             return null;
         }
     }
