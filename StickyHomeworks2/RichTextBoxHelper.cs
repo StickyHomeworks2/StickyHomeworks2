@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,12 +10,15 @@ using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using StickyHomeworks.Services;
 using StickyHomeworks2.Helpers;
 
 namespace StickyHomeworks;
 
 public static class RichTextBoxHelper
 {
+    private static readonly ImageService _imageService = new();
+
     /// <summary>作业富文本中超链接的默认前景色（FlowDocument 内不继承外层隐式样式，需在加载/插入时显式应用）。</summary>
     public static Brush DefaultHyperlinkForeground { get; } = CreateDefaultHyperlinkBrush();
 
@@ -24,9 +28,6 @@ public static class RichTextBoxHelper
         b.Freeze();
         return b;
     }
-
-    /// <summary>与 <see cref="T:StickyHomeworks.Behaviors.RichTextBoxBindingBehavior"/> 保存逻辑共用的行内图片占位前缀。</summary>
-    public const string EmbeddedImageMarkerPrefix = "⌘IMG:";
 
     public static FlowDocument ConvertDocument(string xaml)
     {
@@ -90,56 +91,81 @@ public static class RichTextBoxHelper
     private static void RestoreEmbeddedImages(FlowDocument doc)
     {
         var replacements = new List<(Paragraph Para, BlockUIContainer Container)>();
-        
+        var blocksToRemove = new List<Block>();
+        var blocksToAdd = new List<Block>();
+
         foreach (var block in doc.Blocks.ToList())
         {
             if (block is Paragraph para)
             {
                 var runs = para.Inlines.OfType<Run>().ToList();
-                foreach (var run in runs)
+
+                var hasImageMarker = runs.Any(r => r.Text.StartsWith(ImageService.EmbeddedImageMarkerPrefix, StringComparison.Ordinal));
+                var hasOnlyImageMarkers = runs.All(r => r.Text.StartsWith(ImageService.EmbeddedImageMarkerPrefix, StringComparison.Ordinal))
+                    && para.Inlines.All(i => i is Run);
+
+                if (hasOnlyImageMarkers && hasImageMarker)
                 {
-                    if (run.Text.StartsWith(EmbeddedImageMarkerPrefix, StringComparison.Ordinal))
+                    foreach (var run in runs)
                     {
-                        var data = run.Text.Substring(EmbeddedImageMarkerPrefix.Length);
-                        var parts = data.Split('|');
-                        if (parts.Length < 3)
-                            continue;
-
-                        try
+                        if (run.Text.StartsWith(ImageService.EmbeddedImageMarkerPrefix, StringComparison.Ordinal))
                         {
-                            var b64 = parts[0];
-                            var savedWidth = double.Parse(parts[1]);
-                            var savedHeight = double.Parse(parts[2]);
-
-                            var bytes = Convert.FromBase64String(b64);
-                            var ms = new MemoryStream(bytes);
-                            var bitmap = new BitmapImage();
-                            bitmap.BeginInit();
-                            bitmap.StreamSource = ms;
-                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                            bitmap.EndInit();
-                            bitmap.Freeze();
-
-                            var img = new Image
+                            if (_imageService.TryDecodeBase64ToImage(run.Text, out var image))
                             {
-                                Source = bitmap,
-                                Stretch = Stretch.Uniform,
-                                Width = savedWidth,
-                                Height = savedHeight,
-                                Tag = savedWidth
-                            };
-
-                            var container = new BlockUIContainer(img);
-                            container.SetValue(Paragraph.MarginProperty, new Thickness(0, 4, 0, 4));
-                            
-                            replacements.Add((para, container));
-                            Debug.WriteLine($"恢复图片: {savedWidth}x{savedHeight}, Base64长度={b64.Length}");
+                                var container = _imageService.CreateContainerFromDecodedImage(image);
+                                replacements.Add((para, container));
+                                Debug.WriteLine($"恢复图片: {image.Width}x{image.Height}");
+                            }
                         }
-                        catch (Exception ex)
+                    }
+                }
+                else if (hasImageMarker)
+                {
+                    var inlineContainers = new List<BlockUIContainer>();
+                    foreach (var run in runs)
+                    {
+                        if (run.Text.StartsWith(ImageService.EmbeddedImageMarkerPrefix, StringComparison.Ordinal))
                         {
-                            Debug.WriteLine($"恢复图片失败: {ex.Message}");
+                            if (_imageService.TryDecodeBase64ToImage(run.Text, out var image))
+                            {
+                                inlineContainers.Add(_imageService.CreateContainerFromDecodedImage(image));
+                                run.Text = string.Empty;
+                                Debug.WriteLine($"恢复行内图片: {image.Width}x{image.Height}");
+                            }
+                            else
+                            {
+                                run.Text = "[图片无法恢复]";
+                            }
                         }
-                        break;
+                    }
+
+                    if (inlineContainers.Any())
+                    {
+                        var idx = -1;
+                        for (var i = 0; i < doc.Blocks.Count; i++)
+                        {
+                            if (doc.Blocks.ElementAt(i) == para)
+                            {
+                                idx = i;
+                                break;
+                            }
+                        }
+
+                        var textRuns = para.Inlines.OfType<Run>().Any(r => !string.IsNullOrEmpty(r.Text))
+                            || para.Inlines.Any(i => i is not Run);
+
+                        if (textRuns)
+                        {
+                            blocksToAdd.InsertRange(0, inlineContainers);
+                            blocksToRemove.Add(para);
+                        }
+                        else
+                        {
+                            foreach (var container in inlineContainers)
+                            {
+                                replacements.Add((para, container));
+                            }
+                        }
                     }
                 }
             }
@@ -149,6 +175,27 @@ public static class RichTextBoxHelper
         {
             doc.Blocks.Remove(para);
             doc.Blocks.Add(container);
+        }
+
+        if (blocksToRemove.Any())
+        {
+            foreach (var block in blocksToRemove)
+            {
+                doc.Blocks.Remove(block);
+            }
+            for (var i = blocksToAdd.Count - 1; i >= 0; i--)
+            {
+                var firstBlock = doc.Blocks.FirstOrDefault();
+                if (firstBlock != null)
+                {
+                    doc.Blocks.Remove(blocksToAdd[i]);
+                    doc.Blocks.InsertBefore(firstBlock, blocksToAdd[i]);
+                }
+                else
+                {
+                    doc.Blocks.Add(blocksToAdd[i]);
+                }
+            }
         }
     }
 

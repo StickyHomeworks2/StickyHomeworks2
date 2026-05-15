@@ -57,6 +57,7 @@ public partial class App : AppEx
                 services.AddSingleton<CrashWindow>();
                 services.AddSingleton<WindowFocusObserverService>();
                 services.AddSingleton<TimeMachineService>();
+                services.AddSingleton<ImageService>();
                 services.AddSingleton<ClassIslandIpcService>();
                 services.AddHostedService(sp => sp.GetRequiredService<ClassIslandIpcService>());
                 services.AddSingleton<ViewModels.TimeMachineViewModel>();

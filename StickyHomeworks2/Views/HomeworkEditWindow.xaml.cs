@@ -56,6 +56,8 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     public MainWindow MainWindow { get; }
     public SettingsService SettingsService { get; }
     public TimeMachineService TimeMachineService { get; }
+    public ImageService ImageService { get; }
+
 
     public HomeworkEditViewModel ViewModel { get; } = new();
 
@@ -103,11 +105,12 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         }
     }
 
-    public HomeworkEditWindow(MainWindow mainWindow, SettingsService settingsService, TimeMachineService timeMachineService)
+    public HomeworkEditWindow(MainWindow mainWindow, SettingsService settingsService, TimeMachineService timeMachineService, ImageService imageService)
     {
         MainWindow = mainWindow;
         SettingsService = settingsService;
         TimeMachineService = timeMachineService;
+        ImageService = imageService;
         DataContext = this;
         InitializeComponent();
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
@@ -321,39 +324,85 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         coll.Add(inline);
     }
 
+    private static BitmapImage BitmapImageFromSource(BitmapSource bitmapSource)
+    {
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+        using var ms = new MemoryStream();
+        encoder.Save(ms);
+        ms.Position = 0;
+        bitmap.StreamSource = ms;
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.EndInit();
+        bitmap.Freeze();
+        return bitmap;
+    }
+
     private void ButtonInsertImage_OnClick(object sender, RoutedEventArgs e)
     {
-        var dlg = new OpenFileDialog
+        if (ImageService.TryShowFileDialog(this, out var path))
         {
-            Filter = "图片文件|*.png;*.jpg;*.jpeg;*.bmp;*.gif|所有文件|*.*",
-            Title = "选择要插入的图片"
-        };
-        if (dlg.ShowDialog(this) == true && File.Exists(dlg.FileName))
-        {
-            InsertImageFromFile(dlg.FileName);
+            ImageService.InsertImageFromFile(RelatedRichTextBox, path);
         }
     }
 
-    private void InsertImageFromFile(string filePath)
+    private void OnRichTextBoxPasting(object sender, DataObjectPastingEventArgs e)
     {
-        if (RelatedRichTextBox == null)
-            return;
-
-        var image = new Image
+        if (e.SourceDataObject.GetDataPresent(DataFormats.Bitmap))
         {
-            Source = new BitmapImage(new Uri(filePath, UriKind.Absolute)),
-            Stretch = Stretch.Uniform,
-            Width = 300.0,
-            Tag = 300.0
-        };
-        var source = (BitmapImage)image.Source;
-        image.Height = 300.0 * source.PixelHeight / source.PixelWidth;
+            e.CancelCommand();
 
-        var container = new BlockUIContainer(image);
-        container.SetValue(Paragraph.MarginProperty, new Thickness(0, 4, 0, 4));
-        RelatedRichTextBox.Document.Blocks.Add(container);
-        RelatedRichTextBox.CaretPosition = container.ElementEnd;
-        RelatedRichTextBox.Focus();
+            if (e.SourceDataObject.GetData(DataFormats.Bitmap) is BitmapSource bitmapSource)
+            {
+                var bitmap = BitmapImageFromSource(bitmapSource);
+
+                var image = ImageService.CreateImageElement(bitmap, ImageService.DefaultImageWidth);
+                var container = ImageService.CreateBlockContainer(image);
+
+                var rtb = (RichTextBox)sender;
+                var pos = rtb.CaretPosition;
+                Block insertAfter = null;
+                if (pos.Paragraph != null)
+                {
+                    insertAfter = pos.Paragraph;
+                }
+                else
+                {
+                    rtb.Document.Blocks.Add(container);
+                    rtb.CaretPosition = container.ElementEnd;
+                    rtb.Focus();
+                    return;
+                }
+
+                var blocks = rtb.Document.Blocks.ToList();
+                var idx = blocks.IndexOf(insertAfter);
+                if (idx >= 0)
+                {
+                    var nextBlock = (idx + 1 < blocks.Count) ? blocks[idx + 1] : null;
+                    rtb.Document.Blocks.Remove(insertAfter);
+
+                    if (nextBlock != null)
+                    {
+                        rtb.Document.Blocks.InsertBefore(nextBlock, container);
+                        rtb.Document.Blocks.InsertBefore(nextBlock, insertAfter);
+                    }
+                    else
+                    {
+                        rtb.Document.Blocks.Add(insertAfter);
+                        rtb.Document.Blocks.Add(container);
+                    }
+                }
+                else
+                {
+                    rtb.Document.Blocks.Add(container);
+                }
+
+                rtb.CaretPosition = container.ElementEnd;
+                rtb.Focus();
+            }
+        }
     }
 
     private void RichTextBoxOnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -362,35 +411,10 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
             return;
 
         var hit = VisualTreeHelper.HitTest(RelatedRichTextBox, e.GetPosition(RelatedRichTextBox));
-        
-        Image? clickedImage = hit?.VisualHit switch
+
+        if (ImageService.IsImageClick(hit?.VisualHit, out var clickedImage))
         {
-            Image img => img,
-            TextBlock tb when VisualTreeHelper.GetParent(tb) is Image img => img,
-            _ => null
-        };
-
-        if (clickedImage != null)
-        {
-            var originalWidth = clickedImage.Tag is double d ? d : clickedImage.Width;
-            var currentZoom = Math.Round(clickedImage.Width / originalWidth * 100);
-            var originalHeight = clickedImage.Height;
-            var originalImageWidth = clickedImage.Width;
-            var originalImageHeight = clickedImage.Height;
-
-            void ApplyZoom(double zoomPercent)
-            {
-                var newWidth = originalWidth * zoomPercent / 100.0;
-                var ratio = originalImageHeight / originalImageWidth;
-                clickedImage.Width = newWidth;
-                clickedImage.Height = newWidth * ratio;
-            }
-
-            var dialog = new ImageResizeDialog(currentZoom, ApplyZoom, () => ApplyZoom(currentZoom)) { Owner = this };
-            if (dialog.ShowDialog() != true)
-            {
-                ApplyZoom(currentZoom);
-            }
+            ImageService.ShowResizeDialog(this, clickedImage);
             e.Handled = true;
         }
     }
@@ -429,6 +453,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         richTextBox.TextChanged += RichTextBoxOnTextChanged;
         richTextBox.SelectionChanged += RichTextBoxOnSelectionChanged;
         richTextBox.PreviewMouseLeftButtonDown += RichTextBoxOnPreviewMouseLeftButtonDown;
+        DataObject.AddPastingHandler(richTextBox, OnRichTextBoxPasting);
     }
 
     private void RichTextBoxOnSelectionChanged(object sender, RoutedEventArgs e)
@@ -542,6 +567,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         richTextBox.TextChanged -= RichTextBoxOnTextChanged;
         richTextBox.SelectionChanged -= RichTextBoxOnSelectionChanged;
         richTextBox.PreviewMouseLeftButtonDown -= RichTextBoxOnPreviewMouseLeftButtonDown;
+        DataObject.RemovePastingHandler(richTextBox, OnRichTextBoxPasting);
         var hw = FindParentHomeworkControl(richTextBox);
         RichTextBoxHyperlinkClickHelper.SetRequireCtrlToOpenHyperlinks(richTextBox, hw?.IsEditing ?? false);
     }

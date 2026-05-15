@@ -10,15 +10,17 @@ using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using Microsoft.Xaml.Behaviors;
+using StickyHomeworks.Services;
 
 namespace StickyHomeworks.Behaviors;
 
 /// <summary>
 /// 将 <see cref="RichTextBox"/> 的 <see cref="FlowDocument"/> 与 XAML 字符串做双向绑定；
-/// 保存时把 <see cref="BlockUIContainer"/> 内的位图转为 <see cref="T:StickyHomeworks.RichTextBoxHelper.EmbeddedImageMarkerPrefix"/> 占位行，便于可靠序列化。
+/// 保存时把 <see cref="BlockUIContainer"/> 内的位图转为 <see cref="T:StickyHomeworks.Services.ImageService.EmbeddedImageMarkerPrefix"/> 占位行，便于可靠序列化。
 /// </summary>
 public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
 {
+    private static readonly ImageService _imageService = new();
     private static readonly IEqualityComparer<Image> ImageReferenceComparer = new ImageReferenceEqualityComparer();
 
     private int _applyXamlDepth;
@@ -59,28 +61,58 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
             {
                 if (!encodeCache.TryGetValue(img, out var cachedData))
                 {
-                    var pngBytes = BitmapToPngBytes(bitmap);
-                    if (pngBytes != null)
+                    cachedData = _imageService.EncodeImageToBase64(bitmap, img.Width, img.Height);
+                    if (cachedData != null)
                     {
-                        var b64 = Convert.ToBase64String(pngBytes);
-                        cachedData = $"{b64}|{img.Width}|{img.Height}";
                         encodeCache[img] = cachedData;
                     }
                 }
 
                 if (cachedData != null)
                 {
-                    tempDoc.Blocks.Add(new Paragraph(new Run(RichTextBoxHelper.EmbeddedImageMarkerPrefix + cachedData)));
+                    tempDoc.Blocks.Add(new Paragraph(new Run(ImageService.EmbeddedImageMarkerPrefix + cachedData)));
                 }
                 else
                 {
                     Debug.WriteLine("RichTextBoxBindingBehavior: 图片无法编码为 PNG，已跳过该块。");
-                    tempDoc.Blocks.Add(new Paragraph(new Run("[图片无法保存]")));
+                    tempDoc.Blocks.Add(_imageService.CreatePlaceholderParagraph("[图片无法保存]"));
                 }
             }
             else if (block is Paragraph para)
             {
-                tempDoc.Blocks.Add(CloneBlock(para));
+                var inlineImages = para.Inlines.OfType<InlineUIContainer>()
+                    .Select(i => i.Child as Image)
+                    .Where(i => i?.Source is BitmapImage)
+                    .ToList();
+
+                if (inlineImages.Any())
+                {
+                    foreach (var inlineImg in inlineImages)
+                    {
+                        if (!encodeCache.TryGetValue(inlineImg, out var cachedData))
+                        {
+                            cachedData = _imageService.EncodeImageToBase64((BitmapImage)inlineImg.Source, inlineImg.Width, inlineImg.Height);
+                            if (cachedData != null)
+                            {
+                                encodeCache[inlineImg] = cachedData;
+                            }
+                        }
+
+                        if (cachedData != null)
+                        {
+                            tempDoc.Blocks.Add(new Paragraph(new Run(ImageService.EmbeddedImageMarkerPrefix + cachedData)));
+                        }
+                        else
+                        {
+                            Debug.WriteLine("RichTextBoxBindingBehavior: InlineUIContainer 图片无法编码，已跳过。");
+                            tempDoc.Blocks.Add(_imageService.CreatePlaceholderParagraph("[图片无法保存]"));
+                        }
+                    }
+                }
+                else
+                {
+                    tempDoc.Blocks.Add(CloneBlock(para));
+                }
             }
             else
             {
@@ -95,23 +127,6 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
     {
         var xaml = XamlWriter.Save(block);
         return (Block)XamlReader.Parse(xaml);
-    }
-
-    private static byte[]? BitmapToPngBytes(BitmapImage bitmap)
-    {
-        try
-        {
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bitmap));
-            using var ms = new MemoryStream();
-            encoder.Save(ms);
-            return ms.ToArray();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"RichTextBoxBindingBehavior.BitmapToPngBytes: {ex.Message}");
-            return null;
-        }
     }
 
     public static string GetDocumentXaml(DependencyObject obj)
