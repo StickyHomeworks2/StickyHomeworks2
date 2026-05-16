@@ -1243,6 +1243,35 @@
                                               VerticalScrollBarVisibility="Auto"
                                               PreviewMouseWheel="DocumentViewer_PreviewMouseWheel"/>
                                 </TabItem>
+
+                                <TabItem Header="更新设置">
+                                    <StackPanel Style="{StaticResource SettingsPageStackPanelStyle}" Margin="0">
+                                        <materialDesign:Card Margin="12">
+                                            <StackPanel Margin="12">
+                                                <ely:SettingsControl IconGlyph="DownloadOutline"
+                                                                     Header="更新通道"
+                                                                     Description="控制应用的更新目标版本。">
+                                                    <ely:SettingsControl.Switcher>
+                                                        <Grid>
+                                                            <ComboBox Width="150"
+                                                                  Foreground="{DynamicResource MaterialDesignBody}"
+                                                                  SelectedIndex="{Binding Settings.UpdateChannel}"
+                                                                  SelectionChanged="ComboBoxUpdateChannel_OnSelectionChanged">
+                                                            <ComboBoxItem Content="稳定版" HorizontalContentAlignment="Left"/>
+                                                            <ComboBoxItem Content="测试版" HorizontalContentAlignment="Left"/>
+                                                        </ComboBox>
+                                                        </Grid>
+                                                    </ely:SettingsControl.Switcher>
+                                                </ely:SettingsControl>
+                                                <TextBlock x:Name="UpdateChannelDescriptionTextBlock"
+                                                           Margin="0 8 0 0"
+                                                           FontWeight="Regular"
+                                                           TextWrapping="Wrap"
+                                                           Text="接收经过充分测试的稳定版本更新。" />
+                                            </StackPanel>
+                                        </materialDesign:Card>
+                                    </StackPanel>
+                                </TabItem>
                             </TabControl>
                         </Grid>
                     </TabItem>

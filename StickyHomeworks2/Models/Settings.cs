@@ -51,6 +51,7 @@ public class Settings : ObservableRecipient
     private bool _isClassIslandIpcEnabled = false;
     private ObservableCollection<SubjectAction> _classIslandSubjects = new();
     private HomeworkTemplateConfig _homeworkTemplate = new();
+    private int _updateChannel = 0;
 
     public double WindowX
     {
@@ -515,6 +516,22 @@ public class Settings : ObservableRecipient
             value ??= new HomeworkTemplateConfig();
             if (ReferenceEquals(_homeworkTemplate, value)) return;
             _homeworkTemplate = value;
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
+
+    #region Update
+
+    /// <summary>更新渠道：0=稳定版，1=测试版。</summary>
+    public int UpdateChannel
+    {
+        get => _updateChannel;
+        set
+        {
+            if (value == _updateChannel) return;
+            _updateChannel = value;
             OnPropertyChanged();
         }
     }

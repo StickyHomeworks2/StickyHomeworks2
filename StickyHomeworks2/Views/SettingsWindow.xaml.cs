@@ -67,10 +67,17 @@ public partial class SettingsWindow : MyWindow
     private CancellationTokenSource _cts;
     private string _savePath;
     private string _updateVersion;
-    private const string UpdateInfoUrl = "https://api.classisband.xyz/api/latest.json";
+    private const string ApiBaseUrl = "https://api.classisband.xyz/api";
     private const string LocalAppData = "StickyHomeworks2Updater";
     private HttpClient? _httpClient;
-    private const string ChangelogUrl = "https://api.classisband.xyz/api/changelog.md";
+
+    private string UpdateInfoUrl => Settings.UpdateChannel == 0
+        ? $"{ApiBaseUrl}/latest.json"
+        : $"{ApiBaseUrl}/beta.json";
+
+    private string ChangelogUrl => Settings.UpdateChannel == 0
+        ? $"{ApiBaseUrl}/changelog.md"
+        : $"{ApiBaseUrl}/betamd.md";
 
     private readonly ObservableCollection<string> _homeworkTemplateCommonBookKeys = new();
     private readonly ObservableCollection<string> _homeworkTemplateSubjectBookKeys = new();
@@ -862,6 +869,19 @@ public partial class SettingsWindow : MyWindow
     {
         CheckUpdatesButton.Visibility = Visibility.Visible;
         await CheckForUpdatesAsync();
+    }
+
+    private void ComboBoxUpdateChannel_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        switch (Settings.UpdateChannel)
+        {
+            case 0:
+                UpdateChannelDescriptionTextBlock.Text = "接收经过充分测试的稳定版本更新。";
+                break;
+            case 1:
+                UpdateChannelDescriptionTextBlock.Text = "接收最新的功能更新，但可能包含不稳定因素。适合希望提前体验新功能的用户。";
+                break;
+        }
     }
 
     //private async void LoadTabs()
