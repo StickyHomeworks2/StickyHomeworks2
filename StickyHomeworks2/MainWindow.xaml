@@ -308,15 +308,15 @@
                         <GroupStyle>
                             <GroupStyle.Panel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Vertical" FocusVisualStyle="{x:Null}">
-                                        <WrapPanel.ItemWidth>
+                                    <controls:MasonryPanel FocusVisualStyle="{x:Null}">
+                                        <controls:MasonryPanel.ItemWidth>
                                             <MultiBinding Converter="{StaticResource MinValueMultiConverter}"
                                                           Mode="OneWay">
                                                 <Binding Path="ActualWidth" ElementName="MainListView" Mode="OneWay" />
                                                 <Binding Path="SettingsService.Settings.MaxPanelWidth" Mode="OneWay" />
                                             </MultiBinding>
-                                        </WrapPanel.ItemWidth>
-                                    </WrapPanel>
+                                        </controls:MasonryPanel.ItemWidth>
+                                    </controls:MasonryPanel>
                                 </ItemsPanelTemplate>
                             </GroupStyle.Panel>
                             <GroupStyle.ContainerStyle>
