@@ -578,11 +578,9 @@ public partial class SettingsWindow : MyWindow
 
         try
         {
-            using (var client = new HttpClient())
-            {
-                client.Timeout = TimeSpan.FromSeconds(10);
-                var updateInfo = await client.GetFromJsonAsync<UpdateInfo>(UpdateInfoUrl);
-                _logger.LogInformation("检查更新: 当前版本 {CurrentVersion}", currentVersion);
+            using var checkClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            var updateInfo = await WebRequestHelper.GetJsonAsync<UpdateInfo>(checkClient, UpdateInfoUrl.ToString());
+            _logger.LogInformation("检查更新: 当前版本 {CurrentVersion}", currentVersion);
 
 
                 if (updateInfo == null )
@@ -620,9 +618,8 @@ public partial class SettingsWindow : MyWindow
                     UpdateIcon.Kind = PackIconKind.Update;
                     CheckUpdatesButton.Visibility = Visibility.Visible;
                     DownloadProgress.Visibility = Visibility.Collapsed;
-                    DownloadUpdatesButton.Visibility = Visibility.Collapsed; 
+                    DownloadUpdatesButton.Visibility = Visibility.Collapsed;
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -938,14 +935,7 @@ public partial class SettingsWindow : MyWindow
     {
         try
         {
-            using (HttpClient client = new HttpClient())
-            {
-                HttpResponseMessage response = await client.GetAsync(url);
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadAsStringAsync();
-                }
-            }
+            return await WebRequestHelper.GetStringAsync(_httpClient ?? new HttpClient(), url);
         }
         catch (Exception ex)
         {
@@ -972,7 +962,7 @@ public partial class SettingsWindow : MyWindow
         {
             _logger.LogDebug("加载更新日志: {Url}", ChangelogUrl);
             EnsureHttpClient();
-            string markdown = await _httpClient!.GetStringAsync(ChangelogUrl);
+            string markdown = await WebRequestHelper.GetStringAsync(_httpClient!, ChangelogUrl);
 
             // 使用R0enderToFlowDocument 渲染
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>

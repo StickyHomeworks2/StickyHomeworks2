@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using ClassIsland.Services;
 using ElysiaFramework;
 using ElysiaFramework.Interfaces;
@@ -39,6 +40,8 @@ public partial class App : AppEx
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        WpfBindingDiagnosticsHelper.PrepareEnvironment();
+
         //AppContext.SetSwitch(@"Switch.System.Windows.Controls.DoNotAugmentWordBreakingUsingSpeller", true);
         Mutex = new Mutex(true, "StickyHomeworks.Lock", out var createNew);
         if (!createNew)
@@ -76,22 +79,26 @@ public partial class App : AppEx
                 {
                     LogMaskingHelper.Rules.Add(new LogMaskRule(new(@"(latitude=)(\d*\.?\d*)"), 2));
                     LogMaskingHelper.Rules.Add(new LogMaskRule(new(@"(longitude=)(\d*\.?\d*)"), 2));
+                    builder.SetMinimumLevel(LogLevel.Trace);
 #if DEBUG
-                    builder.SetMinimumLevel(LogLevel.Debug);
+                    builder.AddDebug();
 #endif
                 });
                 services.AddSingleton<ViewModels.TimeMachineViewModel>();
                 services.AddSingleton<TimeMachineWindow>();
             }).
             Build();
+        Logger = GetService<ILogger<App>>();
+        WpfBindingDiagnosticsHelper.Initialize(Logger);
+
         _ = Host.StartAsync();
         GetService<AppDbContext>();
         MainWindow = GetService<MainWindow>();
-        GetService<MainWindow>().Show();
         LinkConfirmationHelper.SetLogger(GetService<ILoggerFactory>().CreateLogger(typeof(LinkConfirmationHelper).FullName));
         RichTextBoxBindingBehavior.SetLogger(GetService<ILogger<RichTextBoxBindingBehavior>>());
+        WebRequestHelper.Logger = GetService<ILoggerFactory>().CreateLogger(typeof(WebRequestHelper).FullName);
 
-        Logger = GetService<ILogger<App>>();
+        GetService<MainWindow>().Show();
         Logger.LogInformation("StickyHomeworks2 v{Version} 正在启动", AppVersion);
 
         var lifetime = GetService<IHostApplicationLifetime>();
@@ -99,16 +106,27 @@ public partial class App : AppEx
         lifetime.ApplicationStopping.Register(() => Logger.LogInformation("应用正在停止"));
         lifetime.ApplicationStopped.Register(() => Logger.LogInformation("应用已停止"));
 
-        System.Windows.Diagnostics.BindingDiagnostics.BindingFailed += (o, args) =>
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
-            if (args.EventType == TraceEventType.Verbose)
-            {
-                Logger.LogTrace("{Message}", args.Message);
-            }
-            else
-            {
-                Logger.LogWarning("{Message}", args.Message);
-            }
+            if (args.ExceptionObject is Exception ex)
+                Logger.LogCritical(ex, "非UI线程未处理异常: IsTerminating={IsTerminating}", args.IsTerminating);
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            args.SetObserved();
+            Logger.LogWarning(args.Exception, "异步任务异常被遗弃: {Message}", args.Exception?.Message);
+        };
+
+        SystemEvents.UserPreferenceChanged += (_, args) =>
+        {
+            if (args.Category == UserPreferenceCategory.Window || args.Category == UserPreferenceCategory.Color)
+                Logger.LogInformation("系统设置变更: Category={Category}", args.Category);
+        };
+
+        SystemEvents.DisplaySettingsChanging += (_, _) =>
+        {
+            Logger.LogInformation("显示器设置正在变更 (分辨率/DPI)");
         };
 
         base.OnStartup(e);
