@@ -5,23 +5,27 @@ using System.Windows.Media;
 using ClassIsland.Services;
 using ElysiaFramework.Interfaces;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 namespace StickyHomeworks.Services;
 
 public class ThemeBackgroundService : IHostedService
 {
+    private readonly ILogger<ThemeBackgroundService> _logger;
+
     private SettingsService SettingsService { get; }
 
     private IThemeService ThemeService { get; }
 
     private WallpaperPickingService WallpaperPickingService { get; }
 
-    public ThemeBackgroundService(SettingsService settingsService, IThemeService themeService, WallpaperPickingService wallpaperPickingService)
+    public ThemeBackgroundService(SettingsService settingsService, IThemeService themeService, WallpaperPickingService wallpaperPickingService, ILogger<ThemeBackgroundService> logger)
     {
         SettingsService = settingsService;
         ThemeService = themeService;
         WallpaperPickingService = wallpaperPickingService;
+        _logger = logger;
         SettingsService.OnSettingsChanged += SettingsServiceOnOnSettingsChanged;
         SystemEvents.UserPreferenceChanged += SystemEventsOnUserPreferenceChanged;
         WallpaperPickingService.WallpaperColorPlatteChanged += WallpaperPickingServiceOnWallpaperColorPlatteChanged;
@@ -82,6 +86,7 @@ public class ThemeBackgroundService : IHostedService
         }
 
         ThemeService.SetTheme(SettingsService.Settings.Theme, primary, secondary);
+        _logger.LogInformation("设置主题: Theme={Theme} ColorSource={ColorSource}", SettingsService.Settings.Theme, SettingsService.Settings.ColorSource);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -89,6 +94,7 @@ public class ThemeBackgroundService : IHostedService
         UpdateTheme();
         _ = WallpaperPickingService.GetWallpaperAsync();
         UpdateStopWatch.Start();
+        _logger.LogInformation("ThemeBackgroundService 已启动");
         return Task.CompletedTask;
     }
 

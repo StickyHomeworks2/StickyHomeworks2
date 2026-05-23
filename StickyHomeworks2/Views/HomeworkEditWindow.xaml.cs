@@ -25,6 +25,7 @@ using StickyHomeworks.Services;
 using StickyHomeworks.ViewModels;
 using StickyHomeworks2.Helpers;
 using StickyHomeworks2.Views;
+using Microsoft.Extensions.Logging;
 
 namespace StickyHomeworks.Views;
 
@@ -57,6 +58,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
     public SettingsService SettingsService { get; }
     public TimeMachineService TimeMachineService { get; }
     public ImageService ImageService { get; }
+    private readonly ILogger<HomeworkEditWindow> _logger;
 
 
     public HomeworkEditViewModel ViewModel { get; } = new();
@@ -105,12 +107,13 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         }
     }
 
-    public HomeworkEditWindow(MainWindow mainWindow, SettingsService settingsService, TimeMachineService timeMachineService, ImageService imageService)
+    public HomeworkEditWindow(MainWindow mainWindow, SettingsService settingsService, TimeMachineService timeMachineService, ImageService imageService, ILogger<HomeworkEditWindow> logger)
     {
         MainWindow = mainWindow;
         SettingsService = settingsService;
         TimeMachineService = timeMachineService;
         ImageService = imageService;
+        _logger = logger;
         DataContext = this;
         InitializeComponent();
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
@@ -246,6 +249,7 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         rtb.CaretPosition = hyperlink.ContentEnd;
         rtb.Focus();
         SaveDocumentToHomework();
+        _logger.LogInformation("插入链接: Uri={Uri} DisplayText={DisplayText}", dlg.ResultUri, dlg.ResultDisplayText);
     }
 
     /// <summary>
@@ -345,6 +349,17 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
         if (ImageService.TryShowFileDialog(this, out var path))
         {
             ImageService.InsertImageFromFile(RelatedRichTextBox, path);
+            var insertedBitmap = ImageService.LoadBitmapFromFile(path);
+            if (insertedBitmap != null)
+            {
+                _logger.LogInformation("插入图片: {FilePath} 尺寸={Width}x{Height} 大小={SizeKB}KB",
+                    path, insertedBitmap.PixelWidth, insertedBitmap.PixelHeight,
+                    (long)(new FileInfo(path).Length / 1024));
+            }
+            else
+            {
+                _logger.LogInformation("插入图片: {FilePath}", path);
+            }
         }
     }
 
@@ -775,6 +790,9 @@ public partial class HomeworkEditWindow : Window, INotifyPropertyChanged
             MainWindow.ViewModel.SelectedHomework = hw;
             MainWindow.ViewModel.EditingHomework = hw;
             MainWindow.ProfileService.SaveProfile();
+            var line = HomeworkTemplateRichTextHelper.GetCaretParagraphPlainText(RelatedRichTextBox);
+            _logger.LogInformation("模板分书拆分新作业: BookName={BookName} Subject={Subject} PartLine={PartLine} 截止日期={DueTime}",
+                bookName, hw.Subject, line, hw.DueTime.ToString("yyyy-MM-dd"));
 
             // 等新选中 Homework 绑定到 RichTextBox、FlowDocument 就绪后再插入模板行，避免作用在旧文档上。
             await Dispatcher.InvokeAsync(static () => { }, DispatcherPriority.Loaded);

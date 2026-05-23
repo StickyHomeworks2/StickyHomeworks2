@@ -62,6 +62,7 @@ public partial class SettingsWindow : MyWindow
     public ClassIslandIpcService ClassIslandIpcService { get; }
 
     private readonly SettingsService _settingsService;
+    private readonly ILogger<SettingsWindow> _logger;
     private readonly PropertyChangedEventHandler _settingsServiceRootPropertyChanged;
 
     private CancellationTokenSource _cts;
@@ -85,11 +86,13 @@ public partial class SettingsWindow : MyWindow
 
     public SettingsWindow(WallpaperPickingService wallpaperPickingService,
         SettingsService settingsService,
-        ClassIslandIpcService classIslandIpcService)
+        ClassIslandIpcService classIslandIpcService,
+        ILogger<SettingsWindow> logger)
     {
         WallpaperPickingService = wallpaperPickingService;
         ClassIslandIpcService = classIslandIpcService;
         _settingsService = settingsService;
+        _logger = logger;
         _settingsServiceRootPropertyChanged = SettingsServiceOnRootPropertyChanged;
 
         InitializeComponent();
@@ -209,6 +212,7 @@ public partial class SettingsWindow : MyWindow
         _homeworkTemplatePersistDebounceTimer?.Stop();
         _homeworkTemplatePersistDebounceTimer = null;
         PersistHomeworkTemplate();
+        _logger.LogDebug("设置窗口关闭");
         Hide();
         IsOpened = false;
     }
@@ -248,6 +252,7 @@ public partial class SettingsWindow : MyWindow
         }
         
         await ShowMaterialAlertAsync("提示", $"已刷新，共 {Settings.ClassIslandSubjects.Count} 个科目。");
+        _logger.LogInformation("刷新 ClassIsland 科目列表: 共 {Count} 个科目", Settings.ClassIslandSubjects.Count);
     }
 
     private async void ButtonImportClassIslandSubjects_OnClick(object sender, RoutedEventArgs e)
@@ -273,6 +278,7 @@ public partial class SettingsWindow : MyWindow
         await ShowMaterialAlertAsync("提示", importedCount > 0
             ? $"成功导入 {importedCount} 个科目至 StickyHomeworks。"
             : "没有新科目需要导入。");
+        _logger.LogInformation("从 ClassIsland 导入 {Count} 个新科目", importedCount);
     }
 
     private async void ButtonTestIpcEvent_OnClick(object sender, RoutedEventArgs e)
@@ -284,6 +290,12 @@ public partial class SettingsWindow : MyWindow
             $"当前科目: {ClassIslandIpcService.CurrentSubjectName}\n" +
             $"上一科目: {ClassIslandIpcService.PreviousSubjectName}\n" +
             $"是否连接: {ClassIslandIpcService.IsConnected}");
+    }
+
+    private void ButtonViewLogs_OnClick(object sender, RoutedEventArgs e)
+    {
+        var win = AppEx.GetService<AppLogsWindow>();
+        win.Open();
     }
 
     private void ButtonDebugToastText_OnClick(object sender, RoutedEventArgs e)
@@ -387,6 +399,7 @@ public partial class SettingsWindow : MyWindow
 
     private async void ButtonUpdateWallpaper_OnClick(object sender, RoutedEventArgs e)
     {
+        _logger.LogInformation("手动刷新壁纸");
         await WallpaperPickingService.GetWallpaperAsync();
     }
 
@@ -398,6 +411,7 @@ public partial class SettingsWindow : MyWindow
         };
         var r = w.ShowDialog();
         Settings.WallpaperClassName = w.SelectedResult ?? "";
+        _logger.LogInformation("选择壁纸窗口类: {ClassName}", w.SelectedResult ?? "(默认)");
         if (r == true)
         {
             await WallpaperPickingService.GetWallpaperAsync();
@@ -415,6 +429,7 @@ public partial class SettingsWindow : MyWindow
         ViewModel.SubjectEditText = Settings.Subjects[index];
         var r = (string?)await ShowDialog("EditSubjectDialog");
         if (r == null) return;
+        _logger.LogInformation("编辑科目: Index={Index} Old={Old} New={New}", index, ViewModel.SubjectEditText, r);
         Settings.Subjects[index] = r;
     }
 
@@ -423,6 +438,7 @@ public partial class SettingsWindow : MyWindow
         ViewModel.TagEditText = Settings.Tags[index];
         var r = (string?)await ShowDialog("EditTagDialog");
         if (r == null) return;
+        _logger.LogInformation("编辑标签: Index={Index} Old={Old} New={New}", index, ViewModel.TagEditText, r);
         Settings.Tags[index] = r;
     }
 
@@ -437,6 +453,7 @@ public partial class SettingsWindow : MyWindow
         }
         else
         {
+            _logger.LogInformation("添加科目: {Name}", r);
             ViewModel.SubjectSelectedIndex = Settings.Subjects.Count - 1;
         }
     }
@@ -456,6 +473,8 @@ public partial class SettingsWindow : MyWindow
         {
             return;
         }
+        var removed = Settings.Subjects[ViewModel.SubjectSelectedIndex];
+        _logger.LogInformation("删除科目: {Name}", removed);
         Settings.Subjects.RemoveAt(ViewModel.SubjectSelectedIndex);
     }
 
@@ -470,6 +489,7 @@ public partial class SettingsWindow : MyWindow
         }
         else
         {
+            _logger.LogInformation("添加标签: {Name}", r);
             ViewModel.TagSelectedIndex = Settings.Tags.Count - 1;
         }
     }
@@ -489,6 +509,8 @@ public partial class SettingsWindow : MyWindow
         {
             return;
         }
+        var removed = Settings.Tags[ViewModel.TagSelectedIndex];
+        _logger.LogInformation("删除标签: {Name}", removed);
         Settings.Tags.RemoveAt(ViewModel.TagSelectedIndex);
     }
 
@@ -528,12 +550,13 @@ public partial class SettingsWindow : MyWindow
             using var fileStream = new FileStream(updaterPath, FileMode.Create, FileAccess.Write, FileShare.None);
             stream.CopyTo(fileStream);
 
-            System.Diagnostics.Debug.WriteLine($"Updater.exe 已提取到: {updaterPath}");
+            _logger.LogInformation("提取 Updater.exe 到 {Path}", updaterPath);
             return updaterPath;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"提取 Updater.exe 失败: {ex.Message}");
+            _logger.LogError(ex, "检查更新异常");
+            _logger.LogError(ex, "提取 Updater.exe 失败");
             throw new InvalidOperationException($"提取 Updater.exe 失败: {ex.Message}", ex);
         }
     }
@@ -559,11 +582,12 @@ public partial class SettingsWindow : MyWindow
             {
                 client.Timeout = TimeSpan.FromSeconds(10);
                 var updateInfo = await client.GetFromJsonAsync<UpdateInfo>(UpdateInfoUrl);
-
+                _logger.LogInformation("检查更新: 当前版本 {CurrentVersion}", currentVersion);
 
 
                 if (updateInfo == null )
                 {
+                    _logger.LogWarning("检查更新失败: API 返回空数据");
                     versionStatusTextBlock.Text = $"当前版本：{currentVersion}";
                     UpdateStatusTextBlock.Text = $"检查失败";
                     DownloadProgress.IsIndeterminate = false;
@@ -602,6 +626,7 @@ public partial class SettingsWindow : MyWindow
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "检查更新异常");
             
             versionStatusTextBlock.Text = "原因：" + ex.Message;
             UpdateStatusTextBlock.Text = $"检查失败";
@@ -632,6 +657,7 @@ public partial class SettingsWindow : MyWindow
 
         try
         {
+            _logger.LogInformation("开始下载更新: {Url}", downloadUrl);
             using (var client = new HttpClient())
             {
                 using (var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, _cts.Token))
@@ -669,6 +695,7 @@ public partial class SettingsWindow : MyWindow
                 }
 
                 versionStatusTextBlock.Text = "下载完成！";
+                _logger.LogInformation("更新包下载完成: {SavePath}", _savePath);
                 UpdateStatusTextBlock.Text = $"重启以应用更新";
                 UpdateIcon.Kind = PackIconKind.MonitorArrowDownVariant;
                 DownloadProgress.IsIndeterminate = true;
@@ -680,6 +707,7 @@ public partial class SettingsWindow : MyWindow
         }
         catch (OperationCanceledException)
         {
+            _logger.LogInformation("更新下载已取消");
             versionStatusTextBlock.Text = "下载已取消。";
             if (System.IO.File.Exists(_savePath))
                 System.IO.File.Delete(_savePath);
@@ -696,6 +724,7 @@ public partial class SettingsWindow : MyWindow
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "更新下载失败");
             UpdateStatusTextBlock.Text = $"下载失败";
             versionStatusTextBlock.Text = "原因：" + ex.Message;
             DownloadProgress.Foreground = new SolidColorBrush(Colors.Red);
@@ -748,6 +777,7 @@ public partial class SettingsWindow : MyWindow
                 ErrorDialog = false
             };
 
+            _logger.LogInformation("启动更新程序: Version={Version} Pid={Pid}", _updateVersion, currentPid);
             Process.Start(startInfo);
 
             System.Windows.Application.Current.Shutdown();
@@ -801,6 +831,7 @@ public partial class SettingsWindow : MyWindow
             catch { }
 
             System.Diagnostics.Debug.WriteLine($"更新失败: {ex.Message}");
+            _logger.LogError(ex, "更新安装失败，已记录错误日志至 {LogPath}", logPath);
 
             System.Windows.Application.Current.Shutdown();
         }
@@ -873,6 +904,7 @@ public partial class SettingsWindow : MyWindow
 
     private void ComboBoxUpdateChannel_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        _logger.LogInformation("切换更新频道: Channel={Channel} ({Name})", Settings.UpdateChannel, Settings.UpdateChannel == 0 ? "稳定版" : "测试版");
         switch (Settings.UpdateChannel)
         {
             case 0:
@@ -938,6 +970,7 @@ public partial class SettingsWindow : MyWindow
     {
         try
         {
+            _logger.LogDebug("加载更新日志: {Url}", ChangelogUrl);
             EnsureHttpClient();
             string markdown = await _httpClient!.GetStringAsync(ChangelogUrl);
 
@@ -961,6 +994,7 @@ public partial class SettingsWindow : MyWindow
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogWarning(ex, "加载更新日志失败: 网络错误");
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 DocumentViewer.Document = CreateErrorDocument($"网络连接失败：{ex.Message}");
@@ -968,6 +1002,7 @@ public partial class SettingsWindow : MyWindow
         }
         catch (Exception ex)
         {
+            _logger.LogWarning(ex, "加载更新日志失败");
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 DocumentViewer.Document = CreateErrorDocument($"加载失败：{ex.Message}");
@@ -1180,6 +1215,7 @@ public partial class SettingsWindow : MyWindow
         if (string.IsNullOrEmpty(text))
             return;
         Settings.HomeworkTemplate.QuickActions.Add(text);
+        _logger.LogInformation("模板添加快捷操作: {Text}", text);
         TbHomeworkTemplateNewQuickAction.Clear();
         RequestPersistHomeworkTemplate();
     }
@@ -1188,6 +1224,7 @@ public partial class SettingsWindow : MyWindow
     {
         if (sender is not FrameworkElement fe || fe.DataContext is not string text)
             return;
+        _logger.LogInformation("模板删除快捷操作: {Text}", text);
         Settings.HomeworkTemplate.QuickActions.Remove(text);
         RequestPersistHomeworkTemplate();
     }
@@ -1200,6 +1237,7 @@ public partial class SettingsWindow : MyWindow
         if (Settings.HomeworkTemplate.CommonBooks.ContainsKey(name))
             return;
         Settings.HomeworkTemplate.CommonBooks[name] = new ObservableCollection<string>();
+        _logger.LogInformation("模板添加通用书: {Name}", name);
         TbHomeworkTemplateNewCommonBook.Clear();
         RefreshHomeworkTemplateCommonBookKeys();
         RequestPersistHomeworkTemplate();
@@ -1209,6 +1247,7 @@ public partial class SettingsWindow : MyWindow
     {
         if (LbHomeworkTemplateCommonBooks.SelectedItem is not string key)
             return;
+        _logger.LogInformation("模板删除通用书: {Key}", key);
         Settings.HomeworkTemplate.CommonBooks.Remove(key);
         RefreshHomeworkTemplateCommonBookKeys();
         LbHomeworkTemplateCommonParts.ItemsSource = null;
@@ -1246,6 +1285,7 @@ public partial class SettingsWindow : MyWindow
         }
 
         parts.Add(text);
+        _logger.LogInformation("模板添加通用部分: Book={Book} Part={Part}", key, text);
         TbHomeworkTemplateNewCommonPart.Clear();
         RequestPersistHomeworkTemplate();
     }
@@ -1256,6 +1296,7 @@ public partial class SettingsWindow : MyWindow
             return;
         if (LbHomeworkTemplateCommonParts.ItemsSource is not ObservableCollection<string> oc)
             return;
+        _logger.LogInformation("模板删除通用部分: Book={Book} Part={Part}", LbHomeworkTemplateCommonBooks.SelectedItem?.ToString() ?? "?", part);
         oc.Remove(part);
         RequestPersistHomeworkTemplate();
     }
@@ -1278,6 +1319,7 @@ public partial class SettingsWindow : MyWindow
         var inner = GetOrCreateSubjectBooksInner(subject);
         if (!inner.ContainsKey(name))
             inner[name] = new ObservableCollection<string>();
+        _logger.LogInformation("模板添加科目书: Subject={Subject} Book={Book}", subject, name);
         TbHomeworkTemplateNewSubjectBook.Clear();
         RefreshHomeworkTemplateSubjectBookKeys();
         RequestPersistHomeworkTemplate();
@@ -1292,6 +1334,7 @@ public partial class SettingsWindow : MyWindow
             return;
         if (!Settings.HomeworkTemplate.SubjectBooks.TryGetValue(subject, out var inner))
             return;
+        _logger.LogInformation("模板删除科目书: Subject={Subject} Book={Book}", subject, bookKey);
         inner.Remove(bookKey);
         RefreshHomeworkTemplateSubjectBookKeys();
         LbHomeworkTemplateSubjectParts.ItemsSource = null;
@@ -1341,6 +1384,7 @@ public partial class SettingsWindow : MyWindow
         }
 
         parts.Add(text);
+        _logger.LogInformation("模板添加科目部分: Subject={Subject} Book={Book} Part={Part}", subject, bookKey, text);
         TbHomeworkTemplateNewSubjectPart.Clear();
         RequestPersistHomeworkTemplate();
     }
@@ -1351,6 +1395,7 @@ public partial class SettingsWindow : MyWindow
             return;
         if (LbHomeworkTemplateSubjectParts.ItemsSource is not ObservableCollection<string> oc)
             return;
+        _logger.LogInformation("模板删除科目部分: Subject={Subject} Part={Part}", ViewModel.HomeworkTemplateSelectedSubject, part);
         oc.Remove(part);
         RequestPersistHomeworkTemplate();
     }

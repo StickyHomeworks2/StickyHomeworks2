@@ -9,6 +9,7 @@ using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using StickyHomeworks.Views;
 
@@ -16,6 +17,13 @@ namespace StickyHomeworks.Services;
 
 public class ImageService
 {
+    private readonly ILogger<ImageService> _logger;
+
+    public ImageService(ILogger<ImageService> logger)
+    {
+        _logger = logger;
+    }
+
     public const string EmbeddedImageMarkerPrefix = "⌘IMG:";
 
     public const long MaxImageFileSize = 10 * 1024 * 1024; // 10MB
@@ -34,18 +42,30 @@ public class ImageService
             return string.Empty;
 
         if (!File.Exists(filePath))
+        {
+            _logger.LogWarning("插入图片失败: 文件不存在 {FilePath}", filePath);
             return string.Empty;
+        }
 
         if (!AllowedImageExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant()))
+        {
+            _logger.LogWarning("插入图片失败: 不支持的格式 {FilePath}", filePath);
             return string.Empty;
+        }
 
         var fileInfo = new FileInfo(filePath);
         if (fileInfo.Length > MaxImageFileSize)
+        {
+            _logger.LogWarning("插入图片失败: 文件过大 ({Size}MB) {FilePath}", fileInfo.Length / 1024.0 / 1024.0, filePath);
             return string.Empty;
+        }
 
         var bitmap = LoadBitmapFromFile(filePath);
         if (bitmap == null)
+        {
+            _logger.LogError("插入图片失败: 无法加载图片 {FilePath}", filePath);
             return string.Empty;
+        }
 
         var image = CreateImageElement(bitmap, DefaultImageWidth);
         var container = CreateBlockContainer(image);
@@ -54,6 +74,9 @@ public class ImageService
         richTextBox.CaretPosition = container.ElementEnd;
         richTextBox.Focus();
 
+        _logger.LogInformation("已插入图片: {FilePath} 尺寸={Width}x{Height} 大小={SizeKB}KB",
+            filePath, bitmap.PixelWidth, bitmap.PixelHeight,
+            (long)(new FileInfo(filePath).Length / 1024));
         return filePath;
     }
 
@@ -89,7 +112,7 @@ public class ImageService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"ImageService.LoadBitmapFromFile: {ex.Message}");
+            _logger.LogWarning(ex, "加载图片失败 {FilePath}", filePath);
             return null;
         }
     }
@@ -198,7 +221,7 @@ public class ImageService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"ImageService.TryDecodeBase64ToImage: {ex.Message}");
+            _logger.LogWarning(ex, "解码 Base64 图片失败");
             return false;
         }
     }
@@ -263,7 +286,7 @@ public class ImageService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"ImageService.BitmapToJpegBytes: {ex.Message}");
+            _logger.LogWarning(ex, "Bitmap 转 JPEG 字节流失败");
             return null;
         }
     }

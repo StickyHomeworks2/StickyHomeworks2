@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using StickyHomeworks.Models;
 
 namespace StickyHomeworks.Services;
@@ -17,6 +18,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
     private const int MaxBackupCount = 20;
     
     private readonly ProfileService _profileService;
+    private readonly ILogger<TimeMachineService> _logger;
     private ObservableCollection<BackupInfo> _backups = new();
     private bool _isRestoring;
 
@@ -45,9 +47,10 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
     public event EventHandler? RestoreCompleted;
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public TimeMachineService(ProfileService profileService)
+    public TimeMachineService(ProfileService profileService, ILogger<TimeMachineService> logger)
     {
         _profileService = profileService;
+        _logger = logger;
         LoadBackupIndex();
     }
     public void CreateBackup(ListView? listView)
@@ -81,11 +84,12 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
             }
 
             SaveBackupIndex();
+            _logger.LogInformation("创建备份 {BackupId}，当前共 {Count} 个备份", backupId, Backups.Count);
             BackupCreated?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"创建备份失败: {ex.Message}");
+            _logger.LogError(ex, "创建备份失败");
         }
     }
     private void GeneratePreviewImage(ListView listView, string outputPath)
@@ -116,7 +120,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"生成预览图失败: {ex.Message}");
+            _logger.LogWarning(ex, "生成预览图失败");
         }
     }
     public async Task RestoreBackup(BackupInfo backup)
@@ -136,6 +140,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
 
             _profileService.Profile = profile;
             _profileService.SaveProfile();
+            _logger.LogInformation("恢复备份 {BackupId} (创建于 {BackupTime})", backup.ProfileFileName, backup.BackupTime.ToString("yyyy-MM-dd HH:mm:ss"));
 
             await Task.Delay(100);
             IsRestoring = false;
@@ -152,13 +157,16 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         RemoveBackupFiles(backup);
         Backups.Remove(backup);
         SaveBackupIndex();
+        _logger.LogInformation("删除备份 {BackupId}", backup.ProfileFileName);
     }
     public void ClearAllBackups()
     {
+        var count = Backups.Count;
         foreach (var backup in Backups.ToList())
         {
             RemoveBackup(backup);
         }
+        if (count > 0) _logger.LogInformation("清除全部 {Count} 个备份", count);
     }
     public string GetPreviewImagePath(BackupInfo backup) => Path.Combine(BackupDir, backup.PreviewImageFileName);
 
@@ -181,7 +189,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"删除备份文件失败: {ex.Message}");
+            _logger.LogWarning(ex, "删除备份文件失败 {BackupId}", backup.ProfileFileName);
         }
     }
 
@@ -207,7 +215,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"加载备份索引失败: {ex.Message}");
+            _logger.LogWarning(ex, "加载备份索引失败");
         }
     }
 
@@ -220,7 +228,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"保存备份索引失败: {ex.Message}");
+            _logger.LogWarning(ex, "保存备份索引失败");
         }
     }
 

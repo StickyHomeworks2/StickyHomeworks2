@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using StickyHomeworks.Models;
 
 namespace StickyHomeworks.Services;
@@ -11,9 +12,12 @@ public class SettingsService : ObservableRecipient, IHostedService
 {
     private Settings _settings = new();
     private PropertyChangedEventHandler? _settingsHandler;
+    private string? _lastChangedProperty;
+    private readonly ILogger<SettingsService> _logger;
 
-    public SettingsService(IHostApplicationLifetime applicationLifetime)
+    public SettingsService(IHostApplicationLifetime applicationLifetime, ILogger<SettingsService> logger)
     {
+        _logger = logger;
         PropertyChanged += OnPropertyChanged;
         SubscribeSettings();
         LoadSettings();
@@ -22,6 +26,7 @@ public class SettingsService : ObservableRecipient, IHostedService
 
     private void OnOnSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
+        _lastChangedProperty = e.PropertyName;
         SaveSettings();
     }
 
@@ -36,7 +41,10 @@ public class SettingsService : ObservableRecipient, IHostedService
     public void LoadSettings()
     {
         if (!File.Exists("./Settings.json"))
+        {
+            _logger.LogInformation("配置文件不存在，跳过加载: {Path}", Path.GetFullPath("./Settings.json"));
             return;
+        }
         var json = File.ReadAllText("./Settings.json");
         var r = JsonSerializer.Deserialize<Settings>(json);
         if (r != null)
@@ -45,12 +53,19 @@ public class SettingsService : ObservableRecipient, IHostedService
                 r.HomeworkTemplate = new HomeworkTemplateConfig();
             HomeworkTemplateConfig.Normalize(r.HomeworkTemplate);
             Settings = r;
+            _logger.LogInformation("加载配置文件: {Path}", Path.GetFullPath("./Settings.json"));
+        }
+        else
+        {
+            _logger.LogWarning("配置文件反序列化失败，使用默认设置");
         }
     }
 
     public void SaveSettings()
     {
-        File.WriteAllText("./Settings.json", JsonSerializer.Serialize<Settings>(Settings));
+        var path = Path.GetFullPath("./Settings.json");
+        File.WriteAllText(path, JsonSerializer.Serialize<Settings>(Settings));
+        _logger.LogInformation("写入配置文件: {Path} 变更属性: {Property}", path, _lastChangedProperty ?? nameof(Settings));
     }
 
     public event PropertyChangedEventHandler? OnSettingsChanged;

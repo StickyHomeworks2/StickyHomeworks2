@@ -28,6 +28,7 @@ using Stfu.Linq;
 using DataFormats = System.Windows.DataFormats;
 using DragEventArgs = System.Windows.DragEventArgs;
 using H.NotifyIcon;
+using Microsoft.Extensions.Logging;
 
 namespace StickyHomeworks;
 
@@ -50,11 +51,14 @@ public partial class MainWindow : Window
     private readonly WindowFocusObserverService _focusObserverService;
     private readonly ClassIslandIpcService? _classIslandIpcService;
     private readonly PropertyChangedEventHandler _settingsClassIslandIpcPropertyChanged;
+    private readonly ILogger<MainWindow> _logger;
 
     public MainWindow(ProfileService profileService,
                       SettingsService settingsService,
-                      WindowFocusObserverService focusObserverService)
+                      WindowFocusObserverService focusObserverService,
+                      ILogger<MainWindow> logger)
     {
+        _logger = logger;
         ProfileService = profileService;
         SettingsService = settingsService;
         TimeMachineService = AppEx.GetService<TimeMachineService>();
@@ -130,11 +134,13 @@ public partial class MainWindow : Window
             
             if (shouldHide && settings.IsMainWindowVisible)
             {
+                _logger.LogDebug("课程状态变更: 隐藏窗口 (科目={Subject})", ipcService.CurrentSubjectName);
                 settings.IsMainWindowVisible = false;
                 Hide();
             }
             else if (!shouldHide && !settings.IsMainWindowVisible)
             {
+                _logger.LogDebug("课程状态变更: 显示窗口 (科目={Subject})", ipcService.PreviousSubjectName);
                 settings.IsMainWindowVisible = true;
                 Show();
                 Activate();
@@ -201,6 +207,7 @@ public partial class MainWindow : Window
         {
             TimeMachineService.CreateBackup(MainListView);
         }
+        _logger.LogTrace("退出编辑模式: Hard={Hard}", hard);
     }
 
     private void SetPos()
@@ -274,6 +281,9 @@ public partial class MainWindow : Window
             return;
         ViewModel.CanRecoverExpireHomework = false;
         var rm = ViewModel.ExpiredHomeworks;
+        if (rm == null || rm.Count == 0) return;
+        var details = string.Join(", ", rm.Select(h => h.Subject ?? "(无科目)"));
+        _logger.LogInformation("恢复 {Count} 条过期作业: {Details}", rm.Count, details);
         foreach (var i in rm)
         {
             ProfileService.Profile.Homeworks.Add(i);
@@ -343,6 +353,10 @@ public partial class MainWindow : Window
         //ComboBoxSubject.Text = lastSubject;
         SettingsService.SaveSettings();
         ProfileService.SaveProfile();
+        _logger.LogInformation("创建作业: Subject={Subject} DueTime={DueTime} Tags=[{Tags}] IsCompleted={IsCompleted}",
+            o.Subject ?? "", o.DueTime.ToString("yyyy-MM-dd"),
+            o.Tags != null ? string.Join(",", o.Tags) : "",
+            o.IsExpired);
         ViewModel.IsUpdatingHomeworkSubject = false;
         RepositionEditingWindow();
         AppEx.GetService<HomeworkEditWindow>().TryOpen();
@@ -416,6 +430,7 @@ public partial class MainWindow : Window
     {
         OnHomeworkEditorUpdated?.Invoke(this, EventArgs.Empty);
         ViewModel.IsCreatingMode = false;
+        _logger.LogDebug("开始编辑作业: Subject={Subject}", ViewModel.SelectedHomework.Subject);
         if (ViewModel.SelectedHomework== null)
             return;
         ViewModel.EditingHomework = ViewModel.SelectedHomework;
@@ -514,7 +529,12 @@ public partial class MainWindow : Window
         ViewModel.IsUpdatingHomeworkSubject = true;
         if (ViewModel.SelectedHomework == null)
             return;
-        ProfileService.Profile.Homeworks.Remove(ViewModel.SelectedHomework);
+        var hw = ViewModel.SelectedHomework;
+        _logger.LogInformation("删除作业: Subject={Subject} DueTime={DueTime} Tags=[{Tags}] ContentLen={ContentLen}",
+            hw.Subject ?? "", hw.DueTime.ToString("yyyy-MM-dd"),
+            hw.Tags != null ? string.Join(",", hw.Tags) : "",
+            hw.Content?.Length ?? 0);
+        ProfileService.Profile.Homeworks.Remove(hw);
         ProfileService.SaveProfile();
         // 仅在不在还原状态时才触发备份
         if (!TimeMachineService.IsRestoring)
@@ -700,6 +720,8 @@ public partial class MainWindow : Window
             {
 
                 encoder.Save(stream);
+                _logger.LogInformation("导出作业列表到 {FilePath} 作业数={Count} 尺寸={Width}x{Height}",
+                    file, MainListView.Items.Count, (int)bitmap.Width, (int)bitmap.Height);
 
 
                 ViewModel.SnackbarMessageQueue.Enqueue($"成功地导出到：{file}", "查看", () =>
@@ -715,7 +737,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            
+            _logger.LogError(ex, "导出作业列表失败");
             ViewModel.SnackbarMessageQueue.Enqueue($"导出失败：{ex.Message}");
         }
 

@@ -5,12 +5,14 @@ using ClassIsland.Shared.IPC;
 using ClassIsland.Shared.IPC.Abstractions.Services;
 using dotnetCampus.Ipc.CompilerServices.GeneratedProxies;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace StickyHomeworks.Services;
 
 public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
 {
     private readonly SettingsService _settingsService;
+    private readonly ILogger<ClassIslandIpcService> _logger;
     private IpcClient? _ipcClient;
     private IPublicLessonsService? _lessonsService;
     private TimeState _currentState;
@@ -70,15 +72,23 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
         }
     }
 
-    public ClassIslandIpcService(SettingsService settingsService)
+    public ClassIslandIpcService(SettingsService settingsService, ILogger<ClassIslandIpcService> logger)
     {
         _settingsService = settingsService;
+        _logger = logger;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         if (_settingsService.Settings.IsClassIslandIpcEnabled)
+        {
+            _logger.LogInformation("IPC 功能已启用，开始连接 ClassIsland");
             _ = ConnectWithRetryAsync(cancellationToken);
+        }
+        else
+        {
+            _logger.LogInformation("IPC 功能已禁用");
+        }
         return Task.CompletedTask;
     }
 
@@ -91,12 +101,13 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
                 await ConnectAsync();
                 if (IsConnected) return;
             }
-            catch
+            catch (Exception ex)
             {
-                // ignored
+                _logger.LogWarning(ex, "第 {Attempt} 次连接 ClassIsland 失败", i + 1);
             }
             await Task.Delay(1000, cancellationToken);
         }
+        _logger.LogError("连接 ClassIsland 失败，已达最大重试次数");
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -122,12 +133,14 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
             _lessonsService = _ipcClient.Provider.CreateIpcProxy<IPublicLessonsService>(_ipcClient.PeerProxy!);
             IsConnected = true;
             ConnectionStatus = "已连接";
+            _logger.LogInformation("已连接 ClassIsland");
 
             RefreshState();
             StartPolling();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "连接 ClassIsland 失败");
             IsConnected = false;
             ConnectionStatus = "连接失败";
         }
@@ -151,6 +164,7 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
         _pollingCts = null;
 
         await Task.Delay(100);
+        _logger.LogInformation("已断开 ClassIsland 连接");
     }
 
     private void StartPolling()
@@ -174,30 +188,41 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
                 RefreshState();
 
                 if (_currentState != oldState || _currentSubjectName != oldSubject)
+                {
+                    _logger.LogTrace("课程状态变更: {OldState}→{NewState} {OldSubject}→{NewSubject}", oldState, _currentState, oldSubject, _currentSubjectName);
                     ClassStateChanged?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
         catch (OperationCanceledException)
         {
+            _logger.LogInformation("IPC 轮询已取消");
         }
     }
 
     public async Task<List<string>> GetSubjectsAsync()
     {
-        if (_ipcClient == null) return [];
+        if (_ipcClient == null)
+        {
+            _logger.LogWarning("获取科目列表失败: IPC 未连接");
+            return [];
+        }
         try
         {
             var profileService = _ipcClient.Provider.CreateIpcProxy<IPublicProfileService>(_ipcClient.PeerProxy!);
             var profile = await Task.Run(() => profileService.Profile);
-            // ClassIsland Profile.Subjects 常为「多 key、同显示名」；不去重会出现同一科目重复多行
-            return profile?.Subjects?
+            var subjects = profile?.Subjects?
                 .Select(s => s.Value.Name?.Trim())
                 .Where(n => !string.IsNullOrEmpty(n))
+                .Select(n => n!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList() ?? [];
+            _logger.LogTrace("获取到 {Count} 个科目", subjects.Count);
+            return subjects;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "获取科目列表失败");
             return [];
         }
     }
@@ -212,8 +237,9 @@ public class ClassIslandIpcService : IHostedService, INotifyPropertyChanged
             if (name == "???") name = "";
             CurrentSubjectName = name;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "刷新课程状态失败");
             CurrentState = TimeState.None;
             CurrentSubjectName = "";
         }

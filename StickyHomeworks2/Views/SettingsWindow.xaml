@@ -1477,6 +1477,9 @@
                                 <MenuItem Icon="{materialDesign:PackIcon LanConnect}"
                                         Header="测试IPC联动"
                                         Click="ButtonTestIpcEvent_OnClick"/>
+                                <MenuItem Icon="{materialDesign:PackIcon TextBoxOutline}"
+                                        Header="查看日志…"
+                                        Click="ButtonViewLogs_OnClick"/>
 
                                 <RichTextBox>
                                     <FlowDocument IsHyphenationEnabled="False"
@@ -1532,6 +1535,9 @@
                                     <MenuItem Icon="{materialDesign:PackIcon Code}"
                                             Header="实验性功能…"
                                             Click="MenuItemExperimentalSettings_OnClick"/>
+                                    <MenuItem Icon="{materialDesign:PackIcon TextBoxOutline}"
+                                            Header="查看日志…"
+                                            Click="ButtonViewLogs_OnClick"/>
                                 </StackPanel>
                             </materialDesign:PopupBox>
                         </StackPanel>

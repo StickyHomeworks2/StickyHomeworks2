@@ -11,8 +11,8 @@ using System.Windows;
                                                 // app, or any theme specific resource dictionaries)
 )]
 
-[assembly: AssemblyVersion("0.4.0.0")]
-[assembly: AssemblyFileVersion("0.4.0.0")]
-[assembly: AssemblyTitle("StickyHomeworks")]
-[assembly: AssemblyProduct("StickyHomeworks")]
+[assembly: AssemblyVersion("0.4.1.0")]
+[assembly: AssemblyFileVersion("0.4.1.0")]
+[assembly: AssemblyTitle("StickyHomeworks2")]
+[assembly: AssemblyProduct("StickyHomeworks2")]
 [assembly: SupportedOSPlatform("Windows")]

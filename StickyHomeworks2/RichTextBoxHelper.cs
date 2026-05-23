@@ -10,6 +10,8 @@ using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using ElysiaFramework;
+using Microsoft.Extensions.Logging;
 using StickyHomeworks.Services;
 using StickyHomeworks2.Helpers;
 
@@ -17,7 +19,7 @@ namespace StickyHomeworks;
 
 public static class RichTextBoxHelper
 {
-    private static readonly ImageService _imageService = new();
+    private static readonly Lazy<ImageService> _imageService = new(() => new ImageService(AppEx.GetService<ILogger<ImageService>>()));
 
     /// <summary>作业富文本中超链接的默认前景色（FlowDocument 内不继承外层隐式样式，需在加载/插入时显式应用）。</summary>
     public static Brush DefaultHyperlinkForeground { get; } = CreateDefaultHyperlinkBrush();
@@ -110,9 +112,9 @@ public static class RichTextBoxHelper
                     {
                         if (run.Text.StartsWith(ImageService.EmbeddedImageMarkerPrefix, StringComparison.Ordinal))
                         {
-                            if (_imageService.TryDecodeBase64ToImage(run.Text, out var image))
+                            if (_imageService.Value.TryDecodeBase64ToImage(run.Text, out var image))
                             {
-                                var container = _imageService.CreateContainerFromDecodedImage(image);
+                                var container = _imageService.Value.CreateContainerFromDecodedImage(image);
                                 replacements.Add((para, container));
                                 Debug.WriteLine($"恢复图片: {image.Width}x{image.Height}");
                             }
@@ -126,9 +128,9 @@ public static class RichTextBoxHelper
                     {
                         if (run.Text.StartsWith(ImageService.EmbeddedImageMarkerPrefix, StringComparison.Ordinal))
                         {
-                            if (_imageService.TryDecodeBase64ToImage(run.Text, out var image))
+                            if (_imageService.Value.TryDecodeBase64ToImage(run.Text, out var image))
                             {
-                                inlineContainers.Add(_imageService.CreateContainerFromDecodedImage(image));
+                                inlineContainers.Add(_imageService.Value.CreateContainerFromDecodedImage(image));
                                 run.Text = string.Empty;
                                 Debug.WriteLine($"恢复行内图片: {image.Width}x{image.Height}");
                             }

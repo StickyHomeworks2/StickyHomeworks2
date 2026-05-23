@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using ElysiaFramework;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using StickyHomeworks;
 using StickyHomeworks.Services;
@@ -24,6 +25,7 @@ namespace ClassIsland.Services;
 
 public sealed class WallpaperPickingService : IHostedService, INotifyPropertyChanged
 {
+    private readonly ILogger<WallpaperPickingService> _logger;
     private SettingsService SettingsService { get; }
 
     private static readonly string DesktopWindowClassName = "Progman";
@@ -76,8 +78,9 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
         }
     }
 
-    public WallpaperPickingService(SettingsService settingsService)
+    public WallpaperPickingService(SettingsService settingsService, ILogger<WallpaperPickingService> logger)
     {
+        _logger = logger;
         SettingsService = settingsService;
         SystemEvents.UserPreferenceChanged += SystemEventsOnUserPreferenceChanged;
         RegistryNotifier = new RegistryNotifier(RegistryNotifier.HKEY_CURRENT_USER, "Control Panel\\Desktop");
@@ -147,8 +150,9 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
         return WindowCaptureHelper.CaptureWindowBitBlt(win);
     }
 
-    public static Bitmap? GetFallbackWallpaper()
+    public Bitmap? GetFallbackWallpaper()
     {
+        _logger.LogInformation("正在以兼容模式获取壁纸");
         try
         {
             var k = Registry.CurrentUser.OpenSubKey("Control Panel\\Desktop");
@@ -156,8 +160,9 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
             var b = Screen.PrimaryScreen.Bounds;
             return path == null? null : new Bitmap(Image.FromFile(path), b.Width, b.Height);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "以兼容模式获取壁纸失败");
             return null;
         }
     }
@@ -181,6 +186,7 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
         }
 
         IsWorking = true;
+        _logger.LogInformation("正在提取壁纸主题色");
         await Task.Run(() =>
         {
             var bitmap = SettingsService.Settings.IsFallbackModeEnabled ?
@@ -193,6 +199,7 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
                 ));
             if (bitmap is null)
             {
+                _logger.LogError("获取壁纸失败");
                 IsWorking = false;
                 return;
             }
@@ -228,6 +235,7 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
                 bitmap.Dispose();
             }
         });
+        _logger.LogTrace("提取到的主题色: {Color}", string.Join(",", WallpaperColorPlatte));
 
         if (SettingsService.Settings.WallpaperColorPlatte.Count < SettingsService.Settings.SelectedPlatteIndex + 1 ||
             SettingsService.Settings.SelectedPlatteIndex == -1 ||
@@ -244,13 +252,19 @@ public sealed class WallpaperPickingService : IHostedService, INotifyPropertyCha
         }
 
         IsWorking = false;
+        _logger.LogInformation("壁纸采集完成");
         WallpaperColorPlatteChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("WallpaperPickingService 已启动");
+        return Task.CompletedTask;
+    }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("WallpaperPickingService 已停止");
         SystemEvents.UserPreferenceChanged -= SystemEventsOnUserPreferenceChanged;
         RegistryNotifier.Stop();
         UpdateTimer.Stop();

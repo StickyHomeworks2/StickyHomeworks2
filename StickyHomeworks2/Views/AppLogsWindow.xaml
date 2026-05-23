@@ -1,0 +1,189 @@
+<ely:MyWindow x:Class="StickyHomeworks.Views.AppLogsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:StickyHomeworks.Views"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
+        mc:Ignorable="d"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal" 
+        TextOptions.TextRenderingMode="Auto"        
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{StaticResource HarmonyOsSans}"
+        Title="日志" Height="600" Width="1200"
+        d:DataContext="{d:DesignInstance local:AppLogsWindow}"
+        Closing="AppLogsWindow_OnClosing">
+    <ely:MyWindow.Resources>
+        <CollectionViewSource x:Key="LogsSource"
+                              IsLiveFilteringRequested="True"
+                              Source="{Binding AppLogService.Logs}"
+                              Filter="LogsSource_OnFilter">
+        </CollectionViewSource>
+        <SolidColorBrush x:Key="LogWarningBrush" Color="#FFA500" />
+        <SolidColorBrush x:Key="LogErrorBrush" Color="#CD5C5C" />
+        <SolidColorBrush x:Key="LogCriticalBrush" Color="#FF0000" />
+        <SolidColorBrush x:Key="LogWarningBackgroundBrush" Color="#22FFA500" />
+        <SolidColorBrush x:Key="LogErrorBackgroundBrush" Color="#22CD5C5C" />
+        <SolidColorBrush x:Key="LogCriticalBackgroundBrush" Color="#22FF0000" />
+        <Style x:Key="LogListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" TargetName="Bd" Value="{DynamicResource MaterialDesignSelection}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" TargetName="Bd" Value="{DynamicResource MaterialDesignDivider}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding LogLevel}" Value="Trace">
+                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding LogLevel}" Value="Debug">
+                    <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBodyLight}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding LogLevel}" Value="Warning">
+                    <Setter Property="Foreground" Value="{DynamicResource LogWarningBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource LogWarningBackgroundBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding LogLevel}" Value="Error">
+                    <Setter Property="Foreground" Value="{DynamicResource LogErrorBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource LogErrorBackgroundBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding LogLevel}" Value="Critical">
+                    <Setter Property="Foreground" Value="{DynamicResource LogCriticalBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource LogCriticalBackgroundBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ely:MyWindow.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <ListBox HorizontalAlignment="Left"
+                     SelectionChanged="Selector_OnSelectionChanged"
+                Style="{StaticResource MaterialDesignFilterChipPrimaryOutlineListBox}"
+            >
+                <ListBoxItem IsSelected="{Binding IsFilteredCritical}">
+                    <ely:IconText Kind="LightningBolt" Text="灾难"/>
+                </ListBoxItem>
+                <ListBoxItem IsSelected="{Binding IsFilteredError}">
+                    <ely:IconText Kind="Error" Text="错误"/>
+                </ListBoxItem>
+                <ListBoxItem IsSelected="{Binding IsFilteredWarning}">
+                    <ely:IconText Kind="Warning" Text="警告"/>
+                </ListBoxItem>
+                <ListBoxItem IsSelected="{Binding IsFilteredInfo}">
+                    <ely:IconText Kind="InfoCircleOutline" Text="信息"/>
+                </ListBoxItem>
+                <ListBoxItem IsSelected="{Binding IsFilteredDebug}">
+                    <ely:IconText Kind="Bug" Text="调试"/>
+                </ListBoxItem>
+                <ListBoxItem IsSelected="{Binding IsFilteredTrace}">
+                    <ely:IconText Kind="Text" Text="追踪"/>
+                </ListBoxItem>
+            </ListBox>
+            
+            <TextBox materialDesign:HintAssist.Hint="搜索日志…"
+                     materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                     materialDesign:TextFieldAssist.LeadingIcon="Search"
+                     materialDesign:TextFieldAssist.HasClearButton="True"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Center"
+                     MinWidth="200"
+                     TextChanged="TextBoxBase_OnTextChanged"
+                     Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+        </Grid>
+        <ListView Grid.Row="1"
+                            ItemsSource="{Binding Source={StaticResource LogsSource}}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            SelectionChanged="MainListView_OnSelectionChanged"
+                            HorizontalContentAlignment="Stretch"
+                            ItemContainerStyle="{StaticResource LogListViewItemStyle}"
+                            x:Name="MainListView"
+                            Background="{DynamicResource MaterialDesignPaper}"
+                            Foreground="{DynamicResource MaterialDesignBody}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon Grid.Column="0" Margin="0 0 4 0"
+                                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListViewItem}}">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="materialDesign:PackIcon">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding LogLevel}" Value="Trace">
+                                            <Setter Property="Kind" Value="Text"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding LogLevel}" Value="Debug">
+                                            <Setter Property="Kind" Value="BugOutline"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding LogLevel}" Value="Information">
+                                            <Setter Property="Kind" Value="InfoCircleOutline"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding LogLevel}" Value="Warning">
+                                            <Setter Property="Kind" Value="Warning"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding LogLevel}" Value="Error">
+                                            <Setter Property="Kind" Value="Error"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding LogLevel}" Value="Critical">
+                                            <Setter Property="Kind" Value="LightningBolt"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock TextWrapping="Wrap">
+                                [<Run Text="{Binding Time, ConverterCulture=zh-cn}" />] <Run Text="{Binding CategoryName}" /><Run Text=":" />
+                            </TextBlock>
+                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <WrapPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Style="{StaticResource MaterialDesignFlatButton}"
+                    Click="ButtonClearLogs_OnClick">
+                <ely:IconText Kind="Clear" Text="清空日志"/>
+            </Button>
+            <Button Style="{StaticResource MaterialDesignFlatButton}"
+                    Click="ButtonCopySelectedLogs_OnClick">
+                <ely:IconText Kind="ContentCopy" Text="复制选中"/>
+            </Button>
+        </WrapPanel>
+    </Grid>
+</ely:MyWindow>

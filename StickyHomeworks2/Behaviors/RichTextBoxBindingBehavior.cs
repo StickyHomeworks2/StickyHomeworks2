@@ -9,6 +9,8 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media.Imaging;
+using ElysiaFramework;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xaml.Behaviors;
 using StickyHomeworks.Services;
 
@@ -20,7 +22,10 @@ namespace StickyHomeworks.Behaviors;
 /// </summary>
 public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
 {
-    private static readonly ImageService _imageService = new();
+    private static ILogger? _logger;
+    internal static void SetLogger(ILogger logger) => _logger = logger;
+
+    private static readonly Lazy<ImageService> _imageService = new(() => new ImageService(AppEx.GetService<ILogger<ImageService>>()));
     private static readonly IEqualityComparer<Image> ImageReferenceComparer = new ImageReferenceEqualityComparer();
 
     private int _applyXamlDepth;
@@ -61,7 +66,7 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
             {
                 if (!encodeCache.TryGetValue(img, out var cachedData))
                 {
-                    cachedData = _imageService.EncodeImageToBase64(bitmap, img.Width, img.Height);
+                    cachedData = _imageService.Value.EncodeImageToBase64(bitmap, img.Width, img.Height);
                     if (cachedData != null)
                     {
                         encodeCache[img] = cachedData;
@@ -74,8 +79,8 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
                 }
                 else
                 {
-                    Debug.WriteLine("RichTextBoxBindingBehavior: 图片无法编码为 PNG，已跳过该块。");
-                    tempDoc.Blocks.Add(_imageService.CreatePlaceholderParagraph("[图片无法保存]"));
+                    _logger?.LogWarning("RichTextBoxBindingBehavior: 图片无法编码为 PNG，已跳过该块");
+                    tempDoc.Blocks.Add(_imageService.Value.CreatePlaceholderParagraph("[图片无法保存]"));
                 }
             }
             else if (block is Paragraph para)
@@ -91,7 +96,7 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
                     {
                         if (!encodeCache.TryGetValue(inlineImg, out var cachedData))
                         {
-                            cachedData = _imageService.EncodeImageToBase64((BitmapImage)inlineImg.Source, inlineImg.Width, inlineImg.Height);
+                            cachedData = _imageService.Value.EncodeImageToBase64((BitmapImage)inlineImg.Source, inlineImg.Width, inlineImg.Height);
                             if (cachedData != null)
                             {
                                 encodeCache[inlineImg] = cachedData;
@@ -105,7 +110,7 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
                         else
                         {
                             Debug.WriteLine("RichTextBoxBindingBehavior: InlineUIContainer 图片无法编码，已跳过。");
-                            tempDoc.Blocks.Add(_imageService.CreatePlaceholderParagraph("[图片无法保存]"));
+                            tempDoc.Blocks.Add(_imageService.Value.CreatePlaceholderParagraph("[图片无法保存]"));
                         }
                     }
                 }
@@ -183,7 +188,7 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
             }
             catch (Exception fallbackEx)
             {
-                Debug.WriteLine($"RichTextBoxBindingBehavior: fallback FlowDocument failed: {fallbackEx.Message}");
+                _logger?.LogError(fallbackEx, "RichTextBoxBindingBehavior: fallback FlowDocument 创建失败");
             }
         }
         finally
