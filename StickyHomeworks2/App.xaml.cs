@@ -1,6 +1,7 @@
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Forms;
@@ -63,6 +64,8 @@ public partial class App : AppEx
                 services.AddSingleton<SettingsWindow>();
                 services.AddSingleton<WallpaperPickingService>();
                 services.AddHostedService<ThemeBackgroundService>();
+                services.AddSingleton<EchoCaveService>();
+                services.AddSingleton<HttpClient>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<HomeworkEditWindow>();
                 services.AddSingleton<CrashWindow>();

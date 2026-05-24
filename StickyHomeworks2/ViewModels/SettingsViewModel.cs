@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StickyHomeworks.ViewModels;
 
@@ -16,6 +16,10 @@ public class SettingsViewModel : ObservableRecipient
 
     /// <summary>作业模板页：当前选中的科目（用于编辑该科目的作业条目）。</summary>
     private string? _homeworkTemplateSelectedSubject;
+
+    private string _echoText = "点击此处查看社区留言";
+
+    private bool _isEchoBusy;
 
     public int AppIconClickCount
     {
@@ -123,6 +127,28 @@ public class SettingsViewModel : ObservableRecipient
         {
             if (_homeworkTemplateSelectedSubject == value) return;
             _homeworkTemplateSelectedSubject = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string EchoText
+    {
+        get => _echoText;
+        set
+        {
+            if (value == _echoText) return;
+            _echoText = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsEchoBusy
+    {
+        get => _isEchoBusy;
+        set
+        {
+            if (_isEchoBusy == value) return;
+            _isEchoBusy = value;
             OnPropertyChanged();
         }
     }

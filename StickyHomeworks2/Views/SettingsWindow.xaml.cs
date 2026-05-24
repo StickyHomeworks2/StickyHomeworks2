@@ -60,6 +60,7 @@ public partial class SettingsWindow : MyWindow
 
     public WallpaperPickingService WallpaperPickingService { get; }
     public ClassIslandIpcService ClassIslandIpcService { get; }
+    public EchoCaveService EchoCaveService { get; }
 
     private readonly SettingsService _settingsService;
     private readonly ILogger<SettingsWindow> _logger;
@@ -87,10 +88,12 @@ public partial class SettingsWindow : MyWindow
     public SettingsWindow(WallpaperPickingService wallpaperPickingService,
         SettingsService settingsService,
         ClassIslandIpcService classIslandIpcService,
+        EchoCaveService echoCaveService,
         ILogger<SettingsWindow> logger)
     {
         WallpaperPickingService = wallpaperPickingService;
         ClassIslandIpcService = classIslandIpcService;
+        EchoCaveService = echoCaveService;
         _settingsService = settingsService;
         _logger = logger;
         _settingsServiceRootPropertyChanged = SettingsServiceOnRootPropertyChanged;
@@ -383,6 +386,40 @@ public partial class SettingsWindow : MyWindow
         if (ViewModel.AppIconClickCount >= 10)
         {
             Settings.IsDebugOptionsEnabled = true;
+        }
+    }
+
+    private int _fallbackIndex;
+    private static readonly string[] s_echoFallbackTexts =
+    {
+        "暂时没有更多回声了，请稍后再试",
+        "回声洞已空，稍后再来听听吧"
+    };
+
+    private async void EchoCave_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (ViewModel.IsEchoBusy)
+        {
+            return;
+        }
+
+        try
+        {
+            await EchoCaveService.GetNextEchoAsync();
+            if (EchoCaveService.CurrentEcho != null)
+            {
+                ViewModel.EchoText = $"{EchoCaveService.CurrentEcho.Text} ——{EchoCaveService.CurrentEcho.User}";
+            }
+            else
+            {
+                ViewModel.EchoText = s_echoFallbackTexts[_fallbackIndex % s_echoFallbackTexts.Length];
+                _fallbackIndex++;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "获取回声失败");
+            ViewModel.EchoText = "获取回声失败，请检查网络连接";
         }
     }
 
