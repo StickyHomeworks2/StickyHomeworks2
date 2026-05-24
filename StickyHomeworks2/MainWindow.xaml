@@ -48,6 +48,7 @@
     <Window.Resources>
         <converter:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
         <converter:OpacityToBackgroundConverter x:Key="OpacityToBackgroundConverter"/>
+        <converter:BooleanAndNotToVisibilityConverter x:Key="BooleanAndNotToVisibilityConverter"/>
         <Style x:Key="MarkdownParagraphBaseStyle" TargetType="Paragraph">
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="FontSize" Value="20"/>
@@ -168,9 +169,19 @@
                                     <Setter Property="Margin" Value="4 0"></Setter>
                                 </Style>
                             </StackPanel.Resources>
-                            <Button Content="{materialDesign:PackIcon Menu, Size=18}" ToolTip="更多选项…" 
-                                    Visibility="{Binding ViewModel.IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                    Click="ButtonMore_Click"/>
+                            
+                            <Button Click="ButtonMore_Click">
+                                <Button.Content>
+                                    <materialDesign:PackIcon Kind="Menu" Width="18" Height="18" />
+                                </Button.Content>
+                                <Button.ToolTip>更多选项…</Button.ToolTip>
+                                <Button.Visibility>
+                                    <MultiBinding Converter="{StaticResource BooleanAndNotToVisibilityConverter}">
+                                        <Binding Path="ViewModel.IsExpanded" />
+                                        <Binding Path="ViewModel.IsFrozen" />
+                                    </MultiBinding>
+                                </Button.Visibility>
+                            </Button>
                             <materialDesign:PopupEx x:Name="PopupExAdvanced"
                                                     StaysOpen="False"
                                                     AllowsTransparency="True"
@@ -233,18 +244,72 @@
                             </materialDesign:PopupEx>
                             <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}"
                                           Margin="4 0"
-                                          Content="{materialDesign:PackIcon UnlockedOutline}"
-                                          materialDesign:ToggleButtonAssist.OnContent="{materialDesign:PackIcon Lock}"
-                                          materialDesign:ToggleButtonAssist.SwitchTrackOnBackground="{DynamicResource MaterialDesignPaper}"
                                           ToolTip="锁定窗口"
-                                          Visibility="{Binding ViewModel.IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                          IsChecked="{Binding ViewModel.IsUnlocked, Converter={StaticResource InvertBooleanConverter}}" />
-                            <Button Content="{materialDesign:PackIcon FileExport, Size=18}" ToolTip="导出…" 
-                                    Visibility="{Binding ViewModel.IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                    Click="ButtonExport_OnClick"/>
-                            <Button Content="{materialDesign:PackIcon Add, Size=18}" ToolTip="布置作业"
-                                    Visibility="{Binding ViewModel.IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                    Click="ButtonCreateHomework_OnClick" />
+                                          IsChecked="{Binding ViewModel.IsUnlocked, Converter={StaticResource InvertBooleanConverter}}">
+                                <ToggleButton.Content>
+                                    <materialDesign:PackIcon Kind="UnlockedOutline" Width="18" Height="18" />
+                                </ToggleButton.Content>
+                                <materialDesign:ToggleButtonAssist.OnContent>
+                                    <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" />
+                                </materialDesign:ToggleButtonAssist.OnContent>
+                                <materialDesign:ToggleButtonAssist.SwitchTrackOnBackground>
+                                    <DynamicResource ResourceKey="MaterialDesignPaper" />
+                                </materialDesign:ToggleButtonAssist.SwitchTrackOnBackground>
+                                <ToggleButton.Visibility>
+                                    <MultiBinding Converter="{StaticResource BooleanAndNotToVisibilityConverter}">
+                                        <Binding Path="ViewModel.IsExpanded" />
+                                        <Binding Path="ViewModel.IsFrozen" />
+                                    </MultiBinding>
+                                </ToggleButton.Visibility>
+                            </ToggleButton>
+                                <Button Margin="4 0"
+                                        ToolTip="冻结界面"
+                                        Click="ButtonFreeze_OnClick">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignToolForegroundButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ViewModel.IsFrozen}" Value="False">
+                                                    <Setter Property="Content">
+                                                        <Setter.Value>
+                                                            <materialDesign:PackIcon Kind="snowflake" Width="18" Height="18" />
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ViewModel.IsFrozen}" Value="True">
+                                                    <Setter Property="Content">
+                                                        <Setter.Value>
+                                                            <materialDesign:PackIcon Kind="snowflakeoff" Width="18" Height="18" />
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button Click="ButtonExport_OnClick">
+                                <Button.Content>
+                                    <materialDesign:PackIcon Kind="FileExport" Width="18" Height="18" />
+                                </Button.Content>
+                                <Button.ToolTip>导出…</Button.ToolTip>
+                                <Button.Visibility>
+                                    <MultiBinding Converter="{StaticResource BooleanAndNotToVisibilityConverter}">
+                                        <Binding Path="ViewModel.IsExpanded" />
+                                        <Binding Path="ViewModel.IsFrozen" />
+                                    </MultiBinding>
+                                </Button.Visibility>
+                            </Button>
+                            <Button Click="ButtonCreateHomework_OnClick">
+                                <Button.Content>
+                                    <materialDesign:PackIcon Kind="Add" Width="18" Height="18" />
+                                </Button.Content>
+                                <Button.ToolTip>布置作业</Button.ToolTip>
+                                <Button.Visibility>
+                                    <MultiBinding Converter="{StaticResource BooleanAndNotToVisibilityConverter}">
+                                        <Binding Path="ViewModel.IsExpanded" />
+                                        <Binding Path="ViewModel.IsFrozen" />
+                                    </MultiBinding>
+                                </Button.Visibility>
+                            </Button>
                             <Button Margin="4 0" Click="ButtonExpandingSwitcher_OnClick">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignToolForegroundButton}">
@@ -361,9 +426,14 @@
                 <!-- 布置作业 -->
                 <Button Grid.Row="2"
                         Click="ButtonCreateHomework_OnClick"
-                        Visibility="{Binding ViewModel.IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}"
                         Style="{StaticResource MaterialDesignFlatButton}">
                     <ely:IconText Kind="Add" Text="布置作业" />
+                    <Button.Visibility>
+                        <MultiBinding Converter="{StaticResource BooleanAndNotToVisibilityConverter}">
+                            <Binding Path="ViewModel.IsExpanded" />
+                            <Binding Path="ViewModel.IsFrozen" />
+                        </MultiBinding>
+                    </Button.Visibility>
                 </Button>
 
                 <!-- 保存中 -->

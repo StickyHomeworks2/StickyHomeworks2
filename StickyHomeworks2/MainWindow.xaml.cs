@@ -187,6 +187,13 @@ public partial class MainWindow : Window
         {
             ExitEditingMode(false);
         }
+        if (e.PropertyName == nameof(ViewModel.IsFrozen) && ViewModel.IsFrozen)
+        {
+            ExitEditingMode(false);
+            MainListView.SelectedIndex = -1;
+            ViewModel.SelectedHomework = null;
+            ViewModel.SelectedListBoxItem = null;
+        }
     }
     
 
@@ -333,6 +340,7 @@ public partial class MainWindow : Window
 
     private void ButtonCreateHomework_OnClick(object sender, RoutedEventArgs e)
     {
+        if (ViewModel.IsFrozen) return;
         CreateHomework();
     }
 
@@ -387,6 +395,11 @@ public partial class MainWindow : Window
         OpenSettingsWindow();
     }
 
+    private void ButtonFreeze_OnClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel.IsFrozen = !ViewModel.IsFrozen;
+    }
+
     private void OpenSettingsWindow()
     {
         var win = AppEx.GetService<SettingsWindow>();
@@ -428,6 +441,7 @@ public partial class MainWindow : Window
 
     private void ButtonEditHomework_OnClick(object sender, RoutedEventArgs e)
     {
+        if (ViewModel.IsFrozen) return;
         OnHomeworkEditorUpdated?.Invoke(this, EventArgs.Empty);
         ViewModel.IsCreatingMode = false;
         _logger.LogDebug("开始编辑作业: Subject={Subject}", ViewModel.SelectedHomework.Subject);
@@ -526,6 +540,7 @@ public partial class MainWindow : Window
 
     private void ButtonRemoveHomework_OnClick(object sender, RoutedEventArgs e)
     {
+        if (ViewModel.IsFrozen) return;
         ViewModel.IsUpdatingHomeworkSubject = true;
         if (ViewModel.SelectedHomework == null)
             return;
@@ -763,6 +778,15 @@ public partial class MainWindow : Window
 
     private void MainListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (ViewModel.IsFrozen)
+        {
+            var listView = sender as System.Windows.Controls.ListView;
+            if (listView != null)
+            {
+                listView.SelectedIndex = -1;
+            }
+            return;
+        }
         //ExitEditingMode(false);
     }
 
