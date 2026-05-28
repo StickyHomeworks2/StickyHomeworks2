@@ -129,14 +129,7 @@ public partial class SettingsWindow : MyWindow
         if (e.PropertyName == nameof(Settings.Debugginginterface))
         {
             _logger.LogDebug("Debugginginterface value: {Value}", Settings.Debugginginterface);
-            if (Settings.Debugginginterface)
-            {
-                Debugginginterface.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                Debugginginterface.Visibility = Visibility.Collapsed;
-            }
+            UpDebugginginterfaceVisibility();
         }
     }
 
@@ -164,7 +157,10 @@ public partial class SettingsWindow : MyWindow
         //var r = new StreamReader(Application.GetResourceStream(new Uri("/Assets/LICENSE.txt", UriKind.Relative))!.Stream);
         //ViewModel.License = r.ReadToEnd();
         base.OnInitialized(e);
-        }
+
+        UpDebugginginterfaceVisibility();
+
+    }
 
     protected override void OnContentRendered(EventArgs e)
     {
