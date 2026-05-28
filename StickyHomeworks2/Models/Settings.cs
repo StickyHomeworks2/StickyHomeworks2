@@ -43,6 +43,7 @@ public class Settings : ObservableRecipient
     private bool _delayedCleanupEnabled = false;
     private bool _isMainWindowVisible = true;
     private bool _isExpiredMarkEnabled = false;
+    private bool _debugginginterface = false;
     private Color _expiredMarkColor = Color.FromRgb(0x33, 0x33, 0x33);
     private ObservableCollection<Color> _savedColors = new();
     private Color _titleColor = Colors.White;
@@ -453,6 +454,17 @@ public class Settings : ObservableRecipient
         {
             if (value == _isDebugShowInTaskBar) return;
             _isDebugShowInTaskBar = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool Debugginginterface
+    {
+        get => _debugginginterface;
+        set
+        {
+            if (value == _debugginginterface) return;
+            _debugginginterface = value;
             OnPropertyChanged();
         }
     }

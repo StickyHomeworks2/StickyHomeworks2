@@ -98,9 +98,10 @@ public partial class SettingsWindow : MyWindow
         _logger = logger;
         _settingsServiceRootPropertyChanged = SettingsServiceOnRootPropertyChanged;
 
+        Settings = settingsService.Settings;
         InitializeComponent();
         DataContext = this;
-        Settings = settingsService.Settings;
+
         LbHomeworkTemplateCommonBooks.ItemsSource = _homeworkTemplateCommonBookKeys;
         LbHomeworkTemplateSubjectBooks.ItemsSource = _homeworkTemplateSubjectBookKeys;
         Settings.PropertyChanged += SettingsOnPropertyChanged;
@@ -125,6 +126,18 @@ public partial class SettingsWindow : MyWindow
 
     private void SettingsOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(Settings.Debugginginterface))
+        {
+            _logger.LogDebug("Debugginginterface value: {Value}", Settings.Debugginginterface);
+            if (Settings.Debugginginterface)
+            {
+                Debugginginterface.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                Debugginginterface.Visibility = Visibility.Collapsed;
+            }
+        }
     }
 
     private void SettingsServiceOnRootPropertyChanged(object? sender, PropertyChangedEventArgs args)
@@ -151,7 +164,7 @@ public partial class SettingsWindow : MyWindow
         //var r = new StreamReader(Application.GetResourceStream(new Uri("/Assets/LICENSE.txt", UriKind.Relative))!.Stream);
         //ViewModel.License = r.ReadToEnd();
         base.OnInitialized(e);
-    }
+        }
 
     protected override void OnContentRendered(EventArgs e)
     {

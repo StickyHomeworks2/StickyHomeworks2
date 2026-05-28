@@ -254,7 +254,7 @@
             </ListView>
         </Grid>
 
-        <ScrollViewer Width="332"
+        <ScrollViewer 
                 x:Key="ExperimentalSettings"
                       VerticalScrollBarVisibility="Auto"
                       materialDesign:ScrollViewerAssist.IsAutoHideEnabled="True">
@@ -262,9 +262,12 @@
                 <TextBlock Text="实验性功能"
                         Style="{StaticResource MaterialDesignHeadline5TextBlock}"
                            Margin="0 0 0 4"/>
-                <TextBlock Text="正在开发/测试的不稳定功能，可能会出现Bug等问题，请谨慎使用。"
+                <TextBlock Text="开发中的不稳定功能，可能会出现Bug等问题，请谨慎使用。"
                         TextWrapping="Wrap"
                            Margin="0 0 0 16"/>
+                <MenuItem IsCheckable="True"
+                        IsChecked="{Binding Settings.Debugginginterface}"
+                           Header="设置 调试界面显隐 为 true"/>
 
             </StackPanel>
         </ScrollViewer>
@@ -1437,7 +1440,7 @@
                     </TabItem>
 
                     <!-- 调试 -->
-                    <TabItem Header="调试">
+                    <TabItem Header="调试" x:Name="Debugginginterface">
                         <ScrollViewer>
                             <StackPanel Style="{StaticResource SettingsPageStackPanelStyle}">
                                 <StackPanel.Resources>
