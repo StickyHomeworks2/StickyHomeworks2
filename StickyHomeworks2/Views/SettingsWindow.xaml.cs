@@ -1441,4 +1441,16 @@ public partial class SettingsWindow : MyWindow
     }
 
     #endregion
+
+    public void UpDebugginginterfaceVisibility()
+    {
+        if (Settings.Debugginginterface)
+        {
+            Debugginginterface.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            Debugginginterface.Visibility = Visibility.Collapsed;
+        }
+    }
 }
