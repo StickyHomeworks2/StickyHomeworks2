@@ -1,0 +1,156 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StickyHomeworks2.ViewModels"
+        xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="StickyHomeworks2.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{Binding Title}"
+        Height="450" Width="800"
+        MinWidth="250" MinHeight="45"
+        WindowStartupLocation="Manual"
+        ExtendClientAreaToDecorationsHint="True"
+        Background="Transparent"
+        WindowDecorations="BorderOnly">
+
+    <Window.Styles>
+        <Style Selector="ToggleSwitch:checked /template/ ContentPresenter#OnContentPresenter">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <Border Grid.Row="0" Grid.RowSpan="3">
+            <Border.Background>
+                <SolidColorBrush Color="#FFFAFAFA" Opacity="{Binding Opacity}"/>
+            </Border.Background>
+        </Border>
+
+        <controls:ColorZone Grid.Row="0" Mode="PrimaryMid"
+                              Padding="8,4">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding Title}"
+                           Foreground="{Binding TitleColor, Converter={x:Static vm:MainViewModel.ColorToBrushConverter}}"
+                           FontSize="22" FontWeight="Normal"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="6,2,2,2"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="0">
+
+                    <Button Classes="icon" ToolTip.Tip="更多选项…" Width="24" Height="24">
+                        <materialIcons:MaterialIcon Kind="Menu" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
+                    </Button>
+
+                    <ToggleSwitch IsChecked="{Binding !IsUnlocked}"
+                                 ToolTip.Tip="锁定窗口"
+                                 Margin="4,0"
+                                 Foreground="White">
+                        <ToggleSwitch.OnContent>
+                            <materialIcons:MaterialIcon Kind="Lock" Width="12" Height="12"/>
+                        </ToggleSwitch.OnContent>
+                        <ToggleSwitch.OffContent>
+                            <materialIcons:MaterialIcon Kind="LockOpen" Width="12" Height="12"/>
+                        </ToggleSwitch.OffContent>
+                    </ToggleSwitch>
+
+                    <Button Classes="icon" Command="{Binding ToggleFreezeCommand}" ToolTip.Tip="冻结窗口" Width="24" Height="24">
+                        <materialIcons:MaterialIcon Kind="Snowflake" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
+                    </Button>
+
+                    <Button Classes="icon" Command="{Binding ExportCommand}" ToolTip.Tip="导出…" Width="24" Height="24">
+                        <materialIcons:MaterialIcon Kind="FileExport" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
+                    </Button>
+
+                    <Button Classes="icon" Command="{Binding CreateHomeworkCommand}" ToolTip.Tip="布置作业" Width="24" Height="24">
+                        <materialIcons:MaterialIcon Kind="Add" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
+                    </Button>
+
+                    <Button Classes="icon" Command="{Binding ToggleExpandCommand}" ToolTip.Tip="{Binding IsExpanded, Converter={x:Static vm:MainViewModel.ExpandToolTipConverter}}" Width="24" Height="24">
+                        <materialIcons:MaterialIcon Kind="{Binding IsExpanded, Converter={x:Static vm:MainViewModel.ExpandIconConverter}}" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </controls:ColorZone>
+
+        <ItemsControl Grid.Row="1" Margin="8"
+                      ItemsSource="{Binding Homeworks}">
+            <ItemsControl.RenderTransform>
+                <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}"/>
+            </ItemsControl.RenderTransform>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:HomeworkItem">
+                    <Border CornerRadius="4" Padding="24,0,0,0" Margin="4"
+                            MaxWidth="{Binding $parent[Window].DataContext.MaxPanelWidth}">
+                        <DockPanel>
+                            <Ellipse Width="6" Height="6"
+                                     Fill="#FF212121"
+                                     DockPanel.Dock="Left"
+                                     VerticalAlignment="Top" Margin="0,10,6,0"/>
+
+                            <WrapPanel DockPanel.Dock="Right"
+                                      VerticalAlignment="Top"
+                                      Margin="4,0,0,0">
+                                <RadioButton Content="{Binding Subject}"
+                                             GroupName="{Binding Subject}"
+                                             IsChecked="True" IsHitTestVisible="False"
+                                             FontSize="18" Height="28" Margin="0"
+                                             Foreground="{Binding $parent[Window].DataContext.PrimaryColor}"/>
+                            </WrapPanel>
+
+                            <TextBlock Text="{Binding Content}"
+                                       FontSize="20" TextWrapping="Wrap"
+                                       Foreground="#FF212121"/>
+                        </DockPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Button Grid.Row="2" Command="{Binding CreateHomeworkCommand}"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                Padding="12,8" Background="Transparent"
+                Foreground="{Binding PrimaryColor, Converter={x:Static vm:MainViewModel.ColorToBrushConverter}}">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="+" FontSize="16" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="布置作业" VerticalAlignment="Center"
+                           FontSize="14"/>
+            </StackPanel>
+        </Button>
+
+        <Border Grid.Row="1" Grid.RowSpan="2"
+                IsVisible="{Binding IsUnlocked}"
+                Opacity="0.75"
+                Background="#FFFAFAFA"
+                BorderThickness="8,0,8,8"
+                BorderBrush="{Binding PrimaryColor, Converter={x:Static vm:MainViewModel.ColorToBrushConverter}}"/>
+
+        <StackPanel Grid.Row="1" Grid.RowSpan="2"
+                    IsVisible="{Binding IsUnlocked}"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center" Margin="12">
+            <TextBlock Text="窗口已经解锁，拖动以移动窗口，拉伸边缘以调整窗口大小。"
+                       TextWrapping="Wrap" TextAlignment="Center"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" Grid.RowSpan="2"
+                IsVisible="{Binding IsWorking}"
+                Opacity="0.75" Background="#FFFAFAFA"/>
+
+        <StackPanel Grid.Row="1" Grid.RowSpan="2"
+                    IsVisible="{Binding IsWorking}"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+            <TextBlock Text="正在处理…" FontSize="16"/>
+        </StackPanel>
+    </Grid>
+</Window>
