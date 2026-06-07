@@ -2,10 +2,82 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:material="clr-namespace:Material.Styles.Themes;assembly=Material.Styles"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:ely="clr-namespace:ElysiaFramework.Controls;assembly=ElysiaFramework"
+             xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
              x:Class="StickyHomeworks2.App"
              RequestedThemeVariant="Light">
+    <Application.Resources>
+        <FontFamily x:Key="HarmonyOsSans">avares://ElysiaFramework/Assets/Fonts/HarmonyOS_Sans_SC_Regular.ttf#HarmonyOS Sans SC</FontFamily>
+    </Application.Resources>
     <Application.Styles>
         <material:MaterialTheme BaseTheme="Light" PrimaryColor="Cyan" SecondaryColor="Cyan" />
         <materialIcons:MaterialIconStyles />
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="{StaticResource HarmonyOsSans}"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource HarmonyOsSans}"/>
+        </Style>
+        <Style Selector="ely|NumberUpDown">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" VerticalAlignment="Center"
+                          x:Name="PART_Root">
+                        <Button Grid.Column="0" Name="PART_DecreaseButton"
+                                Background="Transparent" BorderThickness="0"
+                                Padding="0" CornerRadius="0"
+                                Width="22" Height="22"
+                                Margin="0,0,2,0"
+                                ToolTip.Tip="减小">
+                            <TextBlock Text="−" FontWeight="Normal" FontSize="18"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                        <TextBlock Grid.Column="1" Name="PART_ValueText"
+                                   TextAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource MaterialBodyBrush}"
+                                   MinWidth="40"/>
+                        <Button Grid.Column="3" Name="PART_IncreaseButton"
+                                Background="Transparent" BorderThickness="0"
+                                Padding="0" CornerRadius="0"
+                                Width="22" Height="22"
+                                Margin="2,0,0,0"
+                                ToolTip.Tip="增大">
+                            <TextBlock Text="+" FontWeight="Normal" FontSize="16"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ely|NumberUpDown /template/ Button#PART_DecreaseButton,
+                       ely|NumberUpDown /template/ Button#PART_IncreaseButton">
+            <Setter Property="(assists:ShadowAssist.ShadowDepth)" Value="Depth0" />
+        </Style>
+        <Style Selector="ely|IconButton">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Button Background="Transparent"
+                            BorderBrush="Transparent"
+                            Width="{TemplateBinding Width}"
+                            Height="{TemplateBinding Height}"
+                            CornerRadius="100000"
+                            Padding="12"
+                            assists:ShadowAssist.ShadowDepth="Depth0"
+                            Command="{TemplateBinding Command}"
+                            CommandParameter="{TemplateBinding CommandParameter}"
+                            ToolTip.Tip="{TemplateBinding ToolTipText}">
+                        <materialIcons:MaterialIcon Kind="{TemplateBinding Kind}"
+                                                     Width="{TemplateBinding IconSize}"
+                                                     Height="{TemplateBinding IconSize}"
+                                                     Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
+                    </Button>
+                </ControlTemplate>
+            </Setter>
+        </Style>
     </Application.Styles>
 </Application>

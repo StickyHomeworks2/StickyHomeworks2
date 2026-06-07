@@ -1,11 +1,13 @@
-<Window xmlns="https://github.com/avaloniaui"
+    <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:StickyHomeworks2.ViewModels"
         xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
         xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:ely="clr-namespace:ElysiaFramework.Controls;assembly=ElysiaFramework"
         x:Class="StickyHomeworks2.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="{Binding Title}"
+        FontFamily="{StaticResource HarmonyOsSans}"
         Height="450" Width="800"
         MinWidth="250" MinHeight="45"
         WindowStartupLocation="Manual"
@@ -17,18 +19,22 @@
         <Style Selector="ToggleSwitch:checked /template/ ContentPresenter#OnContentPresenter">
             <Setter Property="IsVisible" Value="True"/>
         </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="Height" Value="NaN"/>
+            <Setter Property="Padding" Value="10,2"/>
+        </Style>
     </Window.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto">
 
         <Border Grid.Row="0" Grid.RowSpan="3">
             <Border.Background>
-                <SolidColorBrush Color="#FFFAFAFA" Opacity="{Binding Opacity}"/>
+                <SolidColorBrush Color="{DynamicResource MaterialPaperColor}" Opacity="{Binding Opacity}"/>
             </Border.Background>
         </Border>
 
         <controls:ColorZone Grid.Row="0" Mode="PrimaryMid"
-                              Padding="8,4">
+                            Padding="8,4">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0"
                            Text="{Binding Title}"
@@ -40,14 +46,15 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="0">
 
-                    <Button Classes="icon" ToolTip.Tip="更多选项…" Width="24" Height="24">
+                    <Button x:Name="MenuButton" Classes="icon" ToolTip.Tip="更多选项…" Width="24" Height="24"
+                            Click="MenuButton_Click" Margin="1,0">
                         <materialIcons:MaterialIcon Kind="Menu" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
                     </Button>
 
                     <ToggleSwitch IsChecked="{Binding !IsUnlocked}"
-                                 ToolTip.Tip="锁定窗口"
-                                 Margin="4,0"
-                                 Foreground="White">
+                                  ToolTip.Tip="锁定窗口"
+                                  Margin="4,0"
+                                  Foreground="White">
                         <ToggleSwitch.OnContent>
                             <materialIcons:MaterialIcon Kind="Lock" Width="12" Height="12"/>
                         </ToggleSwitch.OnContent>
@@ -56,21 +63,19 @@
                         </ToggleSwitch.OffContent>
                     </ToggleSwitch>
 
-                    <Button Classes="icon" Command="{Binding ToggleFreezeCommand}" ToolTip.Tip="冻结窗口" Width="24" Height="24">
-                        <materialIcons:MaterialIcon Kind="Snowflake" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
-                    </Button>
+                    <ely:IconButton Kind="Snowflake" Command="{Binding ToggleFreezeCommand}"
+                                    ToolTip.Tip="冻结窗口" Margin="1,0"/>
 
-                    <Button Classes="icon" Command="{Binding ExportCommand}" ToolTip.Tip="导出…" Width="24" Height="24">
-                        <materialIcons:MaterialIcon Kind="FileExport" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
-                    </Button>
+                    <ely:IconButton Kind="FileExport" Command="{Binding ExportCommand}"
+                                    ToolTip.Tip="导出…" Margin="1,0"/>
 
-                    <Button Classes="icon" Command="{Binding CreateHomeworkCommand}" ToolTip.Tip="布置作业" Width="24" Height="24">
-                        <materialIcons:MaterialIcon Kind="Add" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
-                    </Button>
+                    <ely:IconButton Kind="Add" Command="{Binding CreateHomeworkCommand}"
+                                    ToolTip.Tip="布置作业" Margin="1,0"/>
 
-                    <Button Classes="icon" Command="{Binding ToggleExpandCommand}" ToolTip.Tip="{Binding IsExpanded, Converter={x:Static vm:MainViewModel.ExpandToolTipConverter}}" Width="24" Height="24">
-                        <materialIcons:MaterialIcon Kind="{Binding IsExpanded, Converter={x:Static vm:MainViewModel.ExpandIconConverter}}" Width="18" Height="18" Foreground="{DynamicResource MaterialPrimaryMidForegroundBrush}"/>
-                    </Button>
+                    <ely:IconButton Kind="{Binding IsExpanded, Converter={x:Static vm:MainViewModel.ExpandIconConverter}}"
+                                    Command="{Binding ToggleExpandCommand}"
+                                    ToolTip.Tip="{Binding IsExpanded, Converter={x:Static vm:MainViewModel.ExpandToolTipConverter}}"
+                                    Margin="1,0"/>
                 </StackPanel>
             </Grid>
         </controls:ColorZone>
@@ -91,13 +96,13 @@
                             MaxWidth="{Binding $parent[Window].DataContext.MaxPanelWidth}">
                         <DockPanel>
                             <Ellipse Width="6" Height="6"
-                                     Fill="#FF212121"
+                                     Fill="{DynamicResource MaterialBodyBrush}"
                                      DockPanel.Dock="Left"
                                      VerticalAlignment="Top" Margin="0,10,6,0"/>
 
                             <WrapPanel DockPanel.Dock="Right"
-                                      VerticalAlignment="Top"
-                                      Margin="4,0,0,0">
+                                       VerticalAlignment="Top"
+                                       Margin="4,0,0,0">
                                 <RadioButton Content="{Binding Subject}"
                                              GroupName="{Binding Subject}"
                                              IsChecked="True" IsHitTestVisible="False"
@@ -107,7 +112,7 @@
 
                             <TextBlock Text="{Binding Content}"
                                        FontSize="20" TextWrapping="Wrap"
-                                       Foreground="#FF212121"/>
+                                       Foreground="{DynamicResource MaterialBodyBrush}"/>
                         </DockPanel>
                     </Border>
                 </DataTemplate>
@@ -130,7 +135,7 @@
         <Border Grid.Row="1" Grid.RowSpan="2"
                 IsVisible="{Binding IsUnlocked}"
                 Opacity="0.75"
-                Background="#FFFAFAFA"
+                Background="{DynamicResource MaterialPaperBrush}"
                 BorderThickness="8,0,8,8"
                 BorderBrush="{Binding PrimaryColor, Converter={x:Static vm:MainViewModel.ColorToBrushConverter}}"/>
 
@@ -138,13 +143,16 @@
                     IsVisible="{Binding IsUnlocked}"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center" Margin="12">
-            <TextBlock Text="窗口已经解锁，拖动以移动窗口，拉伸边缘以调整窗口大小。"
-                       TextWrapping="Wrap" TextAlignment="Center"/>
+            <controls:Card MinWidth="240" VerticalAlignment="Top">
+                <StackPanel Margin="0,4">
+                    <TextBlock Classes="Headline6" Text="窗口已经解锁，拖动以移动窗口，拉伸边缘以调整窗口大小。" />
+                </StackPanel>
+            </controls:Card>
         </StackPanel>
 
         <Border Grid.Row="1" Grid.RowSpan="2"
                 IsVisible="{Binding IsWorking}"
-                Opacity="0.75" Background="#FFFAFAFA"/>
+                Opacity="0.75" Background="{DynamicResource MaterialPaperBrush}"/>
 
         <StackPanel Grid.Row="1" Grid.RowSpan="2"
                     IsVisible="{Binding IsWorking}"
@@ -152,5 +160,76 @@
                     HorizontalAlignment="Center">
             <TextBlock Text="正在处理…" FontSize="16"/>
         </StackPanel>
+
+        <Popup x:Name="MenuPopup" IsOpen="False"
+               PlacementTarget="{Binding #MenuButton}"
+               Placement="Bottom"
+               IsLightDismissEnabled="True">
+            <controls:Card Width="200" Margin="8" VerticalAlignment="Top">
+                <StackPanel Margin="8,8,0,-4" Spacing="4" MenuItem.Click="MenuItem_OnClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,0">
+                        <materialIcons:MaterialIcon Kind="CogOutline" Width="18" Height="18" Foreground="{DynamicResource MaterialBodyBrush}"/>
+                        <TextBlock Text="更多选项" FontSize="18" FontWeight="Medium" Foreground="{DynamicResource MaterialBodyBrush}"/>
+                    </StackPanel>
+
+                    <Grid Margin="0,4,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="界面缩放"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource MaterialBodyBrush}"
+                                   FontSize="15"/>
+                        <ely:NumberUpDown Grid.Row="0" Grid.Column="1"
+                                          Value="{Binding Scale}"
+                                          Minimum="0.8" Maximum="5"
+                                          Increment="0.05" FormatString="P0"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="背景不透明度"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource MaterialBodyBrush}"
+                                   FontSize="15"/>
+                        <ely:NumberUpDown Grid.Row="1" Grid.Column="1"
+                                          Value="{Binding Opacity}"
+                                          Minimum="0" Maximum="1"
+                                          Increment="0.05" FormatString="P0"/>
+                    </Grid>
+
+                    <Separator Margin="-12,8"/>
+
+                    <MenuItem Header="恢复过期的作业" Click="RecoverExpired_OnClick" IsEnabled="{Binding CanRecoverExpireHomework}" FontSize="15"
+                              Margin="-20,0,-10,0">
+                        <MenuItem.Icon>
+                            <materialIcons:MaterialIcon Kind="Refresh" Width="18" Height="18"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="时间机器…" Click="TimeMachine_OnClick" FontSize="15"
+                              Margin="-20,0,-10,0">
+                        <MenuItem.Icon>
+                            <materialIcons:MaterialIcon Kind="History" Width="18" Height="18"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="更多设置…" Click="Settings_OnClick" FontSize="15"
+                              Margin="-20,0,-10,0">
+                        <MenuItem.Icon>
+                            <materialIcons:MaterialIcon Kind="CogOutline" Width="18" Height="18"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="退出" Click="Exit_OnClick" FontSize="15"
+                              Margin="-20,0,-10,0">
+                        <MenuItem.Icon>
+                            <materialIcons:MaterialIcon Kind="ExitToApp" Width="18" Height="18"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </StackPanel>
+            </controls:Card>
+        </Popup>
     </Grid>
 </Window>

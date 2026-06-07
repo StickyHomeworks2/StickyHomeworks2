@@ -1,0 +1,40 @@
+    <ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:ElysiaFramework.Controls">
+  <ControlTheme x:Key="{x:Type controls:NumberUpDown}" TargetType="controls:NumberUpDown">
+    <Setter Property="Background" Value="{DynamicResource MaterialPaperBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource MaterialTextAreaBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <Grid ColumnDefinitions="Auto,*,Auto" MinHeight="20">
+            <Button Grid.Column="0" Name="PART_DecreaseButton"
+                    Content="-" FontWeight="Bold" FontSize="14"
+                    Padding="8,0" Width="24"
+                    Background="Transparent" BorderThickness="0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Column="1" Name="PART_ValueText" FontSize="14"
+                       TextAlignment="Center"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource MaterialBodyBrush}"/>
+
+            <Button Grid.Column="2" Name="PART_IncreaseButton"
+                    Content="+" FontWeight="Bold" FontSize="14"
+                    Padding="8,0" Width="24"
+                    Background="Transparent" BorderThickness="0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"/>
+          </Grid>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+</ResourceDictionary>

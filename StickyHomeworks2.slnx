@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="ElysiaFramework/ElysiaFramework.csproj" />
+  <Project Path="StickyHomeworks2.Core/StickyHomeworks2.Core.csproj" />
+  <Project Path="StickyHomeworks2.Migration/StickyHomeworks2.Migration.csproj" />
+  <Project Path="StickyHomeworks2.Platform.Linux/StickyHomeworks2.Platform.Linux.csproj" />
+  <Project Path="StickyHomeworks2.Platform.macOS/StickyHomeworks2.Platform.macOS.csproj" />
+  <Project Path="StickyHomeworks2.Platform.Windows/StickyHomeworks2.Platform.Windows.csproj" />
+  <Project Path="StickyHomeworks2.UI/StickyHomeworks2.UI.csproj" />
+  <Project Path="../tests/StickyHomeworks2.Tests/StickyHomeworks2.Tests.csproj" />
+</Solution>

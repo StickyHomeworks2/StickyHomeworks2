@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Data.Converters;
@@ -52,6 +53,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private double _maxPanelWidth = 350;
 
+    [ObservableProperty]
+    private bool _canRecoverExpireHomework;
+
     public ObservableCollection<HomeworkItem> Homeworks { get; } = new();
 
     [RelayCommand]
@@ -69,7 +73,7 @@ public partial class MainViewModel : ObservableObject
         Homeworks.Add(new HomeworkItem
         {
             Subject = "数学",
-            Content = "完成课本P42练习题",
+            Content = "ABCDEFG1234560",
             Tags = new ObservableCollection<string> { "重要" }
         });
     }
@@ -77,6 +81,27 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Export()
     {
+    }
+
+    [RelayCommand]
+    private void RecoverExpired()
+    {
+    }
+
+    [RelayCommand]
+    private void OpenTimeMachine()
+    {
+    }
+
+    [RelayCommand]
+    private void OpenSettings()
+    {
+    }
+
+    [RelayCommand]
+    private void Exit()
+    {
+        IsClosing = true;
     }
 }
 
@@ -115,9 +140,21 @@ public class LockIconValueConverter : IValueConverter
 
 public class ColorToBrushConverter : IValueConverter
 {
+    private static readonly Dictionary<uint, SolidColorBrush> Cache = new();
+
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return value is Color c ? new SolidColorBrush(c) : value;
+        if (value is Color c)
+        {
+            var key = (uint)((c.A << 24) | (c.R << 16) | (c.G << 8) | c.B);
+            if (!Cache.TryGetValue(key, out var brush))
+            {
+                brush = new SolidColorBrush(c);
+                Cache[key] = brush;
+            }
+            return brush;
+        }
+        return value;
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

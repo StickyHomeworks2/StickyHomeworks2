@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.0.3" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.3" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.3" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.3" />
     <PackageReference Include="Material.Avalonia" Version="3.17.0" />
     <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
@@ -23,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StickyHomeworks2.Core\StickyHomeworks2.Core.csproj" />
+    <ProjectReference Include="..\ElysiaFramework\ElysiaFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>
