@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -41,6 +41,11 @@ public partial class MainWindow : Window
     public SettingsService SettingsService { get; }
 
     public event EventHandler? OnHomeworkEditorUpdated;
+
+    /// <summary>
+    /// 用于节流窗口位置和大小保存操作，防止过于频繁的I/O
+    /// </summary>
+    private DispatcherTimer? _windowStateThrottleTimer;
 
     public MainWindow(ProfileService profileService,
                       SettingsService settingsService,
@@ -121,16 +126,39 @@ public partial class MainWindow : Window
         Height = SettingsService.Settings.WindowHeight / dpi;
     }
 
+    /// <summary>
+    /// 保存窗口位置和大小到设置
+    /// </summary>
     private void SavePos()
     {
         GetCurrentDpi(out var dpi, out _);
         SettingsService.Settings.WindowX = Left * dpi;
         SettingsService.Settings.WindowY = Top * dpi;
-        if (ViewModel.IsExpanded)
+        // 移除 IsExpanded 条件，始终保存窗口宽度和高度
+        SettingsService.Settings.WindowWidth = Width * dpi;
+        SettingsService.Settings.WindowHeight = Height * dpi;
+    }
+
+    /// <summary>
+    /// 节流保存窗口状态，防止在用户拖拽窗口时过于频繁地保存
+    /// </summary>
+    private void ThrottleSavePos()
+    {
+        // 停止现有的计时器
+        _windowStateThrottleTimer?.Stop();
+
+        // 创建新的计时器，延迟 500ms 后保存
+        _windowStateThrottleTimer = new DispatcherTimer()
         {
-            SettingsService.Settings.WindowWidth = Width * dpi;
-            SettingsService.Settings.WindowHeight = Height * dpi;
-        }
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _windowStateThrottleTimer.Tick += (s, e) =>
+        {
+            SavePos();
+            SettingsService.SaveSettings();
+            _windowStateThrottleTimer?.Stop();
+        };
+        _windowStateThrottleTimer.Start();
     }
 
     protected override void OnInitialized(EventArgs e)
@@ -163,7 +191,28 @@ public partial class MainWindow : Window
         SetPos();
         AppEx.GetService<HomeworkEditWindow>().EditingFinished += OnEditingFinished;
         AppEx.GetService<HomeworkEditWindow>().SubjectChanged += OnSubjectChanged;
+        
+        // 注册窗口状态变化事件处理器
+        SizeChanged += MainWindow_OnSizeChanged;
+        LocationChanged += MainWindow_OnLocationChanged;
+        
         base.OnContentRendered(e);
+    }
+
+    /// <summary>
+    /// 处理窗口大小改变事件
+    /// </summary>
+    private void MainWindow_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        ThrottleSavePos();
+    }
+
+    /// <summary>
+    /// 处理窗口位置改变事件
+    /// </summary>
+    private void MainWindow_OnLocationChanged(object? sender, EventArgs e)
+    {
+        ThrottleSavePos();
     }
 
     private void OnSubjectChanged(object? sender, EventArgs e)
@@ -267,6 +316,8 @@ public partial class MainWindow : Window
             return;
         }
 
+        // 停止节流计时器并立即保存
+        _windowStateThrottleTimer?.Stop();
         SavePos();
         SettingsService.SaveSettings();
         ProfileService.SaveProfile();
