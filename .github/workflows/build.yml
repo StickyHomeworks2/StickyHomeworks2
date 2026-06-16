@@ -45,7 +45,9 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Restore NuGet packages
-        run: dotnet restore StickyHomeworks2.sln
+        run: |
+          dotnet restore StickyHomeworks2.sln --force --no-cache
+          dotnet restore StickyHomeworks2/StickyHomeworks2.csproj --force --no-cache
 
       - name: Build solution
         run: dotnet build StickyHomeworks2.sln -c Release --no-restore
