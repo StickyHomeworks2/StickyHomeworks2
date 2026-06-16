@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignColors;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -32,6 +32,7 @@ public class Settings : ObservableRecipient
     private double _windowWidth = 400;
     private double _windowHeight = 800;
     private bool _isBottom = true;
+    private bool _isExpanded = false;
     private string _title = "作业";
     private double _maxPanelWidth = 350;
     private bool _isDebugShowInTaskBar = false;
@@ -119,6 +120,17 @@ public class Settings : ObservableRecipient
         {
             if (value == _isBottom) return;
             _isBottom = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (value == _isExpanded) return;
+            _isExpanded = value;
             OnPropertyChanged();
         }
     }
