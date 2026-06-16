@@ -115,21 +115,84 @@ public partial class MainWindow : Window
     private void SetPos()
     {
         GetCurrentDpi(out var dpi, out _);
-        Left = SettingsService.Settings.WindowX / dpi;
-        Top = SettingsService.Settings.WindowY / dpi;
-        Width = SettingsService.Settings.WindowWidth / dpi;
-        Height = SettingsService.Settings.WindowHeight / dpi;
+
+        // 恢复是否展开状态（如果设置里有保存）
+        try
+        {
+            if (SettingsService.Settings.IsExpanded)
+            {
+                ViewModel.IsExpanded = true;
+                SizeToContent = SizeToContent.Manual;
+            }
+            else
+            {
+                ViewModel.IsExpanded = false;
+                SizeToContent = SizeToContent.Height;
+            }
+        }
+        catch
+        {
+            // 忽略，不应阻塞窗口启动
+        }
+
+        // 只在设置值有效时应用（避免 0 或负值覆盖）
+        try
+        {
+            if (SettingsService.Settings.WindowWidth > 0 && SettingsService.Settings.WindowHeight > 0)
+            {
+                Width = SettingsService.Settings.WindowWidth / dpi;
+                Height = SettingsService.Settings.WindowHeight / dpi;
+            }
+
+            // 允许负坐标（多显示器场景）但过滤掉非常不合理的值（如 NaN、极大值）
+            if (!double.IsNaN(SettingsService.Settings.WindowX) && !double.IsNaN(SettingsService.Settings.WindowY))
+            {
+                Left = SettingsService.Settings.WindowX / dpi;
+                Top = SettingsService.Settings.WindowY / dpi;
+            }
+        }
+        catch
+        {
+            // 发生异常时保持默认布局
+        }
     }
 
     private void SavePos()
     {
         GetCurrentDpi(out var dpi, out _);
-        SettingsService.Settings.WindowX = Left * dpi;
-        SettingsService.Settings.WindowY = Top * dpi;
-        if (ViewModel.IsExpanded)
+
+        try
         {
-            SettingsService.Settings.WindowWidth = Width * dpi;
-            SettingsService.Settings.WindowHeight = Height * dpi;
+            // 如果窗口被最小化或最大化，应使用 RestoreBounds 来取得正常状态下的尺寸与位置
+            Rect bounds;
+            if (WindowState == WindowState.Minimized || WindowState == WindowState.Maximized)
+            {
+                bounds = this.RestoreBounds;
+            }
+            else
+            {
+                bounds = new Rect(Left, Top, Width, Height);
+            }
+
+            // 有时候 RestoreBounds 可能为 0，做个防护
+            if (!double.IsNaN(bounds.Left) && !double.IsNaN(bounds.Top))
+            {
+                SettingsService.Settings.WindowX = bounds.Left * dpi;
+                SettingsService.Settings.WindowY = bounds.Top * dpi;
+            }
+
+            if (bounds.Width > 0 && bounds.Height > 0)
+            {
+                SettingsService.Settings.WindowWidth = bounds.Width * dpi;
+                SettingsService.Settings.WindowHeight = bounds.Height * dpi;
+            }
+
+            // 也保存展开/收缩状态，便于下次恢复
+            SettingsService.Settings.IsExpanded = ViewModel.IsExpanded;
+        }
+        catch
+        {
+            // 忽略保存错误（但最好记录日志）
         }
     }
 
