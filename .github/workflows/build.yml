@@ -1,0 +1,65 @@
+name: Build and Publish .NET 8 (Windows)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build:
+    name: Build and Publish (Windows, .NET 8)
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.local/share/NuGet
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Restore NuGet packages
+        run: dotnet restore StickyHomeworks2.sln
+
+      - name: Build solution
+        run: dotnet build StickyHomeworks2.sln -c Release --no-restore
+
+      - name: Publish desktop app (win-x64)
+        run: |
+          dotnet publish StickyHomeworks2/StickyHomeworks2.csproj -c Release -r win-x64 --no-restore -o ./artifacts/win-x64
+
+      - name: Publish web project
+        run: |
+          dotnet publish StickyHomeworks2.Web/StickyHomeworks2.Web.csproj -c Release --no-restore -o ./artifacts/web
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-artifacts
+          path: ./artifacts
