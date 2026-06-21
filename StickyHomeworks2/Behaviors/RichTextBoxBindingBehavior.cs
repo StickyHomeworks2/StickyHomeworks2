@@ -1,32 +1,137 @@
-﻿using System.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
+using System.Windows.Media.Imaging;
+using ElysiaFramework;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xaml.Behaviors;
+using StickyHomeworks.Services;
 
 namespace StickyHomeworks.Behaviors;
 
+/// <summary>
+/// 将 <see cref="RichTextBox"/> 的 <see cref="FlowDocument"/> 与 XAML 字符串做双向绑定；
+/// 保存时把 <see cref="BlockUIContainer"/> 内的位图转为 <see cref="T:StickyHomeworks.Services.ImageService.EmbeddedImageMarkerPrefix"/> 占位行，便于可靠序列化。
+/// </summary>
 public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
 {
-    private static HashSet<Thread> _recursionProtection = new HashSet<Thread>();
+    private static ILogger? _logger;
+    internal static void SetLogger(ILogger logger) => _logger = logger;
+
+    private static readonly Lazy<ImageService> _imageService = new(() => new ImageService(AppEx.GetService<ILogger<ImageService>>()));
+    private static readonly IEqualityComparer<Image> ImageReferenceComparer = new ImageReferenceEqualityComparer();
+
+    private int _applyXamlDepth;
+    internal bool SuppressDocumentXamlApply { get; set; }
+
+    private sealed class ImageReferenceEqualityComparer : IEqualityComparer<Image>
+    {
+        public bool Equals(Image? x, Image? y) => ReferenceEquals(x, y);
+
+        public int GetHashCode(Image obj) => RuntimeHelpers.GetHashCode(obj);
+    }
 
     protected override void OnAttached()
     {
-        AssociatedObject.TextChanged += (obj2, e2) =>
-        {
-            var sw = new Stopwatch();
-            sw.Start();
-            RichTextBox richTextBox2 = obj2 as RichTextBox;
-            if (richTextBox2 != null)
-            {
-                SetDocumentXaml(this, XamlWriter.Save(richTextBox2.Document));
-            }
-
-        };
         base.OnAttached();
+    }
+
+    protected override void OnDetaching()
+    {
+        base.OnDetaching();
+    }
+
+    public string SaveDocument()
+    {
+        if (AssociatedObject == null)
+            return string.Empty;
+        return SaveDocumentWithEmbeddedImages(AssociatedObject.Document);
+    }
+
+    private string SaveDocumentWithEmbeddedImages(FlowDocument doc)
+    {
+        var tempDoc = new FlowDocument();
+        var encodeCache = new Dictionary<Image, string>(ImageReferenceComparer);
+
+        foreach (var block in doc.Blocks.ToList())
+        {
+            if (block is BlockUIContainer { Child: Image { Source: BitmapImage bitmap } img })
+            {
+                if (!encodeCache.TryGetValue(img, out var cachedData))
+                {
+                    cachedData = _imageService.Value.EncodeImageToBase64(bitmap, img.Width, img.Height);
+                    if (cachedData != null)
+                    {
+                        encodeCache[img] = cachedData;
+                    }
+                }
+
+                if (cachedData != null)
+                {
+                    tempDoc.Blocks.Add(new Paragraph(new Run(ImageService.EmbeddedImageMarkerPrefix + cachedData)));
+                }
+                else
+                {
+                    _logger?.LogWarning("RichTextBoxBindingBehavior: 图片无法编码为 PNG，已跳过该块");
+                    tempDoc.Blocks.Add(_imageService.Value.CreatePlaceholderParagraph("[图片无法保存]"));
+                }
+            }
+            else if (block is Paragraph para)
+            {
+                var inlineImages = para.Inlines.OfType<InlineUIContainer>()
+                    .Select(i => i.Child as Image)
+                    .Where(i => i?.Source is BitmapImage)
+                    .ToList();
+
+                if (inlineImages.Any())
+                {
+                    foreach (var inlineImg in inlineImages)
+                    {
+                        if (!encodeCache.TryGetValue(inlineImg, out var cachedData))
+                        {
+                            cachedData = _imageService.Value.EncodeImageToBase64((BitmapImage)inlineImg.Source, inlineImg.Width, inlineImg.Height);
+                            if (cachedData != null)
+                            {
+                                encodeCache[inlineImg] = cachedData;
+                            }
+                        }
+
+                        if (cachedData != null)
+                        {
+                            tempDoc.Blocks.Add(new Paragraph(new Run(ImageService.EmbeddedImageMarkerPrefix + cachedData)));
+                        }
+                        else
+                        {
+                            Debug.WriteLine("RichTextBoxBindingBehavior: InlineUIContainer 图片无法编码，已跳过。");
+                            tempDoc.Blocks.Add(_imageService.Value.CreatePlaceholderParagraph("[图片无法保存]"));
+                        }
+                    }
+                }
+                else
+                {
+                    tempDoc.Blocks.Add(CloneBlock(para));
+                }
+            }
+            else
+            {
+                tempDoc.Blocks.Add(CloneBlock(block));
+            }
+        }
+
+        return XamlWriter.Save(tempDoc);
+    }
+
+    private static Block CloneBlock(Block block)
+    {
+        var xaml = XamlWriter.Save(block);
+        return (Block)XamlReader.Parse(xaml);
     }
 
     public static string GetDocumentXaml(DependencyObject obj)
@@ -36,43 +141,65 @@ public class RichTextBoxBindingBehavior : Behavior<RichTextBox>
 
     public static void SetDocumentXaml(DependencyObject obj, string value)
     {
-        _recursionProtection.Add(Thread.CurrentThread);
         obj.SetValue(DocumentXamlProperty, value);
-        _recursionProtection.Remove(Thread.CurrentThread);
     }
 
     public static readonly DependencyProperty DocumentXamlProperty = DependencyProperty.Register(
-        nameof(DocumentXaml), typeof(string), typeof(RichTextBoxBindingBehavior), new FrameworkPropertyMetadata(
-            "",
+        nameof(DocumentXaml),
+        typeof(string),
+        typeof(RichTextBoxBindingBehavior),
+        new FrameworkPropertyMetadata(
+            string.Empty,
             FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-            (obj, e) =>
+            OnDocumentXamlPropertyChanged));
+
+    private static void OnDocumentXamlPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not RichTextBoxBindingBehavior b)
+            return;
+
+        if (b.SuppressDocumentXamlApply)
+            return;
+
+        var rtb = b.AssociatedObject;
+        if (rtb is null)
+            return;
+
+        if (b._applyXamlDepth > 0)
+            return;
+
+        b._applyXamlDepth++;
+        try
+        {
+            var xaml = e.NewValue as string ?? string.Empty;
+            var doc = RichTextBoxHelper.ConvertDocument(xaml);
+            rtb.Document = doc;
+            if (rtb.Document != null)
+                rtb.Document.IsOptimalParagraphEnabled = true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"RichTextBoxBindingBehavior.OnDocumentXamlPropertyChanged: {ex}");
+            try
             {
-                var sw = new Stopwatch();
-                sw.Start();
-                if (_recursionProtection.Contains(Thread.CurrentThread))
-                {
-                    Debug.WriteLine(sw.Elapsed.ToString());
-                    return;
-                }
-
-                if (obj is not RichTextBoxBindingBehavior b)
-                    return;
-                var richTextBox = b.AssociatedObject;
-
-                // Parse the XAML to a document (or use XamlReader.Parse())
-
-                var documentXaml = GetDocumentXaml(b);
-                richTextBox.Document = RichTextBoxHelper.ConvertDocument(documentXaml);
-                richTextBox.Document.IsOptimalParagraphEnabled = true;
-
-                // When the document changes update the source
-                
+                var fallback = new FlowDocument(new Paragraph());
+                fallback.IsOptimalParagraphEnabled = true;
+                rtb.Document = fallback;
             }
-        ));
+            catch (Exception fallbackEx)
+            {
+                _logger?.LogError(fallbackEx, "RichTextBoxBindingBehavior: fallback FlowDocument 创建失败");
+            }
+        }
+        finally
+        {
+            b._applyXamlDepth--;
+        }
+    }
 
     public string DocumentXaml
     {
-        get { return (string)GetValue(DocumentXamlProperty); }
-        set { SetValue(DocumentXamlProperty, value); }
+        get => (string)GetValue(DocumentXamlProperty);
+        set => SetValue(DocumentXamlProperty, value);
     }
 }

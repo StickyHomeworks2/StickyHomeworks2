@@ -1,0 +1,89 @@
+<Window x:Class="StickyHomeworks2.Views.InsertLinkWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
+        mc:Ignorable="d"
+        d:DesignHeight="320"
+        d:DesignWidth="480"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontSize="14"
+        FontFamily="{StaticResource HarmonyOsSans}"
+        Title="插入链接"
+        Width="480"
+        MinWidth="380"
+        SizeToContent="Height"
+        Background="{DynamicResource MaterialDesignPaper}"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <materialDesign:Card Grid.Row="0"
+                             Padding="20"
+                             materialDesign:ElevationAssist.Elevation="Dp3"
+                             Background="{DynamicResource MaterialDesignPaper}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                    <materialDesign:PackIcon Kind="LinkVariant"
+                                             Width="22"
+                                             Height="22"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                               Text="插入超链接"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <TextBox x:Name="UrlTextBox"
+                         materialDesign:HintAssist.Hint="地址（https://、http:// 或 mailto:）"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Margin="0,0,0,12"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="False"
+                         SpellCheck.IsEnabled="False"/>
+
+                <TextBox x:Name="DisplayTextBox"
+                         materialDesign:HintAssist.Hint="显示文字（可选，留空则使用地址）"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Margin="0,0,0,8"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="False"/>
+
+                <TextBlock Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                           Opacity="0.75"
+                           TextWrapping="Wrap"
+                           Text="仅支持 http、https 与 mailto 协议。链接将保存在作业内容中。"/>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="0,0,12,0"
+                    MinWidth="96"
+                    IsDefault="True"
+                    Click="OkButton_OnClick">
+                <ely:IconText Kind="Check" Text="确定" IconMargin="4 0 0 0"/>
+            </Button>
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    MinWidth="96"
+                    IsCancel="True"
+                    Click="CancelButton_OnClick">
+                <ely:IconText Kind="Close" Text="取消" IconMargin="4 0 0 0"/>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

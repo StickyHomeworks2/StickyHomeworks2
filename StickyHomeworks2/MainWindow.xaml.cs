@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ClassIsland.Shared.Enums;
 using ElysiaFramework;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Xaml.Behaviors;
@@ -26,6 +27,8 @@ using System.Windows.Threading;
 using Stfu.Linq;
 using DataFormats = System.Windows.DataFormats;
 using DragEventArgs = System.Windows.DragEventArgs;
+using H.NotifyIcon;
+using Microsoft.Extensions.Logging;
 
 namespace StickyHomeworks;
 
@@ -40,20 +43,109 @@ public partial class MainWindow : Window
 
     public SettingsService SettingsService { get; }
 
+    public TimeMachineService TimeMachineService { get; }
+
     public event EventHandler? OnHomeworkEditorUpdated;
+
+    private DispatcherTimer _setBottomTimer;
+    private readonly WindowFocusObserverService _focusObserverService;
+    private readonly ClassIslandIpcService? _classIslandIpcService;
+    private readonly PropertyChangedEventHandler _settingsClassIslandIpcPropertyChanged;
+    private readonly ILogger<MainWindow> _logger;
 
     public MainWindow(ProfileService profileService,
                       SettingsService settingsService,
-                      WindowFocusObserverService focusObserverService)
+                      WindowFocusObserverService focusObserverService,
+                      ILogger<MainWindow> logger)
     {
+        _logger = logger;
         ProfileService = profileService;
         SettingsService = settingsService;
-        //Automation.AddAutomationFocusChangedEventHandler(OnFocusChangedHandler);
+        TimeMachineService = AppEx.GetService<TimeMachineService>();
+        _focusObserverService = focusObserverService;
         InitializeComponent();
-        focusObserverService.FocusChanged += FocusObserverServiceOnFocusChanged;
+        _focusObserverService.FocusChanged += FocusObserverServiceOnFocusChanged;
         ViewModel.PropertyChanged += ViewModelOnPropertyChanged;
         ViewModel.PropertyChanging += ViewModelOnPropertyChanging;
+        this.StateChanged += OnWindowStateChanged;
         DataContext = this;
+        this.TrayIconView.TrayRightMouseUp += TrayIconView_TrayMouseRightClick;
+
+        _classIslandIpcService = AppEx.GetService<ClassIslandIpcService>();
+        _settingsClassIslandIpcPropertyChanged = SettingsOnPropertyChangedForClassIslandIpc;
+        if (_classIslandIpcService != null)
+        {
+            _classIslandIpcService.ClassStateChanged += OnClassStateChanged;
+            SettingsService.Settings.PropertyChanged += _settingsClassIslandIpcPropertyChanged;
+        }
+    }
+
+    private void SettingsOnPropertyChangedForClassIslandIpc(object? s, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(Settings.IsClassIslandIpcEnabled) || _classIslandIpcService == null)
+            return;
+        _ = SettingsService.Settings.IsClassIslandIpcEnabled
+            ? _classIslandIpcService.ConnectAsync()
+            : Task.Run(_classIslandIpcService.Disconnect);
+    }
+
+    private void OnClassStateChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            var ipcService = AppEx.GetService<ClassIslandIpcService>();
+            var settings = SettingsService.Settings;
+            if (ipcService == null || !settings.IsClassIslandIpcEnabled) return;
+            
+            // 使用 TimeState 判断是否在上课
+            var isInClass = ipcService.CurrentState == TimeState.OnClass;
+            var currentSubjectAction = settings.ClassIslandSubjects.FirstOrDefault(s => s.Name == ipcService.CurrentSubjectName);
+            var previousSubjectAction = settings.ClassIslandSubjects.FirstOrDefault(s => s.Name == ipcService.PreviousSubjectName);
+            
+            bool shouldHide;
+            if (isInClass)
+            {
+                // 上课时：检查当前科目是否被监控
+                if (currentSubjectAction == null || !currentSubjectAction.IsMonitored)
+                {
+                    return;
+                }
+                
+                // 0=隐藏, 1=显示, 2=隐藏&下课显示, 3=显示&下课隐藏
+                var mode = currentSubjectAction.ActionMode;
+                if (mode == 0 || mode == 2) shouldHide = true;
+                else if (mode == 1 || mode == 3) shouldHide = false;
+                else return;
+            }
+            else
+            {
+                // 下课/放学/课间：检查之前科目是否被监控
+                if (previousSubjectAction == null || !previousSubjectAction.IsMonitored)
+                {
+                    return;
+                }
+                
+                // 0=隐藏→下课显示, 1=显示→下课隐藏, 2=隐藏→下课显示, 3=显示→下课隐藏
+                var mode = previousSubjectAction.ActionMode;
+                if (mode == 0 || mode == 2) shouldHide = false;
+                else if (mode == 1 || mode == 3) shouldHide = true;
+                else return;
+            }
+            
+            if (shouldHide && settings.IsMainWindowVisible)
+            {
+                _logger.LogDebug("课程状态变更: 隐藏窗口 (科目={Subject})", ipcService.CurrentSubjectName);
+                settings.IsMainWindowVisible = false;
+                Hide();
+            }
+            else if (!shouldHide && !settings.IsMainWindowVisible)
+            {
+                _logger.LogDebug("课程状态变更: 显示窗口 (科目={Subject})", ipcService.PreviousSubjectName);
+                settings.IsMainWindowVisible = true;
+                Show();
+                Activate();
+            }
+        });
     }
 
     private void FocusObserverServiceOnFocusChanged(object? sender, EventArgs e)
@@ -79,7 +171,7 @@ public partial class MainWindow : Window
 
     private void ViewModelOnPropertyChanging(object? sender, PropertyChangingEventArgs e)
     {
-        if (e.PropertyName == nameof(ViewModel.SelectedHomework))
+        if (e.PropertyName == nameof(ViewModel.SelectedHomework) && !ViewModel.IsUpdatingHomeworkSubject)
         {
             ExitEditingMode(true);
         }
@@ -91,9 +183,16 @@ public partial class MainWindow : Window
         {
             RepositionEditingWindow();
         }
-        if (e.PropertyName == nameof(ViewModel.SelectedHomework))
+        if (e.PropertyName == nameof(ViewModel.SelectedHomework) && !ViewModel.IsUpdatingHomeworkSubject)
         {
             ExitEditingMode(false);
+        }
+        if (e.PropertyName == nameof(ViewModel.IsFrozen) && ViewModel.IsFrozen)
+        {
+            ExitEditingMode(false);
+            MainListView.SelectedIndex = -1;
+            ViewModel.SelectedHomework = null;
+            ViewModel.SelectedListBoxItem = null;
         }
     }
     
@@ -110,6 +209,12 @@ public partial class MainWindow : Window
         ViewModel.IsDrawerOpened = false;
         AppEx.GetService<HomeworkEditWindow>().TryClose();
         AppEx.GetService<ProfileService>().SaveProfile();
+        // 仅在 hard=true 且不在还原状态时才触发备份
+        if (hard && !TimeMachineService.IsRestoring)
+        {
+            TimeMachineService.CreateBackup(MainListView);
+        }
+        _logger.LogTrace("退出编辑模式: Hard={Hard}", hard);
     }
 
     private void SetPos()
@@ -135,14 +240,46 @@ public partial class MainWindow : Window
 
     protected override void OnInitialized(EventArgs e)
     {
-        ViewModel.ExpiredHomeworks = ProfileService.CleanupOutdated();
-        if (ViewModel.ExpiredHomeworks.Count > 0)
+        if (SettingsService.Settings.Autooutwork)
         {
-            ViewModel.CanRecoverExpireHomework = true;
-            ViewModel.SnackbarMessageQueue.Enqueue($"清除了{ViewModel.ExpiredHomeworks.Count}条过期的作业。",
-                "恢复", (o) => { RecoverExpiredHomework(); }, null, false, false, TimeSpan.FromSeconds(30));
+            var expired = ProfileService.CleanupOutdated();
+            if (expired.Count > 0)
+            {
+                ViewModel.ExpiredHomeworks = expired;
+                ViewModel.CanRecoverExpireHomework = true;
+                ViewModel.SnackbarMessageQueue.Enqueue(
+                    $"清除了{expired.Count}条过期的作业。",
+                    "恢复",
+                    (o) => RecoverExpiredHomework(),
+                    null,
+                    false,
+                    false,
+                    TimeSpan.FromSeconds(30)
+                );
+            }
         }
+        else
+        {
+            // 不自动清理，ExpiredHomeworks 为空
+            ViewModel.ExpiredHomeworks = new List<Homework>();
+        }
+
         base.OnInitialized(e);
+    }
+
+    //全屏或最大化处理
+    private void OnWindowStateChanged(object? sender, EventArgs e)
+    {
+      
+        if (WindowState != WindowState.Minimized &&
+            ViewModel.IsUnlocked) 
+        {
+            if (WindowState != WindowState.Normal)
+            {
+                SetPos(); 
+                WindowState = WindowState.Normal;
+            }
+        }
     }
 
     private void RecoverExpiredHomework()
@@ -151,6 +288,9 @@ public partial class MainWindow : Window
             return;
         ViewModel.CanRecoverExpireHomework = false;
         var rm = ViewModel.ExpiredHomeworks;
+        if (rm == null || rm.Count == 0) return;
+        var details = string.Join(", ", rm.Select(h => h.Subject ?? "(无科目)"));
+        _logger.LogInformation("恢复 {Count} 条过期作业: {Details}", rm.Count, details);
         foreach (var i in rm)
         {
             ProfileService.Profile.Homeworks.Add(i);
@@ -178,17 +318,29 @@ public partial class MainWindow : Window
         var s = ViewModel.SelectedHomework;
         ProfileService.Profile.Homeworks.Remove(s);
         ProfileService.Profile.Homeworks.Add(s);
+
+        // 保存当前的IsDrawerOpened状态
+        bool wasDrawerOpened = ViewModel.IsDrawerOpened;
+        // 更新SelectedHomework
         ViewModel.SelectedHomework = s;
         ViewModel.IsUpdatingHomeworkSubject = false;
+        // 确保编辑窗口保持打开状态
+        if (wasDrawerOpened)
+        {
+            ViewModel.IsDrawerOpened = true;
+            AppEx.GetService<HomeworkEditWindow>().TryOpen();
+        }
     }
 
     private void OnEditingFinished(object? sender, EventArgs e)
     {
+        ViewModel.IsCreatingMode = false;
         ExitEditingMode();
     }
 
     private void ButtonCreateHomework_OnClick(object sender, RoutedEventArgs e)
     {
+        if (ViewModel.IsFrozen) return;
         CreateHomework();
     }
 
@@ -209,6 +361,10 @@ public partial class MainWindow : Window
         //ComboBoxSubject.Text = lastSubject;
         SettingsService.SaveSettings();
         ProfileService.SaveProfile();
+        _logger.LogInformation("创建作业: Subject={Subject} DueTime={DueTime} Tags=[{Tags}] IsCompleted={IsCompleted}",
+            o.Subject ?? "", o.DueTime.ToString("yyyy-MM-dd"),
+            o.Tags != null ? string.Join(",", o.Tags) : "",
+            o.IsExpired);
         ViewModel.IsUpdatingHomeworkSubject = false;
         RepositionEditingWindow();
         AppEx.GetService<HomeworkEditWindow>().TryOpen();
@@ -237,6 +393,11 @@ public partial class MainWindow : Window
     private void ButtonSettings_OnClick(object sender, RoutedEventArgs e)
     {
         OpenSettingsWindow();
+    }
+
+    private void ButtonFreeze_OnClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel.IsFrozen = !ViewModel.IsFrozen;
     }
 
     private void OpenSettingsWindow()
@@ -280,8 +441,10 @@ public partial class MainWindow : Window
 
     private void ButtonEditHomework_OnClick(object sender, RoutedEventArgs e)
     {
+        if (ViewModel.IsFrozen) return;
         OnHomeworkEditorUpdated?.Invoke(this, EventArgs.Empty);
         ViewModel.IsCreatingMode = false;
+        _logger.LogDebug("开始编辑作业: Subject={Subject}", ViewModel.SelectedHomework.Subject);
         if (ViewModel.SelectedHomework== null)
             return;
         ViewModel.EditingHomework = ViewModel.SelectedHomework;
@@ -289,33 +452,110 @@ public partial class MainWindow : Window
         RepositionEditingWindow();
         AppEx.GetService<HomeworkEditWindow>().TryOpen();
     }
+    
+    public void RepositionHomeworkEditWindow() => RepositionEditingWindow();
 
     private void RepositionEditingWindow()
     {
-        if (ViewModel.SelectedListBoxItem == null) 
+        if (ViewModel.SelectedListBoxItem == null)
             return;
-        Debug.WriteLine("selected changed");
+
         try
         {
             GetCurrentDpi(out var dpiX, out var dpiY);
-            var p = ViewModel.SelectedListBoxItem.PointToScreen(new Point(ViewModel.SelectedListBoxItem.ActualWidth, 0));
+
+
+            var itemRect = new Rect(
+                ViewModel.SelectedListBoxItem.PointToScreen(new Point(0, 0)), // 左上角
+                new Point(
+                    ViewModel.SelectedListBoxItem.PointToScreen(new Point(ViewModel.SelectedListBoxItem.ActualWidth, 0)).X,
+                    ViewModel.SelectedListBoxItem.PointToScreen(new Point(0, ViewModel.SelectedListBoxItem.ActualHeight)).Y
+                )
+            );
+
+
             var screen = Screen.PrimaryScreen!.WorkingArea;
+            var screenRect = new Rect(screen.Left, screen.Top, screen.Width, screen.Height);
+
+
             var homeworkEditWindow = AppEx.GetService<HomeworkEditWindow>();
-            homeworkEditWindow.Left = p.X / dpiX;
-            homeworkEditWindow.Top = Math.Min(p.Y, screen.Bottom - homeworkEditWindow.ActualHeight * dpiY) / dpiY;
+
+
+            var windowWidthPx = (int)(homeworkEditWindow.ActualWidth * dpiX);
+            var windowHeightPx = (int)(homeworkEditWindow.ActualHeight * dpiY);
+
+            double targetLeftPx = 0;
+            double targetTopPx = 0;
+
+
+      
+            double preferredRight = itemRect.Right; 
+            if (preferredRight + windowWidthPx <= screenRect.Right)
+            {
+
+                targetLeftPx = preferredRight;
+            }
+            else if (itemRect.Left - windowWidthPx >= screenRect.Left)
+            {
+
+                targetLeftPx = itemRect.Left - windowWidthPx;
+            }
+            else
+            {
+
+                targetLeftPx = Math.Max(screenRect.Left, itemRect.Left + (itemRect.Width - windowWidthPx) / 2);
+
+                targetLeftPx = Math.Max(screenRect.Left, targetLeftPx);
+            }
+
+            double preferredTop = itemRect.Top;
+            if (preferredTop + windowHeightPx <= screenRect.Bottom && preferredTop >= screenRect.Top)
+            {
+           
+                targetTopPx = preferredTop;
+            }
+            else if (preferredTop + windowHeightPx > screenRect.Bottom && preferredTop - windowHeightPx >= screenRect.Top)
+            {
+                targetTopPx = preferredTop - windowHeightPx;
+            }
+            else
+            {
+
+                targetTopPx = itemRect.Top + (itemRect.Height - windowHeightPx) / 2;
+               
+                targetTopPx = Math.Max(screenRect.Top, targetTopPx); 
+                targetTopPx = Math.Min(targetTopPx, screenRect.Bottom - windowHeightPx);
+            }
+
+            homeworkEditWindow.Left = targetLeftPx / dpiX;
+            homeworkEditWindow.Top = targetTopPx / dpiY;
+
+
         }
         catch (Exception e)
         {
-            // ignored
         }
     }
 
+
     private void ButtonRemoveHomework_OnClick(object sender, RoutedEventArgs e)
     {
+        if (ViewModel.IsFrozen) return;
         ViewModel.IsUpdatingHomeworkSubject = true;
         if (ViewModel.SelectedHomework == null)
             return;
-        ProfileService.Profile.Homeworks.Remove(ViewModel.SelectedHomework);
+        var hw = ViewModel.SelectedHomework;
+        _logger.LogInformation("删除作业: Subject={Subject} DueTime={DueTime} Tags=[{Tags}] ContentLen={ContentLen}",
+            hw.Subject ?? "", hw.DueTime.ToString("yyyy-MM-dd"),
+            hw.Tags != null ? string.Join(",", hw.Tags) : "",
+            hw.Content?.Length ?? 0);
+        ProfileService.Profile.Homeworks.Remove(hw);
+        ProfileService.SaveProfile();
+        // 仅在不在还原状态时才触发备份
+        if (!TimeMachineService.IsRestoring)
+        {
+            TimeMachineService.CreateBackup(MainListView);
+        }
         ViewModel.IsUpdatingHomeworkSubject = false;
     }
 
@@ -336,10 +576,18 @@ public partial class MainWindow : Window
 
     private void SetBottom()
     {
-        if (!SettingsService.Settings.IsBottom)
+        if (!SettingsService.Settings.IsBottom) return;
+
+        if (_setBottomTimer == null)
         {
-            return;
+            _setBottomTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (s, e) =>
+            {
+                _setBottomTimer.Stop();
+            }, Dispatcher);
         }
+
+        _setBottomTimer.Stop();
+        _setBottomTimer.Start();
         var hWnd = new WindowInteropHelper(this).Handle;
         NativeWindowHelper.SetWindowPos(hWnd, NativeWindowHelper.HWND_BOTTOM, 0, 0, 0, 0, NativeWindowHelper.SWP_NOSIZE | NativeWindowHelper.SWP_NOMOVE | NativeWindowHelper.SWP_NOACTIVATE);
     }
@@ -396,64 +644,126 @@ public partial class MainWindow : Window
 
     private async void ButtonExport_OnClick(object sender, RoutedEventArgs e)
     {
+        
         ViewModel.IsWorking = true;
+
+      
         var dialog = new System.Windows.Forms.SaveFileDialog()
         {
+           
             Filter = "图片 (*.png)|*.png"
         };
+
+        // 生成一个默认的文件名，包含时间戳
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        dialog.FileName = $"Export_{timestamp}.png";
+
+        
         if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
         {
             goto done;
         }
 
+        
         ExitEditingMode();
-        //MainListView.Background = (Brush)FindResource("MaterialDesignPaper");
-        await System.Windows.Threading.Dispatcher.Yield(DispatcherPriority.Render);
-        var file = dialog.FileName!;
-        var visual = new DrawingVisual();
-        var s = SettingsService.Settings.Scale;
-        using (var context = visual.RenderOpen())
+
+      
+        await Task.Yield();
+
+       
+        var file = dialog.FileName;
+
+       
+        var scale = SettingsService.Settings.Scale;
+
+        
+        var listViewWidth = MainListView.ActualWidth;
+        var listViewHeight = MainListView.ActualHeight;
+
+        
+        var backgroundWidth = listViewWidth * scale + 100;
+        var backgroundHeight = listViewHeight * scale + 100;
+
+        
+        var backgroundVisual = new DrawingVisual();
+        using (var context = backgroundVisual.RenderOpen())
         {
+            
+            var bg = (System.Windows.Media.Brush)FindResource("MaterialDesignPaper");
+
+            // 绘制背景
+            context.DrawRectangle(bg, null, new Rect(0, 0, backgroundWidth, backgroundHeight));
+        }
+
+   
+        var contentVisual = new DrawingVisual();
+        using (var context = contentVisual.RenderOpen())
+        {
+            // 创建一个新的视觉画刷
             var brush = new VisualBrush(MainListView)
             {
-                Stretch = Stretch.None
+                Stretch = Stretch.None  // 设置画刷的拉伸模式为 None
             };
-            var bg = (Brush)FindResource("MaterialDesignPaper");
-            context.DrawRectangle(bg, null, new Rect(0, 0, MainListView.ActualWidth * s, MainListView.ActualHeight * s)); 
-            context.DrawRectangle(brush, null, new Rect(0, 0, MainListView.ActualWidth * s, MainListView.ActualHeight * s));
-            context.Close();
+
+          
+            context.DrawRectangle(brush, null, new Rect(50, 50, listViewWidth * scale, listViewHeight * scale));
         }
 
-        var bitmap = new RenderTargetBitmap((int)(MainListView.ActualWidth * s), (int)(ActualHeight * s), 96d, 96d,
-            PixelFormats.Default);
-        bitmap.Render(visual);
+       
+        var finalVisual = new DrawingVisual();
+        using (var context = finalVisual.RenderOpen())
+        {
+            // 绘制背景
+            context.DrawDrawing(backgroundVisual.Drawing);
+            // 绘制内容
+            context.DrawDrawing(contentVisual.Drawing);
+        }
+
+     
+        var bitmap = new RenderTargetBitmap((int)backgroundWidth, (int)backgroundHeight, 96d, 96d, PixelFormats.Default);
+        bitmap.Render(finalVisual);
+
+     
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+     
         try
         {
-            var stream = File.Open(file, FileMode.OpenOrCreate);
-            encoder.Save(stream);
-            stream.Close();
-            ViewModel.SnackbarMessageQueue.Enqueue($"成功地导出到：{file}", "查看", () =>
+            
+            using (var stream = new FileStream(file, FileMode.Create, FileAccess.Write))
             {
-                Process.Start(new ProcessStartInfo()
+
+                encoder.Save(stream);
+                _logger.LogInformation("导出作业列表到 {FilePath} 作业数={Count} 尺寸={Width}x{Height}",
+                    file, MainListView.Items.Count, (int)bitmap.Width, (int)bitmap.Height);
+
+
+                ViewModel.SnackbarMessageQueue.Enqueue($"成功地导出到：{file}", "查看", () =>
                 {
-                    FileName = file,
-                    UseShellExecute = true
+                    // 启动系统默认程序打开导出的文件
+                    Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = file,
+                        UseShellExecute = true
+                    });
                 });
-            });
-
+            }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            ViewModel.SnackbarMessageQueue.Enqueue($"导出失败：{ex}");
+            _logger.LogError(ex, "导出作业列表失败");
+            ViewModel.SnackbarMessageQueue.Enqueue($"导出失败：{ex.Message}");
         }
 
-        done:
-        //MainListView.Background = null;
+    done:
+        // 释放保存对话框占用的资源
         dialog.Dispose();
+
+        // false，导出已完成
         ViewModel.IsWorking = false;
     }
+
 
     private void DrawerHost_OnDrawerClosing(object? sender, DrawerClosingEventArgs e)
     {
@@ -468,11 +778,25 @@ public partial class MainWindow : Window
 
     private void MainListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (ViewModel.IsFrozen)
+        {
+            var listView = sender as System.Windows.Controls.ListView;
+            if (listView != null)
+            {
+                listView.SelectedIndex = -1;
+            }
+            return;
+        }
         //ExitEditingMode(false);
     }
 
     public void OnTextBoxEnter()
     {
+        // 编辑窗已打开时再按回车：先把当前条目正文写入模型，再继续新建（避免仅用 IsDrawerOpened 拦截而无法切换新建）
+        var editWin = AppEx.GetService<HomeworkEditWindow>();
+        if (ViewModel.IsDrawerOpened && editWin.IsOpened)
+            editWin.FlushEditingToModel();
+
         CreateHomework();
     }
 
@@ -484,6 +808,25 @@ public partial class MainWindow : Window
     private void MenuItemRecoverExpiredHomework_OnClick(object sender, RoutedEventArgs e)
     {
         RecoverExpiredHomework();
+    }
+
+    private void MenuItemTimeMachine_OnClick(object sender, RoutedEventArgs e)
+    {
+        PopupExAdvanced.IsOpen = false;
+        var win = AppEx.GetService<TimeMachineWindow>();
+        if (!win.IsOpened)
+        {
+            win.IsOpened = true;
+            win.Show();
+        }
+        else
+        {
+            if (win.WindowState == WindowState.Minimized)
+            {
+                win.WindowState = WindowState.Normal;
+            }
+            win.Activate();
+        }
     }
 
     private void MainWindow_OnDragOver(object sender, DragEventArgs e)
@@ -499,5 +842,54 @@ public partial class MainWindow : Window
         ViewModel.IsUnlocked = false;
         SizeToContent = SizeToContent.Height;
         Width = Math.Min(ActualWidth, 350);
+    }
+
+    private void Docs(object sender, RoutedEventArgs e)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "https://sh2.xn--fjqu59cvx0aoqi.icu/",
+            UseShellExecute = true
+        });
+    }
+    private void OpenTaskbarWindow()
+    {
+        var taskbarWindow = new SingleInstanceWarning();
+        taskbarWindow.ShowDialog();
+    }
+    private void TrayIconView_TrayMouseRightClick(object sender, RoutedEventArgs e)
+    {
+        // 弹出 Taskbar.xaml 窗口
+        var menu = new Views.Taskbar();
+        // 在鼠标位置显示
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+        menu.IsOpen = true;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _focusObserverService.FocusChanged -= FocusObserverServiceOnFocusChanged;
+        ViewModel.PropertyChanged -= ViewModelOnPropertyChanged;
+        ViewModel.PropertyChanging -= ViewModelOnPropertyChanging;
+        StateChanged -= OnWindowStateChanged;
+        StateChanged -= MainWindow_OnStateChanged;
+        Activated -= MainWindow_OnActivated;
+        Deactivated -= MainWindow_OnDeactivated;
+
+        if (_classIslandIpcService != null)
+        {
+            _classIslandIpcService.ClassStateChanged -= OnClassStateChanged;
+            SettingsService.Settings.PropertyChanged -= _settingsClassIslandIpcPropertyChanged;
+        }
+
+        var homeworkEdit = AppEx.GetService<HomeworkEditWindow>();
+        homeworkEdit.EditingFinished -= OnEditingFinished;
+        homeworkEdit.SubjectChanged -= OnSubjectChanged;
+
+        _setBottomTimer?.Stop();
+
+        TrayIconView.TrayRightMouseUp -= TrayIconView_TrayMouseRightClick;
+        TrayIconView.Dispose();
+        base.OnClosed(e);
     }
 }

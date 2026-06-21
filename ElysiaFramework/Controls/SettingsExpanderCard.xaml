@@ -1,0 +1,69 @@
+<UserControl x:Class="ElysiaFramework.Controls.SettingsExpanderCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:ElysiaFramework.Controls"
+             mc:Ignorable="d" 
+             Foreground="{DynamicResource MaterialDesignBody}"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <materialDesign:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <materialDesign:Card HorizontalAlignment="Stretch"
+                         VerticalAlignment="Center"
+                         Padding="12 10 16 10">
+        <Expander x:Name="PART_Expander"
+                  Padding="0"
+                  materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
+                  Background="Transparent">
+            <Expander.Style>
+                <Style TargetType="Expander" BasedOn="{StaticResource MaterialDesignExpander}">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Style>
+            </Expander.Style>
+            <Expander.Header>
+                <Grid Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon Grid.Column="0" 
+                                             Kind="{Binding IconGlyph, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}"
+                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Header, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}" FontSize="14"/>
+                        <TextBlock Text="{Binding Description, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}" 
+                                   FontSize="12" Opacity="0.75"/>
+                    </StackPanel>
+                    <ToggleButton Grid.Column="2"
+                                  Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                  IsChecked="{Binding IsOn, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}"
+                                  VerticalAlignment="Center"
+                                  ClickMode="Press"
+                                  Visibility="{Binding HasSwitcher, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                </Grid>
+            </Expander.Header>
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon Grid.Column="0" 
+                                         Kind="{Binding ContentIconGlyph, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}"
+                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ContentHeader, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}" FontSize="14"/>
+                    <TextBlock Text="{Binding ContentDescription, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}" 
+                               FontSize="12" Opacity="0.75"/>
+                </StackPanel>
+                <ContentPresenter Grid.Column="2" 
+                                  Content="{Binding Content, RelativeSource={RelativeSource FindAncestor, AncestorType=controls:SettingsExpanderCard}}"
+                                  VerticalAlignment="Center"/>
+            </Grid>
+        </Expander>
+    </materialDesign:Card>
+</UserControl>

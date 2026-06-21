@@ -1,6 +1,9 @@
-﻿using System.ComponentModel;
+﻿using ElysiaFramework.Controls;
+using MaterialDesignThemes.Wpf;
+using StickyHomeworks.ViewModels;
+using StickyHomeworks2.ViewModels;
+using System.ComponentModel;
 using System.Windows;
-using ElysiaFramework.Controls;
 
 namespace StickyHomeworks.Views;
 
@@ -9,6 +12,12 @@ namespace StickyHomeworks.Views;
 /// </summary>
 public partial class CrashWindow : MyWindow
 {
+    public ClashViewModel ViewModel
+    {
+        get;
+        set;
+    } = new();
+
     public string? CrashInfo
     {
         get;
@@ -34,6 +43,15 @@ public partial class CrashWindow : MyWindow
         base.OnInitialized(e);
     }
 
+    private void MyDrawerHost_OnDrawerClosing(object? sender, DrawerClosingEventArgs e)
+    {
+    }
+
+    private void OpenDrawer(string key)
+    {
+        MyDrawerHost.IsRightDrawerOpen = true;
+        ViewModel.DrawerContent = FindResource(key);
+    }
     protected override void OnContentRendered(EventArgs e)
     {
         IsShowed = true;
@@ -64,8 +82,6 @@ public partial class CrashWindow : MyWindow
         TextBoxCrashInfo.Copy();
     }
 
-    
-
     public void OpenWindow()
     {
         if (IsShowed)
@@ -87,5 +103,10 @@ public partial class CrashWindow : MyWindow
         IsShowed = false;
         Hide();
         e.Cancel = true;
+    }
+
+    private void More_OnClick(object sender, RoutedEventArgs e)
+    {
+        OpenDrawer("More");
     }
 }

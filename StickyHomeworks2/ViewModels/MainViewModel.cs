@@ -1,4 +1,4 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignThemes.Wpf;
 using StickyHomeworks.Models;
@@ -24,6 +24,7 @@ public class MainViewModel : ObservableRecipient
     private bool _isUpdatingHomeworkSubject = false;
     private List<Homework> _expiredHomeworks = new();
     private bool _canRecoverExpireHomework = false;
+    private bool _isFrozen = false;
 
     public Control? SelectedListBoxItem
     {
@@ -175,6 +176,17 @@ public class MainViewModel : ObservableRecipient
         {
             if (value == _canRecoverExpireHomework) return;
             _canRecoverExpireHomework = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsFrozen
+    {
+        get => _isFrozen;
+        set
+        {
+            if (value == _isFrozen) return;
+            _isFrozen = value;
             OnPropertyChanged();
         }
     }

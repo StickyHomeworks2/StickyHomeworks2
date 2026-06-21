@@ -1,8 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignColors;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using System.Windows;
 using System.Windows.Media;
 using WindowsShortcutFactory;
 using File = System.IO.File;
@@ -21,6 +24,7 @@ public class Settings : ObservableRecipient
     private int _wallpaperAutoUpdateIntervalSeconds = 60;
     private string _wallpaperClassName = "";
     private bool _isFallbackModeEnabled = true;
+    
     private double _targetLightValue = 0.6;
     private double _opacity = 0.7;
     private double _scale = 1.5;
@@ -35,7 +39,20 @@ public class Settings : ObservableRecipient
     private string _title = "作业";
     private double _maxPanelWidth = 350;
     private bool _isDebugShowInTaskBar = false;
+    private bool _autooutwork = true;
+    private bool _delayedCleanupEnabled = false;
+    private bool _isMainWindowVisible = true;
+    private bool _isExpiredMarkEnabled = false;
+    private bool _debugginginterface = false;
+    private Color _expiredMarkColor = Color.FromRgb(0x33, 0x33, 0x33);
     private ObservableCollection<Color> _savedColors = new();
+    private Color _titleColor = Colors.White;
+    private FontWeight _titleFontWeight = FontWeights.Normal;
+    private int _titleFontWeightValue = 400;
+    private bool _isClassIslandIpcEnabled = false;
+    private ObservableCollection<SubjectAction> _classIslandSubjects = new();
+    private HomeworkTemplateConfig _homeworkTemplate = new();
+    private int _updateChannel = 0;
 
     public double WindowX
     {
@@ -81,6 +98,51 @@ public class Settings : ObservableRecipient
         }
     }
 
+    public Color TitleColor
+    {
+        get => _titleColor;
+        set
+        {
+            if (value.Equals(_titleColor)) return;
+            _titleColor = value;
+            OnPropertyChanged();
+        }
+    }
+    //<<<字符粗细转换-开始>>>
+    [JsonIgnore]
+    public FontWeight TitleFontWeight
+    {
+        get => _titleFontWeight;
+        set
+        {
+            if (value.Equals(_titleFontWeight)) return;
+            _titleFontWeight = value;
+            if (value == FontWeights.Light) TitleFontWeightValue = 300;
+            else if (value == FontWeights.Normal) TitleFontWeightValue = 400;
+            else if (value == FontWeights.Medium) TitleFontWeightValue = 500;
+            else if (value == FontWeights.Bold) TitleFontWeightValue = 700;
+            else TitleFontWeightValue = 400;
+            OnPropertyChanged();
+        }
+    }
+
+    public int TitleFontWeightValue
+    {
+        get => _titleFontWeightValue;
+        set
+        {
+            if (value == _titleFontWeightValue) return;
+            _titleFontWeightValue = value;
+            if (value == 300) _titleFontWeight = FontWeights.Light;
+            else if (value == 400) _titleFontWeight = FontWeights.Normal;
+            else if (value == 500) _titleFontWeight = FontWeights.Medium;
+            else if (value == 700) _titleFontWeight = FontWeights.Bold;
+            else _titleFontWeight = FontWeights.Normal;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(TitleFontWeight));
+        }
+    }
+    //<<<字符粗细转换-结束>>>
     #region General
 
     public bool IsAutoStartEnabled
@@ -133,6 +195,51 @@ public class Settings : ObservableRecipient
             OnPropertyChanged();
         }
     }
+
+        public bool Autooutwork
+    {
+        get => _autooutwork;
+        set
+        {
+            if (value == _autooutwork) return;
+            _autooutwork = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool DelayedCleanupEnabled
+    {
+        get => _delayedCleanupEnabled;
+        set
+        {
+            if (value == _delayedCleanupEnabled) return;
+            _delayedCleanupEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsExpiredMarkEnabled
+    {
+        get => _isExpiredMarkEnabled;
+        set
+        {
+            if (value == _isExpiredMarkEnabled) return;
+            _isExpiredMarkEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public Color ExpiredMarkColor
+    {
+        get => _expiredMarkColor;
+        set
+        {
+            if (value.Equals(_expiredMarkColor)) return;
+            _expiredMarkColor = value;
+            OnPropertyChanged();
+        }
+    }
+
 
     public double MaxPanelWidth
     {
@@ -351,6 +458,28 @@ public class Settings : ObservableRecipient
         }
     }
 
+    public bool Debugginginterface
+    {
+        get => _debugginginterface;
+        set
+        {
+            if (value == _debugginginterface) return;
+            _debugginginterface = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsMainWindowVisible
+    {
+        get => _isMainWindowVisible;
+        set
+        {
+            if (value == _isMainWindowVisible) return;
+            _isMainWindowVisible = value;
+            OnPropertyChanged();
+        }
+    }
+
     public ObservableCollection<Color> SavedColors
     {
         get => _savedColors;
@@ -361,4 +490,64 @@ public class Settings : ObservableRecipient
             OnPropertyChanged();
         }
     }
+
+    #region ClassIsland
+
+    public bool IsClassIslandIpcEnabled
+    {
+        get => _isClassIslandIpcEnabled;
+        set
+        {
+            if (value == _isClassIslandIpcEnabled) return;
+            _isClassIslandIpcEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ObservableCollection<SubjectAction> ClassIslandSubjects
+    {
+        get => _classIslandSubjects;
+        set
+        {
+            if (Equals(value, _classIslandSubjects)) return;
+            _classIslandSubjects = value;
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
+
+    #region HomeworkTemplate
+
+    /// <summary>作业模板（快捷操作、通用/科目作业条目）。</summary>
+    public HomeworkTemplateConfig HomeworkTemplate
+    {
+        get => _homeworkTemplate;
+        set
+        {
+            value ??= new HomeworkTemplateConfig();
+            if (ReferenceEquals(_homeworkTemplate, value)) return;
+            _homeworkTemplate = value;
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
+
+    #region Update
+
+    /// <summary>更新渠道：0=稳定版，1=测试版。</summary>
+    public int UpdateChannel
+    {
+        get => _updateChannel;
+        set
+        {
+            if (value == _updateChannel) return;
+            _updateChannel = value;
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
 }
+

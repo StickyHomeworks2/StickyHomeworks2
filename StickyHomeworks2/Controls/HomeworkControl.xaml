@@ -9,7 +9,6 @@
              xmlns:emoji="clr-namespace:Emoji.Wpf;assembly=Emoji.Wpf"
              xmlns:stickyHomeworks="clr-namespace:StickyHomeworks"
              xmlns:behaviors="clr-namespace:StickyHomeworks.Behaviors"
-             xmlns:converter="clr-namespace:StickyHomeworks.Converter"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -47,7 +46,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <converter:AndExpressionConverter x:Key="AndExpressionConverter" />
     </UserControl.Resources>
     <Grid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:HomeworkControl}}">
         <DockPanel Margin="0 0">
@@ -65,14 +63,10 @@
                                   BorderThickness="0"
                                    AcceptsReturn="False"
                                    KeyDown="RichTextBox_OnKeyDown"
+                                   PreviewMouseLeftButtonDown="RichTextBox_OnPreviewMouseLeftButtonDown"
                                   IsReadOnly="{Binding IsSelected, Converter={StaticResource InvertBooleanConverter}}"
+                                  IsHitTestVisible="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType=local:HomeworkControl}}"
                                   materialDesign:TextFieldAssist.UnderlineBrush="{x:Null}">
-                    <emoji:RichTextBox.IsHitTestVisible>
-                        <MultiBinding Converter="{StaticResource AndExpressionConverter}">
-                            <Binding Path="IsSelected"/>
-                            <Binding Path="IsEditing"/>
-                        </MultiBinding>
-                    </emoji:RichTextBox.IsHitTestVisible>
                     <materialDesign:BehaviorsAssist.Behaviors>
                         <materialDesign:BehaviorCollection>
                             <behaviors:RichTextBoxBindingBehavior DocumentXaml="{Binding Homework.Content, UpdateSourceTrigger=PropertyChanged}"/>

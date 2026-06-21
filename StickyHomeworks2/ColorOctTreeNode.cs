@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Color = System.Drawing.Color;
 
 namespace StickyHomeworks;
@@ -6,7 +6,12 @@ namespace StickyHomeworks;
 public class ColorOctTreeNode
 {
     public int LeafNum = 0;
-    public List<ColorOctTreeNode>[] ToReduce = Enumerable.Repeat(new List<ColorOctTreeNode>(), 8).ToArray();
+    public List<ColorOctTreeNode>[] ToReduce = {
+        new List<ColorOctTreeNode>(), new List<ColorOctTreeNode>(),
+        new List<ColorOctTreeNode>(), new List<ColorOctTreeNode>(),
+        new List<ColorOctTreeNode>(), new List<ColorOctTreeNode>(),
+        new List<ColorOctTreeNode>(), new List<ColorOctTreeNode>()
+    };
 
     public ColorOctTreeNode?[] Children = new ColorOctTreeNode?[8] {null, null , null , null , null , null , null , null };
     public bool IsLeaf = false;
@@ -46,17 +51,13 @@ public class ColorOctTreeNode
         }
         else
         {
-            var str = "";
-            
-            var r1 = Convert.ToString(color.R, 2).PadLeft(8, '0');
-            var g1 = Convert.ToString(color.G, 2).PadLeft(8, '0');
-            var b1 = Convert.ToString(color.B, 2).PadLeft(8, '0');
+            var rByte = color.R;
+            var gByte = color.G;
+            var bByte = color.B;
 
-            str += r1[level];
-            str += g1[level];
-            str += b1[level];
-
-            var index = Convert.ToInt32(str, 2);
+            int index = ((rByte >> (7 - level)) & 1) << 2 |
+                        ((gByte >> (7 - level)) & 1) << 1 |
+                        ((bByte >> (7 - level)) & 1);
             Children[index] ??= new ColorOctTreeNode(Root, index, level + 1);
             Children[index]!.AddColor(color, level + 1);
         }
@@ -131,21 +132,54 @@ public class ColorOctTreeNode
         }
     }
 
-    public static Dictionary<string, int> ProcessImage(Bitmap img)
+    public static unsafe Dictionary<string, int> ProcessImage(Bitmap img)
     {
         var root = new ColorOctTreeNode(null, 0, 0);
-        for (var x = 0; x < img.Width; x++)
+        
+        var rect = new Rectangle(0, 0, img.Width, img.Height);
+        var data = img.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, img.PixelFormat);
+        try
         {
-            for (var y = 0; y < img.Height; y++)
+            var pixelSize = System.Drawing.Image.GetPixelFormatSize(img.PixelFormat) / 8;
+            var stride = data.Stride;
+            var ptr = data.Scan0;
+            
+            var maxPixels = 50000;
+            var totalPixels = img.Width * img.Height;
+            var step = totalPixels > maxPixels ? (int)Math.Ceiling((double)totalPixels / maxPixels) : 1;
+            
+            int processed = 0;
+            int pixelsAdded = 0;
+            
+            for (int y = 0; y < img.Height; y++)
             {
-                root.AddColor(img.GetPixel(x, y), 0);
-                while (root.LeafNum > 16) 
+                var row = (byte*)(ptr + y * stride);
+                for (int x = 0; x < img.Width; x++)
                 {
-                    root.ReduceTree();
+                    if (processed % step == 0)
+                    {
+                        var idx = x * pixelSize;
+                        byte blue = row[idx];
+                        byte green = row[idx + 1];
+                        byte red = row[idx + 2];
+                        var color = Color.FromArgb(red, green, blue);
+                        
+                        root.AddColor(color, 0);
+                        pixelsAdded++;
+                        while (root.LeafNum > 16) 
+                        {
+                            root.ReduceTree();
+                        }
+                    }
+                    processed++;
                 }
             }
         }
-
+        finally
+        {
+            img.UnlockBits(data);
+        }
+        
         var r = new Dictionary<string, int>();
         ColorStats(root, r);
         return r;
