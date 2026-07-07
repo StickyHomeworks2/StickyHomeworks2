@@ -1,0 +1,110 @@
+<Window x:Class="StickyHomeworks.Views.ImageResizeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
+        mc:Ignorable="d"
+        d:DesignHeight="320"
+        d:DesignWidth="440"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="14"
+        FontFamily="{StaticResource HarmonyOsSans}"
+        Title="调整图片大小"
+        Width="440"
+        MinWidth="380"
+        MinHeight="200"
+        MaxHeight="560"
+        SizeToContent="Height"
+        Background="{DynamicResource MaterialDesignPaper}"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <materialDesign:Card Grid.Row="0"
+                             Padding="20"
+                             materialDesign:ElevationAssist.Elevation="Dp3"
+                             Background="{DynamicResource MaterialDesignPaper}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                    <materialDesign:PackIcon Kind="ImageSizeSelectLarge"
+                                             Width="22"
+                                             Height="22"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                             Margin="0,0,10,0"/>
+                    <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                               Text="调整图片大小"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1"
+                           Style="{StaticResource MaterialDesignBody2TextBlock}"
+                           Opacity="0.85"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,14"
+                           Text="拖动滑块预览缩放比例，确定后保留当前大小。"/>
+
+                <TextBlock Grid.Row="2"
+                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
+                           Margin="0,0,0,6"
+                           Text="缩放比例"/>
+
+                <StackPanel Grid.Row="3">
+                    <TextBlock x:Name="ZoomPercentText"
+                               Text="100%"
+                               Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,12"/>
+                    <Slider x:Name="ZoomSlider"
+                            Minimum="10"
+                            Maximum="300"
+                            Value="100"
+                            TickFrequency="10"
+                            TickPlacement="None"
+                            IsSnapToTickEnabled="True"
+                            AutoToolTipPlacement="BottomRight"
+                            AutoToolTipPrecision="0"
+                            ValueChanged="ZoomSlider_ValueChanged"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="0,0,12,0"
+                    MinWidth="100"
+                    IsDefault="True"
+                    Click="OkButton_Click">
+                <ely:IconText Kind="Check" Text="确定" IconMargin="4 0 0 0"/>
+            </Button>
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    MinWidth="100"
+                    IsCancel="True"
+                    Click="CancelButton_Click">
+                <ely:IconText Kind="Close" Text="取消" IconMargin="4 0 0 0"/>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

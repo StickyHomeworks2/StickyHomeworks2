@@ -1,0 +1,9 @@
+<UserControl x:Class="StickyHomeworks.Controls.TypingControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             mc:Ignorable="d" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
+    <TextBlock x:Name="textBlock" TextWrapping="Wrap" Text="{Binding DisplayingText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+               d:Text="打字机效果示例文本"/>
+</UserControl>

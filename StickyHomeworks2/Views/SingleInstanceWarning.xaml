@@ -1,0 +1,83 @@
+<ely:MyWindow x:Class="StickyHomeworks.Views.SingleInstanceWarning"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
+      mc:Ignorable="d"
+      TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+      TextElement.FontWeight="Regular"
+      TextElement.FontSize="13"
+      TextOptions.TextFormattingMode="Ideal" 
+      TextOptions.TextRenderingMode="Auto"        
+      FontFamily="{StaticResource HarmonyOsSans}"
+      Height="350" 
+      Width="650"
+      Title="警告"
+      Background="#303030" 
+      WindowStartupLocation="CenterScreen"
+      ResizeMode="NoResize">
+
+    <materialDesign:DialogHost Identifier="SingleInstanceWarning"
+                               DialogTheme="Inherit"
+                               CloseOnClickAway="True">
+        <materialDesign:DialogHost.Resources>
+            <StackPanel x:Key="WhyNotMultiInstanceDialogContent"
+                        Margin="24"
+                        MaxWidth="440">
+                <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                           Text="为什么不建议多开实例"
+                           Margin="0,0,0,12"
+                           TextWrapping="Wrap"/>
+                <TextBlock Style="{StaticResource MaterialDesignBody1TextBlock}"
+                           TextWrapping="Wrap"
+                           LineHeight="22">
+                    同时运行多个实例，可能会导致：资源占用翻倍、数据冲突或丢失、功能异常或崩溃等。
+                    <LineBreak/><LineBreak/>
+                    因此，开发者不推荐、也不允许用户多开实例。若您在生产环境中强行使用此类功能，开发者不对该行为产生的后果承担任何责任。
+                </TextBlock>
+                <Button HorizontalAlignment="Right"
+                        Margin="0,20,0,0"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Content="知道了"
+                        Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"/>
+            </StackPanel>
+        </materialDesign:DialogHost.Resources>
+
+        <Grid Margin="20 5 17 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="250"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" TextWrapping="Wrap">
+                <Run Text="ヽ(｀Д´)ﾉ" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="60" FontWeight="Bold"/>
+                <LineBreak/>
+                <Run Text="想多开？没门！" Foreground="{DynamicResource PrimaryHueMidBrush}" FontSize="40" FontWeight="Bold"/>
+                <LineBreak/><LineBreak/><LineBreak/>
+                <Run Text="一个应用正在被运行中，请勿要" FontSize="25" Foreground="White"/>
+                <Run Text="重复的启动实例" FontSize="25" Foreground="Red"/>
+                <Run Text=" ！" FontSize="25" Foreground="White"/>
+            </TextBlock>
+            <StackPanel Grid.Row="1" HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button Style="{StaticResource MaterialDesignRaisedDarkButton}"
+                        Margin="0 0 30 0"
+                        Command="{x:Static materialDesign:DialogHost.OpenDialogCommand}"
+                        CommandParameter="{StaticResource WhyNotMultiInstanceDialogContent}">
+                    <Button.RenderTransform>
+                        <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
+                    </Button.RenderTransform>
+                    <ely:IconText Kind="Information" Text="为什么" IconMargin="3 0 0 0"/>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignOutlinedDarkButton}"
+                        Margin="0 0 30 0"
+                        Click="ButtonIgnore_OnClick">
+                    <Button.RenderTransform>
+                        <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
+                    </Button.RenderTransform>
+                    <ely:IconText Kind="Close" Text="关闭" IconMargin="3 0 0 0" RenderTransformOrigin="0.633,1.665"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </materialDesign:DialogHost>
+</ely:MyWindow>

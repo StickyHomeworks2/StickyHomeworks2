@@ -1,0 +1,103 @@
+<UserControl x:Class="StickyHomeworks.Controls.ClassIslandSubjectsCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:ely="http://github.com/HelloWRC/ElysiaFramework"
+             mc:Ignorable="d" 
+             Foreground="{DynamicResource MaterialDesignBody}">
+    <materialDesign:Card HorizontalAlignment="Stretch"
+                         VerticalAlignment="Center"
+                         Padding="12 10 16 10">
+        <Expander x:Name="PART_Expander"
+                  Padding="0"
+                  materialDesign:ExpanderAssist.HorizontalHeaderPadding="0"
+                  Background="Transparent">
+            <Expander.Style>
+                <Style TargetType="Expander" BasedOn="{StaticResource MaterialDesignExpander}">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Style>
+            </Expander.Style>
+            <Expander.Header>
+                <Grid Background="Transparent">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon Grid.Column="0" Kind="School" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="联动科目" FontSize="14"/>
+                        <TextBlock Text="选择需要联动的科目及其行为" FontSize="12" Opacity="0.75"/>
+                    </StackPanel>
+                </Grid>
+            </Expander.Header>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" 
+                            Click="ButtonRefresh_OnClick"
+                            Margin="0 10 4 8"
+                            HorizontalAlignment="Stretch"
+                            Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <ely:IconText Kind="refresh"
+                            Text="刷新科目列表"
+                            ToolTip="刷新科目列表"/>
+                    </Button>
+                    <Button Grid.Column="1" 
+                            Click="ButtonImport_OnClick"
+                            Margin="4 10 0 8"
+                            HorizontalAlignment="Stretch"
+                            Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <ely:IconText Kind="import"
+                            Text="导入科目至 StickyHomeworks2"
+                            ToolTip="导入科目"/>
+                    </Button>
+                </Grid>
+                
+                <ListBox Grid.Row="1" 
+                         ItemsSource="{Binding Subjects, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
+                         MaxHeight="200"
+                         HorizontalContentAlignment="Stretch">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0 4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0" 
+                                          IsChecked="{Binding IsMonitored, Mode=TwoWay}"
+                                          VerticalAlignment="Center"
+                                          Margin="0 0 8 0"/>
+                                <TextBlock Grid.Column="1" 
+                                           Text="{Binding Name}" 
+                                           VerticalAlignment="Center"
+                                           FontWeight="Medium"/>
+                                <ComboBox Grid.Column="2"
+                                          SelectedIndex="{Binding ActionMode, Mode=TwoWay}"
+                                          VerticalAlignment="Center"
+                                          MinWidth="180"
+                                          IsEnabled="{Binding IsMonitored}">
+                                    <ComboBoxItem Content="上课时隐藏"/>
+                                    <ComboBoxItem Content="上课时显示"/>
+                                    <ComboBoxItem Content="上课时隐藏&amp;下课时显示"/>
+                                    <ComboBoxItem Content="上课时显示&amp;下课时隐藏"/>
+                                </ComboBox>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Expander>
+    </materialDesign:Card>
+</UserControl>
