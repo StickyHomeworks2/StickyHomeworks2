@@ -8,12 +8,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StickyHomeworks.Core;
 using StickyHomeworks.Models;
 
 namespace StickyHomeworks.Services;
 public class TimeMachineService : IHostedService, INotifyPropertyChanged
 {
-    private const string BackupDir = "./backups";
     private const string IndexFile = "backup_index.json";
     private const int MaxBackupCount = 20;
     
@@ -63,13 +63,13 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
             var backupId = Guid.NewGuid().ToString("N")[..8];
             var profileFileName = $"profile_{timestamp}_{backupId}.json";
             var previewFileName = $"preview_{timestamp}_{backupId}.png";
-            if (File.Exists("./Profile.json"))
+            if (File.Exists(AppPaths.ProfileFile))
             {
-                File.Copy("./Profile.json", Path.Combine(BackupDir, profileFileName), true);
+                File.Copy(AppPaths.ProfileFile, Path.Combine(AppPaths.BackupDirectory, profileFileName), true);
             }
             if (listView is { ActualWidth: > 0, ActualHeight: > 0 })
             {
-                GeneratePreviewImage(listView, Path.Combine(BackupDir, previewFileName));
+                GeneratePreviewImage(listView, Path.Combine(AppPaths.BackupDirectory, previewFileName));
             }
             Backups.Insert(0, new BackupInfo
             {
@@ -129,7 +129,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         {
             IsRestoring = true;
             
-            var backupPath = Path.Combine(BackupDir, backup.ProfileFileName);
+            var backupPath = Path.Combine(AppPaths.BackupDirectory, backup.ProfileFileName);
             if (!File.Exists(backupPath))
             {
                 throw new FileNotFoundException("备份文件不存在");
@@ -168,13 +168,13 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         }
         if (count > 0) _logger.LogInformation("清除全部 {Count} 个备份", count);
     }
-    public string GetPreviewImagePath(BackupInfo backup) => Path.Combine(BackupDir, backup.PreviewImageFileName);
+    public string GetPreviewImagePath(BackupInfo backup) => Path.Combine(AppPaths.BackupDirectory, backup.PreviewImageFileName);
 
     private void EnsureBackupDirExists()
     {
-        if (!Directory.Exists(BackupDir))
+        if (!Directory.Exists(AppPaths.BackupDirectory))
         {
-            Directory.CreateDirectory(BackupDir);
+            Directory.CreateDirectory(AppPaths.BackupDirectory);
         }
     }
 
@@ -182,8 +182,8 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
     {
         try
         {
-            var profilePath = Path.Combine(BackupDir, backup.ProfileFileName);
-            var previewPath = Path.Combine(BackupDir, backup.PreviewImageFileName);
+            var profilePath = Path.Combine(AppPaths.BackupDirectory, backup.ProfileFileName);
+            var previewPath = Path.Combine(AppPaths.BackupDirectory, backup.PreviewImageFileName);
             if (File.Exists(profilePath)) File.Delete(profilePath);
             if (File.Exists(previewPath)) File.Delete(previewPath);
         }
@@ -197,7 +197,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
     {
         try
         {
-            var indexPath = Path.Combine(BackupDir, IndexFile);
+            var indexPath = Path.Combine(AppPaths.BackupDirectory, IndexFile);
             if (!File.Exists(indexPath)) return;
 
             var json = File.ReadAllText(indexPath);
@@ -207,7 +207,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
             Backups = backups;
             for (int i = Backups.Count - 1; i >= 0; i--)
             {
-                if (!File.Exists(Path.Combine(BackupDir, Backups[i].ProfileFileName)))
+                if (!File.Exists(Path.Combine(AppPaths.BackupDirectory, Backups[i].ProfileFileName)))
                 {
                     Backups.RemoveAt(i);
                 }
@@ -224,7 +224,7 @@ public class TimeMachineService : IHostedService, INotifyPropertyChanged
         try
         {
             EnsureBackupDirExists();
-            File.WriteAllText(Path.Combine(BackupDir, IndexFile), JsonSerializer.Serialize(Backups));
+            File.WriteAllText(Path.Combine(AppPaths.BackupDirectory, IndexFile), JsonSerializer.Serialize(Backups));
         }
         catch (Exception ex)
         {

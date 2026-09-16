@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Media;
+using StickyHomeworks.Core;
 using WindowsShortcutFactory;
 using File = System.IO.File;
 
@@ -161,7 +162,7 @@ public class Settings : ObservableRecipient
                 {
                     using var shortcut = new WindowsShortcut();
                     shortcut.Path = Environment.ProcessPath;
-                    shortcut.WorkingDirectory = Environment.CurrentDirectory;
+                    shortcut.WorkingDirectory = AppPaths.BaseDirectory;
                     shortcut.Save(path);
                 }
                 else
