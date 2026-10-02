@@ -24,7 +24,7 @@ public partial class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Data Source=db/app.db");
+        optionsBuilder.UseSqlite($"Data Source={AppPaths.DatabaseFile}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

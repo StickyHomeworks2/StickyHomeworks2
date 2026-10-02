@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
+using StickyHomeworks.Core;
 
 namespace StickyHomeworks.Converters;
 public class PreviewPathConverter : IValueConverter
@@ -11,7 +12,7 @@ public class PreviewPathConverter : IValueConverter
         if (value is not string fileName || string.IsNullOrEmpty(fileName))
             return null;
 
-        var fullPath = Path.Combine("./backups", fileName);
+        var fullPath = Path.Combine(AppPaths.BackupDirectory, fileName);
         
         if (!File.Exists(fullPath))
             return null;
@@ -20,7 +21,7 @@ public class PreviewPathConverter : IValueConverter
         {
             var image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri(Path.GetFullPath(fullPath), UriKind.Absolute);
+            image.UriSource = new Uri(fullPath, UriKind.Absolute);
             image.CacheOption = BitmapCacheOption.OnLoad;
             image.EndInit();
             image.Freeze();

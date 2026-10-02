@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StickyHomeworks.Core;
 using StickyHomeworks.Models;
 
 namespace StickyHomeworks.Services;
@@ -39,16 +40,16 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
 
     public void LoadProfile()
     {
-        if (!File.Exists("./Profile.json"))
+        if (!File.Exists(AppPaths.ProfileFile))
         {
-            _logger.LogInformation("未找到 Profile.json，使用默认配置: {Path}", Path.GetFullPath("./Profile.json"));
+            _logger.LogInformation("未找到 Profile.json，使用默认配置: {Path}", AppPaths.ProfileFile);
             return;
         }
-        var json = File.ReadAllText("./Profile.json");
+        var json = File.ReadAllText(AppPaths.ProfileFile);
         var r = JsonSerializer.Deserialize<Profile>(json);
         if (r != null)
         {
-            _logger.LogInformation("已加载 Profile.json: {Path} 共 {HomeworkCount} 条作业", Path.GetFullPath("./Profile.json"), r.Homeworks?.Count ?? 0);
+            _logger.LogInformation("已加载 Profile.json: {Path} 共 {HomeworkCount} 条作业", AppPaths.ProfileFile, r.Homeworks?.Count ?? 0);
             Profile = r;
         }
         else
@@ -78,9 +79,8 @@ public class ProfileService : IHostedService, INotifyPropertyChanged
 
     public void SaveProfile()
     {
-        var path = Path.GetFullPath("./Profile.json");
-        File.WriteAllText(path, JsonSerializer.Serialize<Profile>(Profile));
-        _logger.LogInformation("写入 Profile.json: {Path} 作业数: {Count}", path, Profile.Homeworks.Count);
+        File.WriteAllText(AppPaths.ProfileFile, JsonSerializer.Serialize<Profile>(Profile));
+        _logger.LogInformation("写入 Profile.json: {Path} 作业数: {Count}", AppPaths.ProfileFile, Profile.Homeworks.Count);
         ProfileSaved?.Invoke(this, EventArgs.Empty);
     }
 

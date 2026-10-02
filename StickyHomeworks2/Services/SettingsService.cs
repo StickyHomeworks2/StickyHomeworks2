@@ -4,6 +4,7 @@ using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StickyHomeworks.Core;
 using StickyHomeworks.Models;
 
 namespace StickyHomeworks.Services;
@@ -41,12 +42,12 @@ public class SettingsService : ObservableRecipient, IHostedService
 
     public void LoadSettings()
     {
-        if (!File.Exists("./Settings.json"))
+        if (!File.Exists(AppPaths.SettingsFile))
         {
-            _logger.LogInformation("配置文件不存在，跳过加载: {Path}", Path.GetFullPath("./Settings.json"));
+            _logger.LogInformation("配置文件不存在，跳过加载: {Path}", AppPaths.SettingsFile);
             return;
         }
-        var json = File.ReadAllText("./Settings.json");
+        var json = File.ReadAllText(AppPaths.SettingsFile);
         var r = JsonSerializer.Deserialize<Settings>(json);
         if (r != null)
         {
@@ -54,7 +55,7 @@ public class SettingsService : ObservableRecipient, IHostedService
                 r.HomeworkTemplate = new HomeworkTemplateConfig();
             HomeworkTemplateConfig.Normalize(r.HomeworkTemplate);
             Settings = r;
-            _logger.LogInformation("加载配置文件: {Path}", Path.GetFullPath("./Settings.json"));
+            _logger.LogInformation("加载配置文件: {Path}", AppPaths.SettingsFile);
         }
         else
         {
@@ -64,9 +65,8 @@ public class SettingsService : ObservableRecipient, IHostedService
 
     public void SaveSettings()
     {
-        var path = Path.GetFullPath("./Settings.json");
-        File.WriteAllText(path, JsonSerializer.Serialize<Settings>(Settings));
-        _logger.LogInformation("写入配置文件: {Path} 变更属性: {Property}", path, _lastChangedProperty ?? nameof(Settings));
+        File.WriteAllText(AppPaths.SettingsFile, JsonSerializer.Serialize<Settings>(Settings));
+        _logger.LogInformation("写入配置文件: {Path} 变更属性: {Property}", AppPaths.SettingsFile, _lastChangedProperty ?? nameof(Settings));
     }
 
     public event PropertyChangedEventHandler? OnSettingsChanged;
